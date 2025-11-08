@@ -1,0 +1,65 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Colors */
+  --bg-dark-start: #0a1628;
+  --bg-dark-end: #1a2942;
+  --primary-blue: #7c8cff;
+  --primary-blue-hover: #9ba8ff;
+  --text-primary: #ffffff;
+  --text-secondary: #a0aec0;
+  --input-border: #3d5a80;
+  --input-border-focus: #7c8cff;
+  --error: #ef4444;
+  --success: #10b981;
+  
+  /* Typography */
+  --font-family: 'Inter', sans-serif;
+  
+  /* Spacing */
+  --spacing-unit: 8px;
+  
+  /* Border Radius */
+  --radius-input: 8px;
+  --radius-button: 24px;
+}
+
+body {
+  font-family: var(--font-family);
+  background: linear-gradient(135deg, var(--bg-dark-start) 0%, var(--bg-dark-end) 100%);
+  color: var(--text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button {
+  font-family: var(--font-family);
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+input {
+  font-family: var(--font-family);
+  outline: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+
+/* Hide entire TopBar when modal is open */
+body.modal-open .topBar {
+  display: none !important;
+}
