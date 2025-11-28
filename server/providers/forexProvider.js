@@ -1,6 +1,6 @@
 /**
- * ForexProvider - Alpha Vantage API Integration for Forex
- * Fetches foreign exchange market data from Alpha Vantage API
+ * ForexProvider - Fixer.io API Integration for Forex
+ * Fetches foreign exchange market data from Fixer.io API
  */
 
 import axios from 'axios';
@@ -8,9 +8,9 @@ import { apiConfig } from '../config/apiConfig.js';
 
 class ForexProvider {
   constructor() {
-    this.baseUrl = apiConfig.alphaVantage.baseUrl;
-    this.apiKey = apiConfig.alphaVantage.apiKey;
-    this.timeout = apiConfig.alphaVantage.timeout;
+    this.baseUrl = apiConfig.fixer.baseUrl;
+    this.apiKey = apiConfig.fixer.apiKey;
+    this.timeout = apiConfig.fixer.timeout;
     this.retryConfig = apiConfig.retry;
     
     // Popular forex pairs to display
@@ -35,55 +35,79 @@ class ForexProvider {
    * @returns {Promise<Object>} Exchange rate data
    */
   async getExchangeRate(fromCurrency, toCurrency) {
+    const endpoint = `${this.baseUrl}/latest`;
     const params = {
-      function: 'CURRENCY_EXCHANGE_RATE',
-      from_currency: fromCurrency,
-      to_currency: toCurrency,
-      apikey: this.apiKey
+      access_key: this.apiKey,
+      base: fromCurrency,
+      symbols: toCurrency
     };
 
-    return this._makeRequest(params, `getExchangeRate(${fromCurrency}/${toCurrency})`);
+    const data = await this._makeRequest(endpoint, params, `getExchangeRate(${fromCurrency}/${toCurrency})`);
+    
+    // Transform to include the pair name
+    return {
+      ...data,
+      pair: `${fromCurrency}/${toCurrency}`,
+      fromCurrency,
+      toCurrency
+    };
   }
 
   /**
-   * Get multiple exchange rates
-   * Note: Alpha Vantage free tier limits to 5 calls/minute
+   * Get multiple exchange rates in a single batched request
+   * Fixer.io allows fetching multiple symbols in one call
    * @param {Array<Object>} pairs - Array of {from, to, name} objects
    * @returns {Promise<Object>} Object with pair names as keys
    */
   async getMultipleExchangeRates(pairs = this.defaultPairs) {
+    // Group pairs by base currency for efficient batching
+    const pairsByBase = {};
+    pairs.forEach(pair => {
+      if (!pairsByBase[pair.from]) {
+        pairsByBase[pair.from] = [];
+      }
+      pairsByBase[pair.from].push(pair);
+    });
+
     const results = {};
-    const batchSize = 5; // Free tier limit
-    const delayBetweenBatches = 60000; // 1 minute
+    
+    console.log(`[ForexProvider] Fetching ${pairs.length} forex pairs in ${Object.keys(pairsByBase).length} batched requests`);
+    
+    // Fetch each base currency group
+    for (const [baseCurrency, currencyPairs] of Object.entries(pairsByBase)) {
+      try {
+        const symbols = currencyPairs.map(p => p.to).join(',');
+        const endpoint = `${this.baseUrl}/latest`;
+        const params = {
+          access_key: this.apiKey,
+          base: baseCurrency,
+          symbols: symbols
+        };
 
-    // Process in batches to respect rate limits
-    for (let i = 0; i < pairs.length; i += batchSize) {
-      const batch = pairs.slice(i, i + batchSize);
-      
-      console.log(`[ForexProvider] Fetching batch ${Math.floor(i / batchSize) + 1} (${batch.map(p => p.name).join(', ')})`);
-      
-      // Fetch batch concurrently
-      const batchPromises = batch.map(async pair => {
-        try {
-          const data = await this.getExchangeRate(pair.from, pair.to);
-          return { pair: pair.name, data };
-        } catch (error) {
-          console.error(`[ForexProvider] Error fetching ${pair.name}:`, error.message);
-          return { pair: pair.name, data: null, error: error.message };
-        }
-      });
-
-      const batchResults = await Promise.all(batchPromises);
-      
-      // Store results
-      batchResults.forEach(({ pair, data, error }) => {
-        results[pair] = error ? { error } : data;
-      });
-
-      // Wait before next batch (except for last batch)
-      if (i + batchSize < pairs.length) {
-        console.log(`[ForexProvider] Waiting ${delayBetweenBatches / 1000}s before next batch...`);
-        await this._sleep(delayBetweenBatches);
+        const data = await this._makeRequest(endpoint, params, `getMultipleExchangeRates(${baseCurrency})`);
+        
+        // Map results to pair names
+        currencyPairs.forEach(pair => {
+          const rate = data.rates?.[pair.to];
+          if (rate) {
+            results[pair.name] = {
+              success: true,
+              base: baseCurrency,
+              date: data.date,
+              rates: { [pair.to]: rate },
+              pair: pair.name,
+              fromCurrency: pair.from,
+              toCurrency: pair.to,
+              rate: rate
+            };
+          }
+        });
+      } catch (error) {
+        console.error(`[ForexProvider] Error fetching ${baseCurrency} pairs:`, error.message);
+        // Mark all pairs with this base as errored
+        currencyPairs.forEach(pair => {
+          results[pair.name] = { error: error.message };
+        });
       }
     }
 
@@ -91,38 +115,32 @@ class ForexProvider {
   }
 
   /**
-   * Get forex time series data
+   * Get forex time series data (historical rates)
    * @param {string} fromCurrency - From currency code
    * @param {string} toCurrency - To currency code
-   * @param {string} interval - Time interval ('1min', '5min', '15min', '30min', '60min', 'daily', 'weekly', 'monthly')
-   * @returns {Promise<Object>} Time series data
+   * @param {string} date - Date in YYYY-MM-DD format (optional, defaults to latest)
+   * @returns {Promise<Object>} Historical rate data
    */
-  async getForexTimeSeries(fromCurrency, toCurrency, interval = '60min') {
-    const isIntraday = !['daily', 'weekly', 'monthly'].includes(interval);
-    
+  async getForexTimeSeries(fromCurrency, toCurrency, date = null) {
+    const endpoint = date ? `${this.baseUrl}/${date}` : `${this.baseUrl}/latest`;
     const params = {
-      function: isIntraday ? 'FX_INTRADAY' : 'FX_DAILY',
-      from_symbol: fromCurrency,
-      to_symbol: toCurrency,
-      apikey: this.apiKey
+      access_key: this.apiKey,
+      base: fromCurrency,
+      symbols: toCurrency
     };
 
-    if (isIntraday) {
-      params.interval = interval;
-    }
-
-    return this._makeRequest(params, `getForexTimeSeries(${fromCurrency}/${toCurrency}, ${interval})`);
+    return this._makeRequest(endpoint, params, `getForexTimeSeries(${fromCurrency}/${toCurrency}, ${date || 'latest'})`);
   }
 
   /**
    * Make HTTP request with retry logic and error handling
    * @private
    */
-  async _makeRequest(params, methodName, attempt = 1) {
+  async _makeRequest(endpoint, params, methodName, attempt = 1) {
     try {
       console.log(`[ForexProvider] ${methodName} - Attempt ${attempt}/${this.retryConfig.maxAttempts}`);
       
-      const response = await axios.get(this.baseUrl, {
+      const response = await axios.get(endpoint, {
         params,
         timeout: this.timeout,
         headers: {
@@ -131,13 +149,9 @@ class ForexProvider {
       });
 
       // Check for API error messages
-      if (response.data['Error Message']) {
-        throw new Error(`Alpha Vantage API Error: ${response.data['Error Message']}`);
-      }
-
-      if (response.data['Note']) {
-        // Rate limit message
-        throw new Error(`Alpha Vantage Rate Limit: ${response.data['Note']}`);
+      if (!response.data.success) {
+        const errorInfo = response.data.error || {};
+        throw new Error(`Fixer.io API Error: ${errorInfo.type || 'Unknown error'} - ${errorInfo.info || 'No details'}`);
       }
 
       console.log(`[ForexProvider] ${methodName} - Success`);
@@ -152,7 +166,7 @@ class ForexProvider {
         console.log(`[ForexProvider] ${methodName} - Retrying in ${delay}ms...`);
         
         await this._sleep(delay);
-        return this._makeRequest(params, methodName, attempt + 1);
+        return this._makeRequest(endpoint, params, methodName, attempt + 1);
       }
 
       // Max retries reached or non-retryable error
@@ -165,8 +179,18 @@ class ForexProvider {
    * @private
    */
   _shouldRetry(error) {
+    // Don't retry API key errors
+    if (error.message && (error.message.includes('invalid_access_key') || error.message.includes('missing_access_key'))) {
+      return false;
+    }
+
     // Don't retry rate limit errors
-    if (error.message && error.message.includes('Rate Limit')) {
+    if (error.message && error.message.includes('rate_limit')) {
+      return false;
+    }
+
+    // Don't retry invalid currency errors
+    if (error.message && error.message.includes('invalid_currency')) {
       return false;
     }
 
@@ -202,19 +226,20 @@ class ForexProvider {
    */
   _formatError(error, methodName) {
     const formattedError = new Error();
-    formattedError.provider = 'AlphaVantage-Forex';
+    formattedError.provider = 'Fixer.io';
     formattedError.method = methodName;
     formattedError.originalError = error.message;
+    formattedError.retryable = this._shouldRetry(error);
 
     if (error.response) {
-      formattedError.message = `Alpha Vantage API error: ${error.response.status} - ${error.response.statusText}`;
+      formattedError.message = `Fixer.io API error: ${error.response.status} - ${error.response.statusText}`;
       formattedError.statusCode = error.response.status;
       formattedError.data = error.response.data;
     } else if (error.request) {
-      formattedError.message = 'Alpha Vantage API request timeout or network error';
+      formattedError.message = 'Fixer.io API request timeout or network error';
       formattedError.statusCode = 0;
     } else {
-      formattedError.message = `Alpha Vantage API request error: ${error.message}`;
+      formattedError.message = `Fixer.io API request error: ${error.message}`;
       formattedError.statusCode = 0;
     }
 

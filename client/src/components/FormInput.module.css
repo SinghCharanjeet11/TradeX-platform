@@ -6,7 +6,7 @@
   display: block;
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-primary);
+  color: #1a202c;
   margin-bottom: 12px;
 }
 
@@ -22,8 +22,8 @@
   padding: 12px 48px 12px 0;
   background: transparent;
   border: none;
-  border-bottom: 2px solid var(--input-border);
-  color: var(--text-primary);
+  border-bottom: 2px solid #e2e8f0;
+  color: #1a202c;
   font-size: 15px;
   transition: all 0.3s ease;
 }
@@ -33,18 +33,18 @@
 }
 
 .input:focus {
-  border-bottom-color: var(--input-border-focus);
+  border-bottom-color: #00d4aa;
   outline: none;
 }
 
 .inputWrapper.error .input {
-  border-bottom-color: var(--error);
+  border-bottom-color: #ef4444;
 }
 
 .icon {
   position: absolute;
   right: 0;
-  color: var(--text-secondary);
+  color: #718096;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -58,12 +58,12 @@
 .helperText {
   margin-top: 8px;
   font-size: 12px;
-  color: var(--text-secondary);
+  color: #718096;
   line-height: 1.4;
 }
 
 .errorText {
   margin-top: 8px;
   font-size: 12px;
-  color: var(--error);
+  color: #ef4444;
 }

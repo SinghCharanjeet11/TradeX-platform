@@ -75,16 +75,111 @@ class MarketService {
         return this._formatResponse(cachedData.data, true, cachedData.age);
       }
 
-      // Fetch from API
-      console.log('[MarketService] Fetching fresh stocks data from Alpha Vantage');
-      const symbols = this.stocksProvider.defaultSymbols;
-      const rawData = await this.stocksProvider.getMultipleStockQuotes(symbols);
-      const transformedData = transformStocksData(rawData, symbols);
+      // Use mock data for stocks (Alpha Vantage free tier is too slow)
+      console.log('[MarketService] Using mock stocks data (Alpha Vantage free tier rate limits)');
+      const mockStocksData = [
+        {
+          id: 'aapl',
+          symbol: 'AAPL',
+          name: 'Apple Inc.',
+          price: 178.25,
+          change24h: 1.45,
+          volume24h: 52300000,
+          marketCap: 2800000000000,
+          image: 'https://logo.clearbit.com/apple.com',
+          lastUpdate: new Date().toISOString(),
+          source: 'mock'
+        },
+        {
+          id: 'msft',
+          symbol: 'MSFT',
+          name: 'Microsoft Corporation',
+          price: 412.80,
+          change24h: 0.92,
+          volume24h: 28100000,
+          marketCap: 3100000000000,
+          image: 'https://logo.clearbit.com/microsoft.com',
+          lastUpdate: new Date().toISOString(),
+          source: 'mock'
+        },
+        {
+          id: 'googl',
+          symbol: 'GOOGL',
+          name: 'Alphabet Inc.',
+          price: 142.65,
+          change24h: 1.23,
+          volume24h: 31200000,
+          marketCap: 1800000000000,
+          image: 'https://logo.clearbit.com/google.com',
+          lastUpdate: new Date().toISOString(),
+          source: 'mock'
+        },
+        {
+          id: 'amzn',
+          symbol: 'AMZN',
+          name: 'Amazon.com Inc.',
+          price: 178.35,
+          change24h: 1.12,
+          volume24h: 41500000,
+          marketCap: 1800000000000,
+          image: 'https://logo.clearbit.com/amazon.com',
+          lastUpdate: new Date().toISOString(),
+          source: 'mock'
+        },
+        {
+          id: 'tsla',
+          symbol: 'TSLA',
+          name: 'Tesla Inc.',
+          price: 242.50,
+          change24h: -2.15,
+          volume24h: 95200000,
+          marketCap: 770000000000,
+          image: 'https://logo.clearbit.com/tesla.com',
+          lastUpdate: new Date().toISOString(),
+          source: 'mock'
+        },
+        {
+          id: 'meta',
+          symbol: 'META',
+          name: 'Meta Platforms Inc.',
+          price: 485.20,
+          change24h: 2.34,
+          volume24h: 18900000,
+          marketCap: 1200000000000,
+          image: 'https://logo.clearbit.com/meta.com',
+          lastUpdate: new Date().toISOString(),
+          source: 'mock'
+        },
+        {
+          id: 'nvda',
+          symbol: 'NVDA',
+          name: 'NVIDIA Corporation',
+          price: 875.45,
+          change24h: 3.21,
+          volume24h: 42300000,
+          marketCap: 2200000000000,
+          image: 'https://logo.clearbit.com/nvidia.com',
+          lastUpdate: new Date().toISOString(),
+          source: 'mock'
+        },
+        {
+          id: 'jpm',
+          symbol: 'JPM',
+          name: 'JPMorgan Chase & Co.',
+          price: 195.80,
+          change24h: 0.87,
+          volume24h: 12400000,
+          marketCap: 570000000000,
+          image: 'https://logo.clearbit.com/jpmorganchase.com',
+          lastUpdate: new Date().toISOString(),
+          source: 'mock'
+        }
+      ];
 
-      // Cache the result
-      this._setCachedData(cacheKey, transformedData, this.cacheTTL.stocks);
+      // Cache the mock data
+      this._setCachedData(cacheKey, mockStocksData, this.cacheTTL.stocks);
 
-      return this._formatResponse(transformedData, false, 0);
+      return this._formatResponse(mockStocksData, false, 0);
 
     } catch (error) {
       console.error('[MarketService] Error fetching stocks data:', error.message);
@@ -107,17 +202,105 @@ class MarketService {
         return this._formatResponse(cachedData.data, true, cachedData.age);
       }
 
-      // Fetch from API
-      console.log('[MarketService] Fetching fresh forex data from Alpha Vantage');
-      const pairs = this.forexProvider.defaultPairs;
-      const rawData = await this.forexProvider.getMultipleExchangeRates(pairs);
-      const pairNames = pairs.map(p => p.name);
-      const transformedData = transformForexData(rawData, pairNames);
+      // Use mock data for forex (Alpha Vantage free tier is too slow)
+      console.log('[MarketService] Using mock forex data (Alpha Vantage free tier rate limits)');
+      const mockForexData = [
+        {
+          id: 'eurusd',
+          symbol: 'EUR/USD',
+          name: 'Euro / US Dollar',
+          price: 1.0845,
+          change24h: 0.15,
+          volume24h: 1200000000000,
+          marketCap: 0,
+          bidPrice: 1.0843,
+          askPrice: 1.0847,
+          spread: 0.0004,
+          image: 'https://flagcdn.com/w80/eu.png',
+          lastUpdate: new Date().toISOString(),
+          source: 'mock'
+        },
+        {
+          id: 'gbpusd',
+          symbol: 'GBP/USD',
+          name: 'British Pound / US Dollar',
+          price: 1.2675,
+          change24h: -0.22,
+          volume24h: 850000000000,
+          marketCap: 0,
+          bidPrice: 1.2673,
+          askPrice: 1.2677,
+          spread: 0.0004,
+          image: 'https://flagcdn.com/w80/gb.png',
+          lastUpdate: new Date().toISOString(),
+          source: 'mock'
+        },
+        {
+          id: 'usdjpy',
+          symbol: 'USD/JPY',
+          name: 'US Dollar / Japanese Yen',
+          price: 149.85,
+          change24h: 0.45,
+          volume24h: 950000000000,
+          marketCap: 0,
+          bidPrice: 149.83,
+          askPrice: 149.87,
+          spread: 0.04,
+          image: 'https://flagcdn.com/w80/us.png',
+          lastUpdate: new Date().toISOString(),
+          source: 'mock'
+        },
+        {
+          id: 'audusd',
+          symbol: 'AUD/USD',
+          name: 'Australian Dollar / US Dollar',
+          price: 0.6542,
+          change24h: -0.18,
+          volume24h: 420000000000,
+          marketCap: 0,
+          bidPrice: 0.6540,
+          askPrice: 0.6544,
+          spread: 0.0004,
+          image: 'https://flagcdn.com/w80/au.png',
+          lastUpdate: new Date().toISOString(),
+          source: 'mock'
+        },
+        {
+          id: 'usdcad',
+          symbol: 'USD/CAD',
+          name: 'US Dollar / Canadian Dollar',
+          price: 1.3625,
+          change24h: 0.32,
+          volume24h: 380000000000,
+          marketCap: 0,
+          bidPrice: 1.3623,
+          askPrice: 1.3627,
+          spread: 0.0004,
+          image: 'https://flagcdn.com/w80/ca.png',
+          lastUpdate: new Date().toISOString(),
+          source: 'mock'
+        },
+        {
+          id: 'usdchf',
+          symbol: 'USD/CHF',
+          name: 'US Dollar / Swiss Franc',
+          price: 0.8845,
+          change24h: 0.18,
+          volume24h: 290000000000,
+          marketCap: 0,
+          bidPrice: 0.8843,
+          askPrice: 0.8847,
+          spread: 0.0004,
+          image: 'https://flagcdn.com/w80/ch.png',
+          lastUpdate: new Date().toISOString(),
+          source: 'mock'
+        }
+      ];
 
-      // Cache the result
-      this._setCachedData(cacheKey, transformedData, this.cacheTTL.forex);
+      // Cache the mock data
+      this._setCachedData(cacheKey, mockForexData, this.cacheTTL.forex);
 
-      return this._formatResponse(transformedData, false, 0);
+      return this._formatResponse(mockForexData, false, 0);
 
     } catch (error) {
       console.error('[MarketService] Error fetching forex data:', error.message);
@@ -140,16 +323,105 @@ class MarketService {
         return this._formatResponse(cachedData.data, true, cachedData.age);
       }
 
-      // Fetch from API
-      console.log('[MarketService] Fetching fresh commodities data from Alpha Vantage');
-      const commodities = this.commoditiesProvider.defaultCommodities;
-      const rawData = await this.commoditiesProvider.getMultipleCommodityPrices(commodities);
-      const transformedData = transformCommoditiesData(rawData, commodities);
+      // Use mock data for commodities (Alpha Vantage free tier is too slow)
+      console.log('[MarketService] Using mock commodities data (Alpha Vantage free tier rate limits)');
+      const mockCommoditiesData = [
+        {
+          id: 'xau',
+          symbol: 'XAU',
+          name: 'Gold',
+          price: 2045.50,
+          change24h: 0.85,
+          volume24h: 145000000000,
+          marketCap: 12500000000000,
+          unit: 'per oz',
+          high24h: 2055.30,
+          low24h: 2038.20,
+          image: 'https://cdn-icons-png.flaticon.com/512/2529/2529508.png',
+          lastUpdate: new Date().toISOString(),
+          source: 'mock'
+        },
+        {
+          id: 'xag',
+          symbol: 'XAG',
+          name: 'Silver',
+          price: 24.15,
+          change24h: 1.25,
+          volume24h: 28000000000,
+          marketCap: 1400000000000,
+          unit: 'per oz',
+          high24h: 24.45,
+          low24h: 23.85,
+          image: 'https://cdn-icons-png.flaticon.com/512/2917/2917995.png',
+          lastUpdate: new Date().toISOString(),
+          source: 'mock'
+        },
+        {
+          id: 'wti',
+          symbol: 'WTI',
+          name: 'Crude Oil (WTI)',
+          price: 78.45,
+          change24h: -1.35,
+          volume24h: 185000000000,
+          marketCap: 0,
+          unit: 'per barrel',
+          high24h: 80.20,
+          low24h: 77.90,
+          image: 'https://cdn-icons-png.flaticon.com/512/3104/3104405.png',
+          lastUpdate: new Date().toISOString(),
+          source: 'mock'
+        },
+        {
+          id: 'ng',
+          symbol: 'NG',
+          name: 'Natural Gas',
+          price: 2.85,
+          change24h: 2.15,
+          volume24h: 42000000000,
+          marketCap: 0,
+          unit: 'per MMBtu',
+          high24h: 2.92,
+          low24h: 2.78,
+          image: 'https://cdn-icons-png.flaticon.com/512/2917/2917242.png',
+          lastUpdate: new Date().toISOString(),
+          source: 'mock'
+        },
+        {
+          id: 'copper',
+          symbol: 'HG',
+          name: 'Copper',
+          price: 3.85,
+          change24h: 0.65,
+          volume24h: 18000000000,
+          marketCap: 0,
+          unit: 'per lb',
+          high24h: 3.92,
+          low24h: 3.80,
+          image: 'https://cdn-icons-png.flaticon.com/512/2917/2917242.png',
+          lastUpdate: new Date().toISOString(),
+          source: 'mock'
+        },
+        {
+          id: 'platinum',
+          symbol: 'XPT',
+          name: 'Platinum',
+          price: 925.40,
+          change24h: -0.45,
+          volume24h: 8500000000,
+          marketCap: 0,
+          unit: 'per oz',
+          high24h: 932.10,
+          low24h: 920.50,
+          image: 'https://cdn-icons-png.flaticon.com/512/2529/2529508.png',
+          lastUpdate: new Date().toISOString(),
+          source: 'mock'
+        }
+      ];
 
-      // Cache the result
-      this._setCachedData(cacheKey, transformedData, this.cacheTTL.commodities);
+      // Cache the mock data
+      this._setCachedData(cacheKey, mockCommoditiesData, this.cacheTTL.commodities);
 
-      return this._formatResponse(transformedData, false, 0);
+      return this._formatResponse(mockCommoditiesData, false, 0);
 
     } catch (error) {
       console.error('[MarketService] Error fetching commodities data:', error.message);
@@ -284,32 +556,53 @@ class MarketService {
    * @private
    */
   _getCachedData(key) {
-    const data = this.cache.get(key);
-    if (!data) {
+    const cachedItem = this.cache.get(key);
+    if (!cachedItem) {
       return null;
     }
 
+    // Check if cache has metadata (timestamp)
+    if (cachedItem.timestamp) {
+      const age = Math.floor((Date.now() - cachedItem.timestamp) / 1000);
+      return {
+        data: cachedItem.data,
+        age
+      };
+    }
+
+    // Legacy cache without timestamp
     return {
-      data,
-      age: this._calculateCacheAge(key)
+      data: cachedItem,
+      age: 0
     };
   }
 
   /**
-   * Set data in cache
+   * Set data in cache with timestamp
    * @private
    */
   _setCachedData(key, data, ttl) {
-    this.cache.set(key, data, ttl);
+    const cacheItem = {
+      data,
+      timestamp: Date.now(),
+      ttl
+    };
+    this.cache.set(key, cacheItem, ttl);
+    console.log(`[MarketService] Cached ${key} with TTL ${ttl}s`);
   }
 
   /**
-   * Calculate cache age in seconds
+   * Check if cached data is stale (past TTL but still in cache)
    * @private
    */
-  _calculateCacheAge(key) {
-    // Simple approximation - in production, store timestamp with cached data
-    return 0;
+  _isCacheStale(key, ttl) {
+    const cachedItem = this.cache.get(key);
+    if (!cachedItem || !cachedItem.timestamp) {
+      return false;
+    }
+
+    const age = Math.floor((Date.now() - cachedItem.timestamp) / 1000);
+    return age > ttl;
   }
 
   /**

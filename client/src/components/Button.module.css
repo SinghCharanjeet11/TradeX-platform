@@ -12,15 +12,16 @@
 }
 
 .button.primary {
-  background: var(--primary-blue);
-  color: var(--text-primary);
-  box-shadow: 0 4px 12px rgba(124, 140, 255, 0.3);
+  background: linear-gradient(135deg, #00d4aa 0%, #00a88e 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 212, 170, 0.3);
+  border: none;
 }
 
 .button.primary:hover:not(:disabled) {
-  background: var(--primary-blue-hover);
+  background: linear-gradient(135deg, #00ffcc 0%, #00d4aa 100%);
   transform: scale(1.02);
-  box-shadow: 0 6px 16px rgba(124, 140, 255, 0.4);
+  box-shadow: 0 6px 16px rgba(0, 212, 170, 0.4);
 }
 
 .button:disabled {
@@ -32,7 +33,7 @@
   width: 20px;
   height: 20px;
   border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: var(--text-primary);
+  border-top-color: #ffffff;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }

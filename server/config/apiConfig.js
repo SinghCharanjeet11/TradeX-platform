@@ -10,31 +10,51 @@ export const apiConfig = {
   // CoinGecko API Configuration (No key required)
   coingecko: {
     baseUrl: process.env.COINGECKO_API_URL || 'https://api.coingecko.com/api/v3',
-    timeout: 10000, // 10 seconds
+    timeout: 15000, // 15 seconds (increased for better reliability)
     rateLimit: {
       callsPerMinute: 50,
       callsPerHour: 500
     }
   },
 
-  // Alpha Vantage API Configuration
-  alphaVantage: {
-    apiKey: process.env.ALPHA_VANTAGE_API_KEY,
-    baseUrl: process.env.ALPHA_VANTAGE_API_URL || 'https://www.alphavantage.co/query',
-    timeout: 10000, // 10 seconds
+  // Finnhub API Configuration (Stocks)
+  finnhub: {
+    apiKey: process.env.FINNHUB_API_KEY,
+    baseUrl: process.env.FINNHUB_API_URL || 'https://finnhub.io/api/v1',
+    timeout: 15000,
     rateLimit: {
-      callsPerMinute: 5,
-      callsPerDay: 25 // Free tier limit
+      callsPerMinute: 60,
+      callsPerDay: 'unlimited' // Free tier
+    }
+  },
+
+  // Fixer.io API Configuration (Forex)
+  fixer: {
+    apiKey: process.env.FIXER_API_KEY,
+    baseUrl: process.env.FIXER_API_URL || 'http://data.fixer.io/api',
+    timeout: 15000,
+    rateLimit: {
+      callsPerMonth: 100 // Free tier
+    }
+  },
+
+  // Metals-API Configuration (Commodities)
+  metalsApi: {
+    apiKey: process.env.METALS_API_KEY,
+    baseUrl: process.env.METALS_API_URL || 'https://metals-api.com/api',
+    timeout: 15000,
+    rateLimit: {
+      callsPerMonth: 50 // Free tier
     }
   },
 
   // Cache TTL Configuration (in seconds)
   cache: {
-    crypto: 30,      // 30 seconds for crypto (high volatility)
-    stocks: 60,      // 60 seconds for stocks
-    forex: 60,       // 60 seconds for forex
-    commodities: 120, // 120 seconds for commodities
-    charts: 300      // 5 minutes for chart data
+    crypto: 60,        // 1 minute for crypto (real-time)
+    stocks: 60,        // 1 minute for stocks (real-time with Finnhub)
+    forex: 3600,       // 1 hour for forex (to respect monthly limits)
+    commodities: 3600, // 1 hour for commodities (to respect monthly limits)
+    charts: 1800       // 30 minutes for chart data
   },
 
   // Retry Configuration
@@ -52,18 +72,37 @@ export const apiConfig = {
  */
 export function validateConfig() {
   const errors = [];
+  const warnings = [];
 
-  // Alpha Vantage API key is required for stocks, forex, commodities
-  if (!apiConfig.alphaVantage.apiKey) {
-    errors.push('ALPHA_VANTAGE_API_KEY is not configured in environment variables');
+  // Finnhub API key is required for stocks
+  if (!apiConfig.finnhub.apiKey) {
+    errors.push('FINNHUB_API_KEY is not configured in environment variables');
+  }
+
+  // Fixer.io API key is required for forex
+  if (!apiConfig.fixer.apiKey) {
+    warnings.push('FIXER_API_KEY is not configured - forex data will be unavailable');
+  }
+
+  // Metals-API key is required for commodities
+  if (!apiConfig.metalsApi.apiKey) {
+    warnings.push('METALS_API_KEY is not configured - commodities data will be unavailable');
   }
 
   if (errors.length > 0) {
     console.error('❌ API Configuration Errors:');
     errors.forEach(error => console.error(`  - ${error}`));
-    console.error('\n📝 Please add the required API keys to your .env file');
-    console.error('   Get your free Alpha Vantage API key at: https://www.alphavantage.co/support/#api-key\n');
+    console.error('\n📝 Please add the required API keys to your .env file:');
+    console.error('   Finnhub (Stocks): https://finnhub.io/register');
+    console.error('   Fixer.io (Forex): https://fixer.io/signup/free');
+    console.error('   Metals-API (Commodities): https://metals-api.com/signup/free\n');
     return false;
+  }
+
+  if (warnings.length > 0) {
+    console.warn('⚠️  API Configuration Warnings:');
+    warnings.forEach(warning => console.warn(`  - ${warning}`));
+    console.warn('');
   }
 
   console.log('✅ API Configuration validated successfully');

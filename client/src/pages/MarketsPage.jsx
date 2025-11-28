@@ -124,16 +124,6 @@ function MarketsPage() {
         <div className={styles.content}>
           <div className={styles.titleRow}>
             <h1 className={styles.pageTitle}>{activeMarket} Market Insights!</h1>
-            <span className={styles.updated}>
-              {lastUpdate ? (
-                <>
-                  Updated {Math.floor((new Date() - lastUpdate) / 1000)}s ago
-                  {isCached && <span className={styles.cachedBadge}> (Cached)</span>}
-                </>
-              ) : (
-                'Loading...'
-              )}
-            </span>
           </div>
           
           <div className={styles.grid}>
@@ -150,6 +140,7 @@ function MarketsPage() {
             data={marketData}
             loading={marketLoading}
             error={marketError}
+            lastUpdate={lastUpdate}
           />
         </div>
       </div>

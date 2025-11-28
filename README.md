@@ -156,7 +156,7 @@ tradex-authentication/
 ### API Rate Limits
 
 **CoinGecko (Free Tier):**
-- 10-50 calls/minute
+- 10-50 calls/minute 
 - No API key required
 - Used for cryptocurrency data
 

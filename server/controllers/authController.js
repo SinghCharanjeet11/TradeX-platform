@@ -59,9 +59,38 @@ export const register = async (req, res) => {
       passwordHash
     })
 
+    // Generate session token for immediate login
+    const token = generateSessionToken(
+      { userId: user.id, email: user.email },
+      false
+    )
+
+    // Store session in database
+    const tokenHash = hashToken(token)
+    const expiresAt = getTokenExpiration(false)
+    const ipAddress = req.ip || req.connection.remoteAddress
+    const userAgent = req.headers['user-agent']
+
+    await createSession({
+      userId: user.id,
+      tokenHash,
+      expiresAt,
+      ipAddress,
+      userAgent
+    })
+
+    // Set HTTP-only cookie
+    res.cookie('session_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000
+    })
+
     res.status(201).json({
       success: true,
       message: 'Account created successfully',
+      token, // Include token in response for API testing
       user: {
         id: user.id,
         username: user.username,
@@ -136,6 +165,7 @@ export const login = async (req, res) => {
     res.json({
       success: true,
       message: 'Logged in successfully',
+      token, // Include token in response for API testing
       user: {
         id: user.id,
         username: user.username,

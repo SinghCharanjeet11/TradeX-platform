@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Header from '../components/Header'
 import FormInput from '../components/FormInput'
 import Button from '../components/Button'
+import AuthLoadingTransition from '../components/AuthLoadingTransition'
 import styles from './RegisterPage.module.css'
 
 function RegisterPage() {
@@ -14,6 +15,7 @@ function RegisterPage() {
   })
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showLoadingTransition, setShowLoadingTransition] = useState(false)
 
   const validateUsername = (value) => {
     if (!value) return 'Username is required'
@@ -72,14 +74,17 @@ function RegisterPage() {
       const { authAPI } = await import('../services/api')
       await authAPI.register(formData)
       
-      // Success - redirect to sign in
-      alert('Account created successfully! Please sign in.')
-      navigate('/signin')
+      // Success - show loading transition then redirect to dashboard
+      setShowLoadingTransition(true)
     } catch (error) {
       // Show error message
       alert(error.message || 'Failed to create account')
       setIsSubmitting(false)
     }
+  }
+
+  const handleLoadingComplete = () => {
+    navigate('/dashboard')
   }
 
   const isFormValid = () => {
@@ -89,6 +94,10 @@ function RegisterPage() {
            !errors.username && 
            !errors.email && 
            !errors.password
+  }
+
+  if (showLoadingTransition) {
+    return <AuthLoadingTransition onComplete={handleLoadingComplete} />
   }
 
   return (

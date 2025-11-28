@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { LineChart, Line, ResponsiveContainer, Tooltip } from 'recharts'
-import { MdSearch, MdFilterList, MdStar, MdStarBorder } from 'react-icons/md'
+import { MdSearch, MdFilterList, MdStar, MdStarBorder, MdNotifications } from 'react-icons/md'
 import AssetDetailModal from './AssetDetailModal'
+import WatchlistButton from '../markets/WatchlistButton'
+import PriceAlertModal from '../markets/PriceAlertModal'
+import { useWatchlist } from '../../hooks/useWatchlist'
 import styles from './CryptoPricesTable.module.css'
 
 // Helper functions
@@ -40,32 +43,66 @@ const formatLargeNumber = (num) => {
 
 const marketData = {
   Crypto: [
-    { id: 1, name: 'Bitcoin', symbol: 'BTC', price: 67245, change: 2.15, marketCap: '1.32T', volume: '38.4B', supply: 'BTC 12.43M', chart: [40, 45, 42, 48, 52, 50, 55] },
-    { id: 2, name: 'Ethereum', symbol: 'ETH', price: 3120, change: 0.84, marketCap: '380.2B', volume: '18.1B', supply: 'ETH 120.5M', chart: [30, 32, 35, 33, 36, 38, 40] },
-    { id: 3, name: 'Solana', symbol: 'SOL', price: 152.40, change: -1.92, marketCap: '67.8B', volume: '3.9B', supply: 'SOL 445M', chart: [50, 48, 45, 42, 40, 38, 35] },
-    { id: 4, name: 'BNB', symbol: 'BNB', price: 584.10, change: 0.34, marketCap: '85.3B', volume: '1.8B', supply: 'BNB 146M', chart: [35, 37, 36, 38, 40, 39, 41] },
+    { id: 1, name: 'Bitcoin', symbol: 'BTC', price: 67245, change: 2.15, marketCap: 1320000000000, volume: 38400000000, supply: 'BTC 19.5M', chart: [64000, 65000, 64500, 66000, 67000, 66500, 67245], image: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png' },
+    { id: 2, name: 'Ethereum', symbol: 'ETH', price: 3120, change: 0.84, marketCap: 380200000000, volume: 18100000000, supply: 'ETH 120.5M', chart: [3050, 3080, 3100, 3090, 3110, 3115, 3120], image: 'https://cryptologos.cc/logos/ethereum-eth-logo.png' },
+    { id: 3, name: 'Solana', symbol: 'SOL', price: 152.40, change: -1.92, marketCap: 67800000000, volume: 3900000000, supply: 'SOL 445M', chart: [158, 156, 155, 154, 153, 152.5, 152.40], image: 'https://cryptologos.cc/logos/solana-sol-logo.png' },
+    { id: 4, name: 'BNB', symbol: 'BNB', price: 584.10, change: 0.34, marketCap: 85300000000, volume: 1800000000, supply: 'BNB 146M', chart: [580, 581, 582, 583, 584, 583.5, 584.10], image: 'https://cryptologos.cc/logos/bnb-bnb-logo.png' },
   ],
   Stocks: [
-    { id: 5, name: 'Apple Inc.', symbol: 'AAPL', price: 178.25, change: 1.45, marketCap: '2.8T', volume: '52.3M', supply: 'Shares 15.5B', chart: [170, 172, 175, 173, 176, 178, 178] },
-    { id: 6, name: 'Microsoft', symbol: 'MSFT', price: 412.80, change: 0.92, marketCap: '3.1T', volume: '28.1M', supply: 'Shares 7.4B', chart: [405, 408, 410, 409, 411, 413, 412] },
-    { id: 7, name: 'Tesla Inc.', symbol: 'TSLA', price: 242.50, change: -2.15, marketCap: '770B', volume: '95.2M', supply: 'Shares 3.2B', chart: [260, 255, 250, 248, 245, 243, 242] },
-    { id: 8, name: 'Amazon', symbol: 'AMZN', price: 178.35, change: 1.12, marketCap: '1.8T', volume: '41.5M', supply: 'Shares 10.3B', chart: [175, 176, 177, 176, 178, 179, 178] },
+    { id: 5, name: 'Apple Inc.', symbol: 'AAPL', price: 178.25, change: 1.45, marketCap: 2800000000000, volume: 52300000, supply: 'Shares 15.5B', chart: [175, 176, 176.5, 177, 177.5, 178, 178.25], image: 'https://logo.clearbit.com/apple.com' },
+    { id: 6, name: 'Microsoft', symbol: 'MSFT', price: 412.80, change: 0.92, marketCap: 3100000000000, volume: 28100000, supply: 'Shares 7.4B', chart: [408, 409, 410, 411, 412, 412.5, 412.80], image: 'https://logo.clearbit.com/microsoft.com' },
+    { id: 7, name: 'Tesla Inc.', symbol: 'TSLA', price: 242.50, change: -2.15, marketCap: 770000000000, volume: 95200000, supply: 'Shares 3.2B', chart: [250, 248, 246, 245, 244, 243, 242.50], image: 'https://logo.clearbit.com/tesla.com' },
+    { id: 8, name: 'Amazon', symbol: 'AMZN', price: 178.35, change: 1.12, marketCap: 1800000000000, volume: 41500000, supply: 'Shares 10.3B', chart: [176, 176.5, 177, 177.5, 178, 178.2, 178.35], image: 'https://logo.clearbit.com/amazon.com' },
   ],
   Forex: [
-    { id: 9, name: 'EUR/USD', symbol: 'EURUSD', price: 1.0845, change: 0.15, marketCap: '-', volume: '1.2T', supply: 'Daily Vol', chart: [1.08, 1.082, 1.083, 1.084, 1.085, 1.084, 1.0845] },
-    { id: 10, name: 'GBP/USD', symbol: 'GBPUSD', price: 1.2675, change: -0.22, marketCap: '-', volume: '850B', supply: 'Daily Vol', chart: [1.27, 1.269, 1.268, 1.267, 1.268, 1.267, 1.2675] },
-    { id: 11, name: 'USD/JPY', symbol: 'USDJPY', price: 149.85, change: 0.45, marketCap: '-', volume: '950B', supply: 'Daily Vol', chart: [149, 149.5, 149.7, 149.6, 149.8, 149.9, 149.85] },
-    { id: 12, name: 'AUD/USD', symbol: 'AUDUSD', price: 0.6542, change: -0.18, marketCap: '-', volume: '420B', supply: 'Daily Vol', chart: [0.656, 0.655, 0.654, 0.655, 0.654, 0.6545, 0.6542] },
+    { id: 9, name: 'EUR/USD', symbol: 'EURUSD', price: 1.0845, change: 0.15, marketCap: 0, volume: 1200000000000, supply: 'Daily Vol', chart: [1.083, 1.0835, 1.084, 1.0842, 1.0843, 1.0844, 1.0845], image: 'https://flagcdn.com/w80/eu.png' },
+    { id: 10, name: 'GBP/USD', symbol: 'GBPUSD', price: 1.2675, change: -0.22, marketCap: 0, volume: 850000000000, supply: 'Daily Vol', chart: [1.270, 1.269, 1.268, 1.2678, 1.2676, 1.2675, 1.2675], image: 'https://flagcdn.com/w80/gb.png' },
+    { id: 11, name: 'USD/JPY', symbol: 'USDJPY', price: 149.85, change: 0.45, marketCap: 0, volume: 950000000000, supply: 'Daily Vol', chart: [149.2, 149.4, 149.5, 149.6, 149.7, 149.8, 149.85], image: 'https://flagcdn.com/w80/us.png' },
+    { id: 12, name: 'AUD/USD', symbol: 'AUDUSD', price: 0.6542, change: -0.18, marketCap: 0, volume: 420000000000, supply: 'Daily Vol', chart: [0.656, 0.655, 0.6548, 0.6545, 0.6543, 0.6542, 0.6542], image: 'https://flagcdn.com/w80/au.png' },
   ],
   Commodities: [
-    { id: 13, name: 'Gold', symbol: 'XAU', price: 2045.50, change: 0.85, marketCap: '12.5T', volume: '145B', supply: 'Oz 197K', chart: [2030, 2035, 2040, 2038, 2042, 2044, 2045] },
-    { id: 14, name: 'Silver', symbol: 'XAG', price: 24.15, change: 1.25, marketCap: '1.4T', volume: '28B', supply: 'Oz 1.6M', chart: [23.5, 23.7, 23.9, 23.8, 24.0, 24.1, 24.15] },
-    { id: 15, name: 'Crude Oil', symbol: 'WTI', price: 78.45, change: -1.35, marketCap: '-', volume: '185B', supply: 'Barrel', chart: [82, 81, 80, 79, 79.5, 78.8, 78.45] },
-    { id: 16, name: 'Natural Gas', symbol: 'NG', price: 2.85, change: 2.15, marketCap: '-', volume: '42B', supply: 'MMBtu', chart: [2.7, 2.72, 2.75, 2.78, 2.8, 2.83, 2.85] },
+    { id: 13, name: 'Gold', symbol: 'XAU', price: 2045.50, change: 0.85, marketCap: 12500000000000, volume: 145000000000, supply: 'Oz 197K', chart: [2035, 2038, 2040, 2042, 2043, 2044, 2045.50], image: 'https://cdn-icons-png.flaticon.com/512/2529/2529508.png' },
+    { id: 14, name: 'Silver', symbol: 'XAG', price: 24.15, change: 1.25, marketCap: 1400000000000, volume: 28000000000, supply: 'Oz 1.6M', chart: [23.8, 23.9, 24.0, 24.05, 24.1, 24.12, 24.15], image: 'https://cdn-icons-png.flaticon.com/512/2917/2917995.png' },
+    { id: 15, name: 'Crude Oil', symbol: 'WTI', price: 78.45, change: -1.35, marketCap: 0, volume: 185000000000, supply: 'Barrel', chart: [80, 79.5, 79.2, 79, 78.8, 78.6, 78.45], image: 'https://cdn-icons-png.flaticon.com/512/3104/3104405.png' },
+    { id: 16, name: 'Natural Gas', symbol: 'NG', price: 2.85, change: 2.15, marketCap: 0, volume: 42000000000, supply: 'MMBtu', chart: [2.75, 2.78, 2.80, 2.81, 2.82, 2.83, 2.85], image: 'https://cdn-icons-png.flaticon.com/512/2917/2917242.png' },
   ]
 }
 
-function CryptoPricesTable({ marketType = 'Crypto', data = [], loading = false, error = null }) {
+// Generate chart data for items that don't have it
+const generateChartData = (price, change) => {
+  const points = 7
+  const changeDecimal = (change || 0) / 100
+  const startPrice = price / (1 + changeDecimal)
+  
+  return Array.from({ length: points }, (_, i) => {
+    const progress = i / (points - 1)
+    const value = startPrice + (price - startPrice) * progress
+    const variance = (Math.random() - 0.5) * (price * 0.01)
+    return value + variance
+  })
+}
+
+// Get default image for market type
+const getDefaultImage = (marketType, symbol) => {
+  const defaults = {
+    Crypto: `https://cryptologos.cc/logos/${symbol.toLowerCase()}-${symbol.toLowerCase()}-logo.png`,
+    Stocks: `https://logo.clearbit.com/${symbol.toLowerCase()}.com`,
+    Forex: symbol.includes('EUR') ? 'https://flagcdn.com/w80/eu.png' : 
+           symbol.includes('GBP') ? 'https://flagcdn.com/w80/gb.png' :
+           symbol.includes('AUD') ? 'https://flagcdn.com/w80/au.png' :
+           symbol.includes('CAD') ? 'https://flagcdn.com/w80/ca.png' :
+           symbol.includes('CHF') ? 'https://flagcdn.com/w80/ch.png' :
+           'https://flagcdn.com/w80/us.png', // Default to US flag for USD pairs
+    Commodities: symbol === 'XAU' ? 'https://cdn-icons-png.flaticon.com/512/2529/2529508.png' :
+                 symbol === 'XAG' ? 'https://cdn-icons-png.flaticon.com/512/2917/2917995.png' :
+                 symbol === 'WTI' || symbol === 'CL' ? 'https://cdn-icons-png.flaticon.com/512/3104/3104405.png' :
+                 symbol === 'NG' ? 'https://cdn-icons-png.flaticon.com/512/2917/2917242.png' :
+                 'https://cdn-icons-png.flaticon.com/512/2917/2917242.png'
+  }
+  return defaults[marketType] || defaults.Crypto
+}
+
+function CryptoPricesTable({ marketType = 'Crypto', data = [], loading = false, error = null, lastUpdate = null }) {
   const [activeTab, setActiveTab] = useState('Overview')
   const [favorites, setFavorites] = useState(new Set([]))
   const [searchTerm, setSearchTerm] = useState('')
@@ -73,9 +110,16 @@ function CryptoPricesTable({ marketType = 'Crypto', data = [], loading = false, 
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [selectedAsset, setSelectedAsset] = useState(null)
+  const [alertModalAsset, setAlertModalAsset] = useState(null)
+  const { watchlist, refetch: refetchWatchlist } = useWatchlist()
   
   // Use real data if available, otherwise fall back to mock data
-  let cryptos = data.length > 0 ? data : (marketData[marketType] || marketData.Crypto)
+  // Enhance data with charts and images if missing
+  let cryptos = data.length > 0 ? data.map(item => ({
+    ...item,
+    chart: item.chart || generateChartData(item.price, item.change24h || item.change),
+    image: item.image || getDefaultImage(marketType, item.symbol)
+  })) : (marketData[marketType] || marketData.Crypto)
   
   // Apply search filter
   if (searchTerm) {
@@ -116,13 +160,19 @@ function CryptoPricesTable({ marketType = 'Crypto', data = [], loading = false, 
   
   // Market-specific tabs
   const marketTabs = {
-    Crypto: ['Overview', 'All Coins', 'Gainers', 'All ATH', 'Performance'],
-    Stocks: ['Overview', 'Top Stocks', 'Gainers', 'Losers', 'Most Active'],
-    Forex: ['Overview', 'Major Pairs', 'Gainers', 'Losers', 'Exotic Pairs'],
-    Commodities: ['Overview', 'All Commodities', 'Gainers', 'Precious Metals', 'Energy']
+    Crypto: ['Overview', 'All Coins', 'Watchlist', 'Gainers', 'All ATH'],
+    Stocks: ['Overview', 'Top Stocks', 'Watchlist', 'Gainers', 'Losers'],
+    Forex: ['Overview', 'Major Pairs', 'Watchlist', 'Gainers', 'Losers'],
+    Commodities: ['Overview', 'All Commodities', 'Watchlist', 'Gainers', 'Precious Metals']
   }
   
   const tabs = marketTabs[marketType] || marketTabs.Crypto
+  
+  // Filter by watchlist if Watchlist tab is active
+  if (activeTab === 'Watchlist') {
+    const watchlistSymbols = new Set(watchlist.map(item => item.symbol))
+    cryptos = cryptos.filter(item => watchlistSymbols.has(item.symbol))
+  }
   
   const handleRowClick = (crypto) => {
     console.log('Clicked:', crypto.name)
@@ -142,7 +192,18 @@ function CryptoPricesTable({ marketType = 'Crypto', data = [], loading = false, 
   return (
     <div className={styles.container} data-market={marketType}>
       <div className={styles.header}>
-        <h2>{marketType} Prices</h2>
+        <div className={styles.headerTop}>
+          <h2>{marketType} Prices</h2>
+          <span className={styles.updated}>
+            {lastUpdate ? (
+              <>
+                Updated {Math.floor((new Date() - lastUpdate) / 1000)}s ago
+              </>
+            ) : (
+              'Loading...'
+            )}
+          </span>
+        </div>
         <div className={styles.headerActions}>
           <div className={styles.tabs}>
             {tabs.map(tab => (
@@ -204,6 +265,7 @@ function CryptoPricesTable({ marketType = 'Crypto', data = [], loading = false, 
                 <th>Volume (24h)</th>
                 <th>Circ Supply</th>
                 <th>Price Graph (7D)</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -236,18 +298,22 @@ function CryptoPricesTable({ marketType = 'Crypto', data = [], loading = false, 
                       </div>
                     </div>
                   </td>
-                  <td className={styles.price}>${formatPrice(crypto.price)}</td>
+                  <td className={styles.price}>${formatPrice(crypto?.price)}</td>
                   <td>
-                    <span className={(crypto.change24h || crypto.change) > 0 ? styles.positive : styles.negative}>
-                      {(crypto.change24h || crypto.change) > 0 ? '+' : ''}{(crypto.change24h || crypto.change).toFixed(2)}%
-                    </span>
+                    {crypto && (crypto.change24h !== undefined || crypto.change !== undefined) ? (
+                      <span className={(crypto.change24h || crypto.change || 0) >= 0 ? styles.positive : styles.negative}>
+                        {(crypto.change24h || crypto.change || 0) >= 0 ? '+' : ''}{((crypto.change24h || crypto.change || 0)).toFixed(2)}%
+                      </span>
+                    ) : (
+                      <span>-</span>
+                    )}
                   </td>
-                  <td>${formatLargeNumber(crypto.marketCap)}</td>
-                  <td>${formatLargeNumber(crypto.volume24h || crypto.volume)}</td>
-                  <td>{crypto.supply || crypto.symbol}</td>
+                  <td>${formatLargeNumber(crypto?.marketCap)}</td>
+                  <td>${formatLargeNumber(crypto?.volume24h || crypto?.volume)}</td>
+                  <td>{crypto?.supply || crypto?.symbol || '-'}</td>
                   <td onClick={(e) => e.stopPropagation()}>
                     <div className={styles.miniChart}>
-                      {crypto.chart ? (
+                      {crypto?.chart ? (
                         <ResponsiveContainer width="100%" height={60}>
                           <LineChart data={crypto.chart.map((v, i) => ({ value: v, index: i }))}>
                             <Tooltip 
@@ -266,7 +332,7 @@ function CryptoPricesTable({ marketType = 'Crypto', data = [], loading = false, 
                             <Line 
                               type="monotone" 
                               dataKey="value" 
-                              stroke={(crypto.change24h || crypto.change) > 0 ? '#10b981' : '#ef4444'}
+                              stroke={(crypto?.change24h || crypto?.change || 0) >= 0 ? '#10b981' : '#ef4444'}
                               strokeWidth={2}
                               dot={false}
                             />
@@ -275,6 +341,33 @@ function CryptoPricesTable({ marketType = 'Crypto', data = [], loading = false, 
                       ) : (
                         <span className={styles.noChart}>-</span>
                       )}
+                    </div>
+                  </td>
+                  <td onClick={(e) => e.stopPropagation()}>
+                    <div className={styles.actions}>
+                      <WatchlistButton 
+                        asset={{
+                          symbol: crypto.symbol,
+                          name: crypto.name,
+                          assetType: marketType.toLowerCase()
+                        }}
+                        onToggle={refetchWatchlist}
+                      />
+                      <button 
+                        className={styles.alertBtn}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setAlertModalAsset({
+                            symbol: crypto.symbol,
+                            name: crypto.name,
+                            assetType: marketType.toLowerCase(),
+                            price: crypto.price
+                          })
+                        }}
+                        title="Set price alert"
+                      >
+                        <MdNotifications />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -346,6 +439,15 @@ function CryptoPricesTable({ marketType = 'Crypto', data = [], loading = false, 
           asset={selectedAsset}
           marketType={marketType.toLowerCase()}
           onClose={() => setSelectedAsset(null)} 
+        />
+      )}
+
+      {/* Price Alert Modal */}
+      {alertModalAsset && (
+        <PriceAlertModal
+          isOpen={true}
+          onClose={() => setAlertModalAsset(null)}
+          asset={alertModalAsset}
         />
       )}
     </div>

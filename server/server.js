@@ -3,6 +3,14 @@ import cookieParser from 'cookie-parser'
 import dotenv from 'dotenv'
 import authRoutes from './routes/authRoutes.js'
 import marketRoutes from './routes/marketRoutes.js'
+import portfolioRoutes from './routes/portfolioRoutes.js'
+import holdingsRoutes from './routes/holdingsRoutes.js'
+import watchlistRoutes from './routes/watchlistRoutes.js'
+import ordersRoutes from './routes/ordersRoutes.js'
+import newsRoutes from './routes/newsRoutes.js'
+import priceRoutes from './routes/priceRoutes.js'
+import adminRoutes from './routes/adminRoutes.js'
+import paperTradingRoutes from './routes/paperTradingRoutes.js'
 import { securityHeaders, corsOptions, setCsrfToken } from './middleware/security.js'
 import { validateConfig } from './config/apiConfig.js'
 
@@ -10,6 +18,15 @@ dotenv.config()
 
 // Validate API configuration
 validateConfig()
+
+// Check encryption key
+if (!process.env.ENCRYPTION_KEY) {
+  console.error('❌ ENCRYPTION_KEY not found in environment variables!')
+  console.error('❌ Please add ENCRYPTION_KEY to your .env file')
+  process.exit(1)
+} else {
+  console.log('✅ Encryption key loaded successfully')
+}
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -25,6 +42,14 @@ app.use(setCsrfToken)
 // Routes
 app.use('/api/auth', authRoutes)
 app.use('/api/markets', marketRoutes)
+app.use('/api/portfolio', portfolioRoutes)
+app.use('/api/holdings', holdingsRoutes)
+app.use('/api/watchlist', watchlistRoutes)
+app.use('/api/orders', ordersRoutes)
+app.use('/api/news', newsRoutes)
+app.use('/api/prices', priceRoutes)
+app.use('/api/admin', adminRoutes)
+app.use('/api/paper-trading', paperTradingRoutes)
 
 // Health check
 app.get('/health', (req, res) => {

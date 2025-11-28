@@ -8,14 +8,15 @@
   /* Colors */
   --bg-dark-start: #0a1628;
   --bg-dark-end: #1a2942;
-  --primary-blue: #7c8cff;
-  --primary-blue-hover: #9ba8ff;
-  --text-primary: #ffffff;
-  --text-secondary: #a0aec0;
-  --input-border: #3d5a80;
-  --input-border-focus: #7c8cff;
+  --primary-blue: #00d4aa;
+  --primary-blue-hover: #00ffcc;
+  --text-primary: #1a202c;
+  --text-secondary: #718096;
+  --input-border: #e2e8f0;
+  --input-border-focus: #00d4aa;
   --error: #ef4444;
   --success: #10b981;
+  --card-bg: #ffffff;
   
   /* Typography */
   --font-family: 'Inter', sans-serif;
@@ -30,7 +31,7 @@
 
 body {
   font-family: var(--font-family);
-  background: linear-gradient(135deg, var(--bg-dark-start) 0%, var(--bg-dark-end) 100%);
+  background: #f7fafc;
   color: var(--text-primary);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;

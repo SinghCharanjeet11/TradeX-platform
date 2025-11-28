@@ -7,7 +7,16 @@ import { findUserById } from '../repositories/userRepository.js'
  */
 export const verifyAuth = async (req, res, next) => {
   try {
-    const token = req.cookies.session_token
+    // Support both cookie and Bearer token for API testing
+    let token = req.cookies.session_token
+    
+    // If no cookie, check Authorization header
+    if (!token && req.headers.authorization) {
+      const authHeader = req.headers.authorization
+      if (authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7)
+      }
+    }
     
     if (!token) {
       return res.status(401).json({

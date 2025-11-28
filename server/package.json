@@ -7,11 +7,14 @@
     "dev": "node --watch server.js",
     "start": "node server.js",
     "db:init": "node database/init.js",
-    "db:reset": "node database/init.js"
+    "db:reset": "node database/init.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch"
   },
   "dependencies": {
     "axios": "^1.13.2",
     "bcrypt": "^5.1.1",
+    "binance-api-node": "^0.13.2",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
@@ -22,5 +25,10 @@
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.9.7",
     "pg": "^8.11.3"
+  },
+  "devDependencies": {
+    "@jest/globals": "^30.2.0",
+    "fast-check": "^4.3.0",
+    "jest": "^30.2.0"
   }
 }

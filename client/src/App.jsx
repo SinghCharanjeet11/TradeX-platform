@@ -5,8 +5,13 @@ import SignInPage from './pages/SignInPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import DashboardPage from './pages/DashboardPage'
+import PortfolioPage from './pages/PortfolioPage'
 import MarketsPage from './pages/MarketsPage'
+import OrdersPage from './pages/OrdersPage'
 import NewsPage from './pages/NewsPage'
+import SettingsPage from './pages/SettingsPage'
+import PaperTradingPage from './pages/PaperTradingPage'
+import TestPage from './pages/TestPage'
 
 function AnimatedRoutes() {
   const location = useLocation()
@@ -36,6 +41,7 @@ function AnimatedRoutes() {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Navigate to="/register" replace />} />
+        <Route path="/test" element={<TestPage />} />
         <Route 
           path="/register" 
           element={
@@ -107,6 +113,20 @@ function AnimatedRoutes() {
           } 
         />
         <Route 
+          path="/portfolio" 
+          element={
+            <motion.div
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              variants={pageVariants}
+              transition={pageTransition}
+            >
+              <PortfolioPage />
+            </motion.div>
+          } 
+        />
+        <Route 
           path="/markets" 
           element={
             <motion.div
@@ -121,6 +141,20 @@ function AnimatedRoutes() {
           } 
         />
         <Route 
+          path="/orders" 
+          element={
+            <motion.div
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              variants={pageVariants}
+              transition={pageTransition}
+            >
+              <OrdersPage />
+            </motion.div>
+          } 
+        />
+        <Route 
           path="/news" 
           element={
             <motion.div
@@ -131,6 +165,34 @@ function AnimatedRoutes() {
               transition={pageTransition}
             >
               <NewsPage />
+            </motion.div>
+          } 
+        />
+        <Route 
+          path="/paper-trading" 
+          element={
+            <motion.div
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              variants={pageVariants}
+              transition={pageTransition}
+            >
+              <PaperTradingPage />
+            </motion.div>
+          } 
+        />
+        <Route 
+          path="/settings" 
+          element={
+            <motion.div
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              variants={pageVariants}
+              transition={pageTransition}
+            >
+              <SettingsPage />
             </motion.div>
           } 
         />

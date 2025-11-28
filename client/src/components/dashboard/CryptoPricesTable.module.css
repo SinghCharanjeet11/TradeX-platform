@@ -1,41 +1,28 @@
 .container {
-  background: rgba(15, 23, 42, 0.6);
-  border: 0.5px solid rgba(255, 255, 255, 0.06);
+  background: #ffffff;
+  border: 2px solid #00d4aa;
   border-radius: 20px;
   padding: 0;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   position: relative;
   overflow: hidden;
-  backdrop-filter: blur(20px);
 }
 
-/* Ultra-thin top border with market color */
-.container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: var(--market-color, #10b981);
-  opacity: 0.5;
-}
-
-/* Market-specific border colors */
+/* Market-specific theming */
 .container[data-market="Crypto"] {
-  --market-color: #10b981;
+  border-color: #10b981;
 }
 
 .container[data-market="Stocks"] {
-  --market-color: #3b82f6;
+  border-color: #3b82f6;
 }
 
 .container[data-market="Forex"] {
-  --market-color: #f59e0b;
+  border-color: #f59e0b;
 }
 
 .container[data-market="Commodities"] {
-  --market-color: #8b5cf6;
+  border-color: #8b5cf6;
 }
 
 .header {
@@ -45,23 +32,55 @@
   padding: 24px 24px 0 24px;
 }
 
+.headerTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
 .header h2 {
   font-size: 18px;
   font-weight: 600;
-  color: #ffffff;
-  margin: 0 0 20px 0;
+  color: #1a202c;
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.updated {
+  font-size: 14px;
+  color: #718096;
 }
 
 .header h2::before {
   content: '';
   width: 6px;
   height: 6px;
-  background: var(--market-color, #10b981);
+  background: #00d4aa;
   border-radius: 50%;
-  box-shadow: 0 0 10px var(--market-color, #10b981);
+  box-shadow: 0 0 10px #00d4aa;
+}
+
+.container[data-market="Crypto"] .header h2::before {
+  background: #10b981;
+  box-shadow: 0 0 10px #10b981;
+}
+
+.container[data-market="Stocks"] .header h2::before {
+  background: #3b82f6;
+  box-shadow: 0 0 10px #3b82f6;
+}
+
+.container[data-market="Forex"] .header h2::before {
+  background: #f59e0b;
+  box-shadow: 0 0 10px #f59e0b;
+}
+
+.container[data-market="Commodities"] .header h2::before {
+  background: #8b5cf6;
+  box-shadow: 0 0 10px #8b5cf6;
 }
 
 .headerActions {
@@ -70,7 +89,7 @@
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
-  border-bottom: 0.5px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .tabs {
@@ -84,7 +103,7 @@
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
-  color: rgba(255, 255, 255, 0.5);
+  color: #718096;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -94,13 +113,13 @@
 }
 
 .tab:hover {
-  color: rgba(255, 255, 255, 0.8);
-  background: rgba(255, 255, 255, 0.02);
+  color: #1a202c;
+  background: #f7fafc;
 }
 
 .tab.active {
-  color: #ffffff;
-  border-bottom-color: var(--market-color, #10b981);
+  color: #1a202c;
+  border-bottom-color: #00d4aa;
   background: transparent;
 }
 
@@ -111,48 +130,123 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: var(--market-color, #10b981);
-  box-shadow: 0 0 10px var(--market-color, #10b981);
+  background: #00d4aa;
+  box-shadow: 0 0 10px #00d4aa;
+}
+
+.container[data-market="Crypto"] .tab.active {
+  border-bottom-color: #10b981;
+}
+
+.container[data-market="Crypto"] .tab.active::after {
+  background: #10b981;
+  box-shadow: 0 0 10px #10b981;
+}
+
+.container[data-market="Stocks"] .tab.active {
+  border-bottom-color: #3b82f6;
+}
+
+.container[data-market="Stocks"] .tab.active::after {
+  background: #3b82f6;
+  box-shadow: 0 0 10px #3b82f6;
+}
+
+.container[data-market="Forex"] .tab.active {
+  border-bottom-color: #f59e0b;
+}
+
+.container[data-market="Forex"] .tab.active::after {
+  background: #f59e0b;
+  box-shadow: 0 0 10px #f59e0b;
+}
+
+.container[data-market="Commodities"] .tab.active {
+  border-bottom-color: #8b5cf6;
+}
+
+.container[data-market="Commodities"] .tab.active::after {
+  background: #8b5cf6;
+  box-shadow: 0 0 10px #8b5cf6;
 }
 
 .search {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 0.5px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
+  padding: 10px 4px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid #10b981;
+  border-radius: 0;
   margin-bottom: 14px;
+  transition: all 0.2s ease;
+}
+
+.search:focus-within {
+  border-bottom-color: #10b981;
+}
+
+.container[data-market="Crypto"] .search {
+  border-bottom-color: #10b981;
+}
+
+.container[data-market="Crypto"] .search:focus-within {
+  border-bottom-color: #10b981;
+}
+
+.container[data-market="Stocks"] .search {
+  border-bottom-color: #3b82f6;
+}
+
+.container[data-market="Stocks"] .search:focus-within {
+  border-bottom-color: #3b82f6;
+}
+
+.container[data-market="Forex"] .search {
+  border-bottom-color: #f59e0b;
+}
+
+.container[data-market="Forex"] .search:focus-within {
+  border-bottom-color: #f59e0b;
+}
+
+.container[data-market="Commodities"] .search {
+  border-bottom-color: #8b5cf6;
+}
+
+.container[data-market="Commodities"] .search:focus-within {
+  border-bottom-color: #8b5cf6;
 }
 
 .search svg {
-  color: rgba(255, 255, 255, 0.4);
+  color: #718096;
   font-size: 18px;
 }
 
 .search input {
   background: transparent;
   border: none;
-  color: #ffffff;
+  color: #1a202c;
   font-size: 13px;
   width: 180px;
   outline: none;
 }
 
 .search input::placeholder {
-  color: rgba(255, 255, 255, 0.3);
+  color: #a0aec0;
 }
 
 .filterBtn {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 0.5px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  color: rgba(255, 255, 255, 0.8);
+  padding: 10px 4px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid #10b981;
+  border-radius: 0;
+  color: #1a202c;
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -160,8 +254,40 @@
 }
 
 .filterBtn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: transparent;
+  border-bottom-color: #10b981;
+}
+
+.container[data-market="Crypto"] .filterBtn {
+  border-bottom-color: #10b981;
+}
+
+.container[data-market="Crypto"] .filterBtn:hover {
+  border-bottom-color: #10b981;
+}
+
+.container[data-market="Stocks"] .filterBtn {
+  border-bottom-color: #3b82f6;
+}
+
+.container[data-market="Stocks"] .filterBtn:hover {
+  border-bottom-color: #3b82f6;
+}
+
+.container[data-market="Forex"] .filterBtn {
+  border-bottom-color: #f59e0b;
+}
+
+.container[data-market="Forex"] .filterBtn:hover {
+  border-bottom-color: #f59e0b;
+}
+
+.container[data-market="Commodities"] .filterBtn {
+  border-bottom-color: #8b5cf6;
+}
+
+.container[data-market="Commodities"] .filterBtn:hover {
+  border-bottom-color: #8b5cf6;
 }
 
 .tableWrapper {
@@ -178,18 +304,18 @@
   text-align: left;
   padding: 16px 12px;
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.4);
+  color: #718096;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  border-bottom: 0.5px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .table td {
   padding: 18px 12px;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.9);
-  border-bottom: 0.5px solid rgba(255, 255, 255, 0.04);
+  color: #1a202c;
+  border-bottom: 1px solid #f7fafc;
 }
 
 .clickableRow {
@@ -198,17 +324,17 @@
 }
 
 .clickableRow:hover {
-  background: rgba(255, 255, 255, 0.02);
+  background: #f7fafc;
 }
 
 .clickableRow:hover td {
-  color: #ffffff;
+  color: #1a202c;
 }
 
 .favoriteBtn {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.3);
+  color: #cbd5e0;
   cursor: pointer;
   margin-right: 10px;
   font-size: 16px;
@@ -239,7 +365,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--market-color, #10b981), rgba(var(--market-color-rgb, 16, 185, 129), 0.6));
+  background: linear-gradient(135deg, #00d4aa, rgba(0, 212, 170, 0.6));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -256,24 +382,24 @@
   border-radius: 6px;
   padding: 3px 6px;
   margin: -3px -6px;
-  color: #ffffff;
+  color: #1a202c;
 }
 
 .coinName:hover {
-  color: var(--market-color, #10b981);
-  background: rgba(255, 255, 255, 0.04);
+  color: #00d4aa;
+  background: #f7fafc;
 }
 
 .coinSymbol {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.4);
+  color: #718096;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .price {
   font-weight: 600;
-  color: #ffffff;
+  color: #1a202c;
   font-size: 14px;
 }
 
@@ -309,8 +435,8 @@
   align-items: center;
   padding: 16px 24px;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.4);
-  border-top: 0.5px solid rgba(255, 255, 255, 0.06);
+  color: #718096;
+  border-top: 1px solid #e2e8f0;
 }
 
 .pagination {
@@ -321,10 +447,10 @@
 
 .pagination button {
   padding: 8px 14px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 0.5px solid rgba(255, 255, 255, 0.08);
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  color: rgba(255, 255, 255, 0.7);
+  color: #1a202c;
   cursor: pointer;
   font-size: 13px;
   transition: all 0.2s ease;
@@ -332,24 +458,48 @@
 }
 
 .pagination button:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
+  background: #edf2f7;
+  border-color: #cbd5e0;
+  color: #1a202c;
 }
 
 .pagination button.active {
-  background: var(--market-color, #10b981);
-  border-color: var(--market-color, #10b981);
+  background: #00d4aa;
+  border-color: #00d4aa;
   color: #ffffff;
-  box-shadow: 0 0 15px rgba(var(--market-color-rgb, 16, 185, 129), 0.3);
+  box-shadow: 0 0 15px rgba(0, 212, 170, 0.3);
+}
+
+.container[data-market="Crypto"] .pagination button.active {
+  background: #10b981;
+  border-color: #10b981;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+}
+
+.container[data-market="Stocks"] .pagination button.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+}
+
+.container[data-market="Forex"] .pagination button.active {
+  background: #f59e0b;
+  border-color: #f59e0b;
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+}
+
+.container[data-market="Commodities"] .pagination button.active {
+  background: #8b5cf6;
+  border-color: #8b5cf6;
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
 }
 
 .rowsSelect {
   padding: 8px 14px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 0.5px solid rgba(255, 255, 255, 0.08);
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  color: rgba(255, 255, 255, 0.7);
+  color: #1a202c;
   font-size: 13px;
   cursor: pointer;
   outline: none;
@@ -357,8 +507,8 @@
 }
 
 .rowsSelect:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: #edf2f7;
+  border-color: #cbd5e0;
 }
 
 @media (max-width: 1200px) {
@@ -380,6 +530,16 @@
 @media (max-width: 768px) {
   .header {
     padding: 16px 16px 0 16px;
+  }
+  
+  .headerTop {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .updated {
+    font-size: 12px;
   }
   
   .tableWrapper {
@@ -453,7 +613,7 @@
 }
 
 .noChart {
-  color: rgba(255, 255, 255, 0.3);
+  color: #cbd5e0;
   font-size: 13px;
 }
 
@@ -475,17 +635,17 @@
 }
 
 .tableWrapper::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.02);
+  background: #f7fafc;
   border-radius: 3px;
 }
 
 .tableWrapper::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: #cbd5e0;
   border-radius: 3px;
 }
 
 .tableWrapper::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: #a0aec0;
 }
 
 .filterDropdown {
@@ -501,14 +661,13 @@
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  background: rgba(15, 23, 42, 0.98);
-  border: 0.5px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
   padding: 6px;
   min-width: 160px;
   z-index: 1000;
-  backdrop-filter: blur(20px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .filterMenu button {
@@ -517,7 +676,7 @@
   padding: 10px 14px;
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.8);
+  color: #1a202c;
   text-align: left;
   cursor: pointer;
   border-radius: 8px;
@@ -526,33 +685,33 @@
 }
 
 .filterMenu button:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: #ffffff;
+  background: #f7fafc;
+  color: #1a202c;
 }
 
 .pagination button:disabled {
-  opacity: 0.3;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .pagination button:disabled:hover {
-  background: rgba(255, 255, 255, 0.03);
-  color: rgba(255, 255, 255, 0.3);
+  background: #f7fafc;
+  color: #a0aec0;
 }
 
 .ellipsis {
-  color: rgba(255, 255, 255, 0.4);
+  color: #718096;
   padding: 0 4px;
 }
 
 .footerInfo {
-  color: rgba(255, 255, 255, 0.5);
+  color: #718096;
   font-size: 13px;
 }
 
 .viewAllBtn {
   padding: 8px 18px;
-  background: var(--market-color, #10b981);
+  background: #00d4aa;
   border: none;
   border-radius: 8px;
   color: #ffffff;
@@ -560,10 +719,78 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 0 15px rgba(var(--market-color-rgb, 16, 185, 129), 0.3);
+  box-shadow: 0 0 15px rgba(0, 212, 170, 0.3);
 }
 
 .viewAllBtn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 20px rgba(var(--market-color-rgb, 16, 185, 129), 0.4);
+  box-shadow: 0 4px 20px rgba(0, 212, 170, 0.4);
+}
+
+.container[data-market="Crypto"] .viewAllBtn {
+  background: #10b981;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+}
+
+.container[data-market="Crypto"] .viewAllBtn:hover {
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+}
+
+.container[data-market="Stocks"] .viewAllBtn {
+  background: #3b82f6;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+}
+
+.container[data-market="Stocks"] .viewAllBtn:hover {
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+}
+
+.container[data-market="Forex"] .viewAllBtn {
+  background: #f59e0b;
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+}
+
+.container[data-market="Forex"] .viewAllBtn:hover {
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4);
+}
+
+.container[data-market="Commodities"] .viewAllBtn {
+  background: #8b5cf6;
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+}
+
+.container[data-market="Commodities"] .viewAllBtn:hover {
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+}
+
+/* Actions column */
+.actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.alertBtn {
+  background: transparent;
+  border: none;
+  color: #718096;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 18px;
+}
+
+.alertBtn:hover {
+  background: #f7fafc;
+  color: #3b82f6;
+  transform: scale(1.1);
+}
+
+.alertBtn:active {
+  transform: scale(0.95);
 }

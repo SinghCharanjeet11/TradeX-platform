@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Header from '../components/Header'
 import FormInput from '../components/FormInput'
 import Button from '../components/Button'
+import AuthLoadingTransition from '../components/AuthLoadingTransition'
 import styles from './SignInPage.module.css'
 
 function SignInPage() {
@@ -14,6 +15,7 @@ function SignInPage() {
   })
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showLoadingTransition, setShowLoadingTransition] = useState(false)
 
   const validateEmail = (value) => {
     if (!value) return 'Email is required'
@@ -62,8 +64,8 @@ function SignInPage() {
         rememberMe: formData.rememberMe
       })
       
-      // Success - redirect to dashboard
-      navigate('/dashboard')
+      // Success - show loading transition then redirect
+      setShowLoadingTransition(true)
     } catch (error) {
       // Show error message
       alert(error.message || 'Failed to sign in')
@@ -71,11 +73,19 @@ function SignInPage() {
     }
   }
 
+  const handleLoadingComplete = () => {
+    navigate('/dashboard')
+  }
+
   const isFormValid = () => {
     return formData.email && 
            formData.password &&
            !errors.email && 
            !errors.password
+  }
+
+  if (showLoadingTransition) {
+    return <AuthLoadingTransition onComplete={handleLoadingComplete} />
   }
 
   return (

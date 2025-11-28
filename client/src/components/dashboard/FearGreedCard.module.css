@@ -1,48 +1,17 @@
 .card {
-  background: rgba(15, 23, 42, 0.6);
+  background: #ffffff;
   border-radius: 20px;
   padding: 20px;
-  backdrop-filter: blur(20px);
-  border: 0.5px solid rgba(255, 255, 255, 0.06);
+  border: 2px solid #00d4aa;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-}
-
-/* Ultra-thin top border with market color */
-.card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: var(--market-color, #10b981);
-  opacity: 0.5;
-}
-
-/* Market-specific border colors */
-.card[data-market="Crypto"] {
-  --market-color: #10b981;
-}
-
-.card[data-market="Stocks"] {
-  --market-color: #3b82f6;
-}
-
-.card[data-market="Forex"] {
-  --market-color: #f59e0b;
-}
-
-.card[data-market="Commodities"] {
-  --market-color: #8b5cf6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
-  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .header {
@@ -102,7 +71,7 @@
   gap: 10px;
   padding: 8px 10px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.02);
+  background: #f7fafc;
   transition: all 0.3s ease;
   cursor: pointer;
   border: 1px solid transparent;
@@ -110,9 +79,10 @@
 
 .compositionItem:hover,
 .compositionItem.active {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: #edf2f7;
+  border-color: #e2e8f0;
   transform: translateX(2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .compositionDot {
@@ -161,7 +131,7 @@
   width: 100%;
   max-width: 300px;
   height: auto;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.08));
 }
 
 .gaugeValue {
@@ -183,12 +153,12 @@
   font-weight: 800;
   letter-spacing: -2px;
   line-height: 1;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .indexLabel {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: #718096;
   margin-top: 8px;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -197,7 +167,7 @@
 
 .indexSubLabel {
   font-size: 14px;
-  color: var(--text-primary);
+  color: #2d3748;
   margin-top: 4px;
   font-weight: 700;
 }
@@ -250,9 +220,9 @@
   justify-content: space-between;
   margin-top: 12px;
   padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.02);
+  background: #f7fafc;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid #e2e8f0;
   position: relative;
   z-index: 1;
 }
@@ -267,12 +237,12 @@
 .scaleValue {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #2d3748;
 }
 
 .scaleLabel {
   font-size: 9px;
-  color: var(--text-secondary);
+  color: #718096;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-weight: 500;

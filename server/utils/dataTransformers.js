@@ -28,8 +28,8 @@ function transformCryptoData(rawData) {
 }
 
 /**
- * Transform Alpha Vantage stock data to standardized format
- * @param {Object} rawData - Raw data from Alpha Vantage API
+ * Transform Finnhub stock data to standardized format
+ * @param {Object} rawData - Raw data from Finnhub API
  * @param {Array} symbols - Array of stock symbols
  * @returns {Array} Standardized market data
  */
@@ -42,26 +42,31 @@ function transformStocksData(rawData, symbols) {
 
   for (const symbol of symbols) {
     const quote = rawData[symbol];
-    if (!quote || !quote['Global Quote']) {
+    if (!quote || quote.error) {
       continue;
     }
 
-    const data = quote['Global Quote'];
-    const currentPrice = parseFloat(data['05. price'] || 0);
-    const previousClose = parseFloat(data['08. previous close'] || 0);
-    const change = currentPrice - previousClose;
-    const changePercent = previousClose !== 0 ? (change / previousClose) * 100 : 0;
+    // Finnhub returns: {c: current, h: high, l: low, o: open, pc: previousClose, d: change, dp: changePercent, t: timestamp}
+    const currentPrice = parseFloat(quote.c || 0);
+    const previousClose = parseFloat(quote.pc || 0);
+    const change = parseFloat(quote.d || 0);
+    const changePercent = parseFloat(quote.dp || 0);
 
     results.push({
       id: symbol.toLowerCase(),
       symbol: symbol,
-      name: symbol, // Alpha Vantage doesn't provide full name in quote
+      name: symbol, // Finnhub doesn't provide full name in quote
       price: formatNumber(currentPrice, 2),
       change24h: formatNumber(changePercent, 2),
-      volume24h: formatNumber(parseInt(data['06. volume'] || 0), 0),
-      marketCap: null, // Not provided by Alpha Vantage in quote
-      lastUpdate: data['07. latest trading day'] || new Date().toISOString(),
-      source: 'alphavantage'
+      volume24h: null, // Not provided in quote endpoint
+      marketCap: null, // Not provided in quote endpoint
+      high: formatNumber(quote.h, 2),
+      low: formatNumber(quote.l, 2),
+      open: formatNumber(quote.o, 2),
+      previousClose: formatNumber(previousClose, 2),
+      changeValue: formatNumber(change, 2),
+      lastUpdate: quote.t ? new Date(quote.t * 1000).toISOString() : new Date().toISOString(),
+      source: 'finnhub'
     });
   }
 
@@ -69,9 +74,64 @@ function transformStocksData(rawData, symbols) {
 }
 
 /**
- * Transform Alpha Vantage forex data to standardized format
- * @param {Object} rawData - Raw data from Alpha Vantage API
- * @param {Array} pairs - Array of forex pairs
+ * Transform Finnhub candle data to standardized time series format
+ * @param {Object} rawData - Raw candle data from Finnhub
+ * @param {string} symbol - Stock symbol
+ * @returns {Object} Standardized time series data
+ */
+function transformStockTimeSeries(rawData, symbol) {
+  if (!rawData || rawData.s !== 'ok' || !Array.isArray(rawData.t)) {
+    return { symbol, candles: [] };
+  }
+
+  const candles = rawData.t.map((timestamp, index) => ({
+    timestamp: new Date(timestamp * 1000).toISOString(),
+    open: formatNumber(rawData.o[index], 2),
+    high: formatNumber(rawData.h[index], 2),
+    low: formatNumber(rawData.l[index], 2),
+    close: formatNumber(rawData.c[index], 2),
+    volume: rawData.v ? formatNumber(rawData.v[index], 0) : 0
+  }));
+
+  return {
+    symbol,
+    candles,
+    source: 'finnhub'
+  };
+}
+
+/**
+ * Transform Finnhub company profile to standardized format
+ * @param {Object} rawData - Raw company profile from Finnhub
+ * @returns {Object} Standardized company overview
+ */
+function transformCompanyOverview(rawData) {
+  if (!rawData || !rawData.ticker) {
+    return null;
+  }
+
+  return {
+    symbol: rawData.ticker,
+    name: rawData.name || rawData.ticker,
+    country: rawData.country || null,
+    currency: rawData.currency || 'USD',
+    exchange: rawData.exchange || null,
+    industry: rawData.finnhubIndustry || null,
+    ipo: rawData.ipo || null,
+    marketCap: rawData.marketCapitalization ? rawData.marketCapitalization * 1000000 : null,
+    shareOutstanding: rawData.shareOutstanding || null,
+    logo: rawData.logo || null,
+    phone: rawData.phone || null,
+    weburl: rawData.weburl || null,
+    lastUpdate: new Date().toISOString(),
+    source: 'finnhub'
+  };
+}
+
+/**
+ * Transform Fixer.io forex data to standardized format
+ * @param {Object} rawData - Raw data from Fixer.io API
+ * @param {Array} pairs - Array of forex pair names
  * @returns {Array} Standardized market data
  */
 function transformForexData(rawData, pairs) {
@@ -81,34 +141,33 @@ function transformForexData(rawData, pairs) {
 
   const results = [];
 
-  for (const pair of pairs) {
-    const data = rawData[pair];
-    if (!data || !data['Realtime Currency Exchange Rate']) {
+  for (const pairName of pairs) {
+    const data = rawData[pairName];
+    if (!data || data.error || !data.success) {
       continue;
     }
 
-    const exchangeData = data['Realtime Currency Exchange Rate'];
-    const rate = parseFloat(exchangeData['5. Exchange Rate'] || 0);
-    const bidPrice = parseFloat(exchangeData['8. Bid Price'] || rate);
-    const askPrice = parseFloat(exchangeData['9. Ask Price'] || rate);
+    // Fixer.io returns: {success: true, base: 'EUR', date: '2024-01-01', rates: {USD: 1.18}}
+    const rate = data.rate || (data.rates && Object.values(data.rates)[0]) || 0;
+    const fromCurrency = data.fromCurrency || data.base;
+    const toCurrency = data.toCurrency || (data.rates && Object.keys(data.rates)[0]);
 
-    // Calculate approximate 24h change (Alpha Vantage doesn't provide this directly)
-    // In production, you'd need to fetch historical data or use a different endpoint
-    const change24h = 0; // Placeholder
+    // Calculate 24h change if we have historical data (placeholder for now)
+    const change24h = 0; // Would need historical endpoint to calculate
 
     results.push({
-      id: pair.toLowerCase().replace('/', ''),
-      symbol: pair,
-      name: `${exchangeData['2. From_Currency Name']} / ${exchangeData['4. To_Currency Name']}`,
+      id: pairName.toLowerCase().replace('/', ''),
+      symbol: pairName,
+      name: `${fromCurrency} / ${toCurrency}`,
       price: formatNumber(rate, 5), // Forex typically uses more decimal places
       change24h: formatNumber(change24h, 2),
-      volume24h: null, // Not provided by Alpha Vantage
+      volume24h: null, // Not provided by Fixer.io
       marketCap: null,
-      bidPrice: formatNumber(bidPrice, 5),
-      askPrice: formatNumber(askPrice, 5),
-      spread: formatNumber(askPrice - bidPrice, 5),
-      lastUpdate: exchangeData['6. Last Refreshed'] || new Date().toISOString(),
-      source: 'alphavantage'
+      fromCurrency: fromCurrency,
+      toCurrency: toCurrency,
+      rate: formatNumber(rate, 5),
+      lastUpdate: data.date ? new Date(data.date).toISOString() : new Date().toISOString(),
+      source: 'fixer'
     });
   }
 
@@ -116,45 +175,101 @@ function transformForexData(rawData, pairs) {
 }
 
 /**
- * Transform Alpha Vantage commodity data to standardized format
- * @param {Object} rawData - Raw data from Alpha Vantage API
- * @param {Array} commodities - Array of commodity symbols with metadata
+ * Transform Fixer.io historical data to time series format
+ * @param {Object} rawData - Raw historical data from Fixer.io
+ * @param {string} pair - Forex pair name
+ * @returns {Object} Standardized time series data
+ */
+function transformForexTimeSeries(rawData, pair) {
+  if (!rawData || !rawData.success || !rawData.rates) {
+    return { pair, rates: [] };
+  }
+
+  const rates = [{
+    date: rawData.date,
+    rate: formatNumber(Object.values(rawData.rates)[0], 5),
+    base: rawData.base,
+    target: Object.keys(rawData.rates)[0]
+  }];
+
+  return {
+    pair,
+    rates,
+    source: 'fixer'
+  };
+}
+
+/**
+ * Transform Metals-API commodity data to standardized format
+ * @param {Object} rawData - Raw data from Metals-API
+ * @param {Array} commoditySymbols - Array of commodity symbols
  * @returns {Array} Standardized market data
  */
-function transformCommoditiesData(rawData, commodities) {
+function transformCommoditiesData(rawData, commoditySymbols) {
   if (!rawData || typeof rawData !== 'object') {
     return [];
   }
 
   const results = [];
 
-  for (const commodity of commodities) {
-    const data = rawData[commodity.symbol];
-    if (!data || !data['Global Quote']) {
+  for (const symbol of commoditySymbols) {
+    const data = rawData[symbol];
+    if (!data || data.error || !data.success) {
       continue;
     }
 
-    const quote = data['Global Quote'];
-    const currentPrice = parseFloat(quote['05. price'] || 0);
-    const previousClose = parseFloat(quote['08. previous close'] || 0);
-    const change = currentPrice - previousClose;
-    const changePercent = previousClose !== 0 ? (change / previousClose) * 100 : 0;
+    // Metals-API returns rates as inverse (e.g., USD per ounce of gold)
+    // Rate is how much USD you get for 1 unit of the commodity
+    // We need to invert it to get price per unit
+    const rate = data.rate || (data.rates && data.rates[symbol]) || 0;
+    const price = rate !== 0 ? 1 / rate : 0;
+
+    // Calculate 24h change if we have historical data (placeholder for now)
+    const change24h = 0; // Would need historical endpoint to calculate
 
     results.push({
-      id: commodity.symbol.toLowerCase(),
-      symbol: commodity.symbol,
-      name: commodity.name,
-      price: formatNumber(currentPrice, 2),
-      change24h: formatNumber(changePercent, 2),
-      volume24h: formatNumber(parseInt(quote['06. volume'] || 0), 0),
+      id: symbol.toLowerCase(),
+      symbol: symbol,
+      name: data.name || symbol,
+      price: formatNumber(price, 2),
+      change24h: formatNumber(change24h, 2),
+      volume24h: null, // Not provided by Metals-API
       marketCap: null,
-      unit: commodity.unit || 'USD',
-      lastUpdate: quote['07. latest trading day'] || new Date().toISOString(),
-      source: 'alphavantage'
+      unit: data.unit || 'USD',
+      lastUpdate: data.date ? new Date(data.date).toISOString() : new Date().toISOString(),
+      source: 'metals-api'
     });
   }
 
   return results;
+}
+
+/**
+ * Transform Metals-API historical data to time series format
+ * @param {Object} rawData - Raw historical data from Metals-API
+ * @param {string} symbol - Commodity symbol
+ * @returns {Object} Standardized time series data
+ */
+function transformCommodityTimeSeries(rawData, symbol) {
+  if (!rawData || !rawData.success || !rawData.rates) {
+    return { symbol, rates: [] };
+  }
+
+  const rate = rawData.rates[symbol];
+  const price = rate !== 0 ? 1 / rate : 0;
+
+  const rates = [{
+    date: rawData.date,
+    price: formatNumber(price, 2),
+    rate: formatNumber(rate, 6),
+    base: rawData.base
+  }];
+
+  return {
+    symbol,
+    rates,
+    source: 'metals-api'
+  };
 }
 
 /**
@@ -338,8 +453,12 @@ function formatLargeNumber(value) {
 export {
   transformCryptoData,
   transformStocksData,
+  transformStockTimeSeries,
+  transformCompanyOverview,
   transformForexData,
+  transformForexTimeSeries,
   transformCommoditiesData,
+  transformCommodityTimeSeries,
   transformCryptoChartData,
   transformCryptoDetailData,
   transformOHLCData,

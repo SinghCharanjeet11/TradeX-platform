@@ -1,8 +1,8 @@
 .sidebar {
   width: 200px;
   height: 100vh;
-  background: rgba(10, 22, 40, 0.8);
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  background: #ffffff;
+  border-right: 1px solid #e2e8f0;
   padding: 24px 16px;
   display: flex;
   flex-direction: column;
@@ -18,7 +18,7 @@
   gap: 12px;
   font-size: 20px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #00d4aa;
   margin-bottom: 40px;
   padding: 0 8px;
 }
@@ -46,13 +46,13 @@
 }
 
 .navItem:hover {
-  background: rgba(124, 140, 255, 0.1);
+  background: rgba(0, 212, 170, 0.1);
   color: var(--text-primary);
 }
 
 .navItem.active {
-  background: rgba(124, 140, 255, 0.15);
-  color: var(--primary-blue);
+  background: rgba(0, 212, 170, 0.15);
+  color: #00d4aa;
 }
 
 .icon {

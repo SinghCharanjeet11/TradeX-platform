@@ -79,6 +79,26 @@ export const authAPI = {
     const response = await api.get('/api/auth/me')
     return response.data
   },
+
+  connectExternalAccount: async (accountData) => {
+    const response = await api.post('/api/auth/connect-account', accountData)
+    return response.data
+  },
+
+  getConnectedAccounts: async () => {
+    const response = await api.get('/api/auth/connected-accounts')
+    return response.data
+  },
+
+  disconnectExternalAccount: async (platform) => {
+    const response = await api.delete(`/api/auth/disconnect-account/${platform}`)
+    return response.data
+  },
+
+  refreshAccountData: async (accountId) => {
+    const response = await api.post(`/api/auth/connected-accounts/${accountId}/refresh`)
+    return response.data
+  },
 }
 
 export default api

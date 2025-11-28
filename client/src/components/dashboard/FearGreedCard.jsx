@@ -151,13 +151,14 @@ function FearGreedCard({ marketType = 'Crypto' }) {
             key={`${index}-${i}`}
             d={`M ${x1},${y1} A ${radius},${radius} 0 0,1 ${x2},${y2} L ${x3},${y3} A ${innerRadius},${innerRadius} 0 0,0 ${x4},${y4} Z`}
             fill={item.color}
-            opacity={isHovered ? 1 : 0.85}
+            opacity="0.85"
+            stroke={isHovered ? '#ffffff' : 'none'}
+            strokeWidth={isHovered ? '0.5' : '0'}
             onMouseEnter={() => setHoveredSegment(item.name)}
             onMouseLeave={() => setHoveredSegment(null)}
             style={{ 
               cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              filter: isHovered ? 'brightness(1.3) drop-shadow(0 0 8px currentColor)' : 'none'
+              transition: 'all 0.2s ease'
             }}
           />
         )
@@ -230,15 +231,6 @@ function FearGreedCard({ marketType = 'Crypto' }) {
         <div className={styles.gaugeContainer}>
           <svg className={styles.gaugeSvg} viewBox="0 0 240 135">
             {renderSemicircle()}
-            
-            {/* Animated glow effect */}
-            <defs>
-              <radialGradient id="glowGradient">
-                <stop offset="0%" stopColor="rgba(124, 140, 255, 0.3)" />
-                <stop offset="100%" stopColor="rgba(124, 140, 255, 0)" />
-              </radialGradient>
-            </defs>
-            <circle cx="120" cy="120" r="70" fill="url(#glowGradient)" opacity="0.5" />
           </svg>
           
           <div className={styles.gaugeValue}>

@@ -1,14 +1,17 @@
 .topBar {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   padding: 20px 32px;
-  background: rgba(10, 22, 40, 0.6);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  position: sticky;
+  background: transparent;
+  border-bottom: none;
+  backdrop-filter: none;
+  position: fixed;
   top: 0;
-  z-index: 50;
+  left: 200px;
+  right: 0;
+  z-index: 100;
+  pointer-events: none;
 }
 
 .searchSection {
@@ -16,6 +19,8 @@
   align-items: center;
   gap: 24px;
   flex: 1;
+  pointer-events: auto;
+  margin-right: auto;
 }
 
 .searchBox {
@@ -26,19 +31,20 @@
 
 .searchIcon {
   position: absolute;
-  left: 16px;
+  left: 4px;
   top: 50%;
   transform: translateY(-50%);
   font-size: 20px;
-  color: var(--text-secondary);
+  color: #718096;
 }
 
 .searchInput {
   width: 100%;
-  padding: 12px 16px 12px 48px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  padding: 12px 4px 12px 32px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid #10b981;
+  border-radius: 0;
   color: var(--text-primary);
   font-size: 14px;
   transition: all 0.2s ease;
@@ -46,12 +52,44 @@
 
 .searchInput:focus {
   outline: none;
-  border-color: var(--primary-blue);
-  background: rgba(255, 255, 255, 0.08);
+  border-bottom-color: #10b981;
 }
 
 .searchInput::placeholder {
   color: var(--text-secondary);
+}
+
+/* Market-specific search input colors */
+.topBar[data-page="markets"][data-market="Crypto"] .searchInput {
+  border-bottom-color: #10b981;
+}
+
+.topBar[data-page="markets"][data-market="Crypto"] .searchInput:focus {
+  border-bottom-color: #10b981;
+}
+
+.topBar[data-page="markets"][data-market="Stocks"] .searchInput {
+  border-bottom-color: #3b82f6;
+}
+
+.topBar[data-page="markets"][data-market="Stocks"] .searchInput:focus {
+  border-bottom-color: #3b82f6;
+}
+
+.topBar[data-page="markets"][data-market="Forex"] .searchInput {
+  border-bottom-color: #f59e0b;
+}
+
+.topBar[data-page="markets"][data-market="Forex"] .searchInput:focus {
+  border-bottom-color: #f59e0b;
+}
+
+.topBar[data-page="markets"][data-market="Commodities"] .searchInput {
+  border-bottom-color: #8b5cf6;
+}
+
+.topBar[data-page="markets"][data-market="Commodities"] .searchInput:focus {
+  border-bottom-color: #8b5cf6;
 }
 
 .marketTabs {
@@ -78,14 +116,37 @@
 
 .marketTab.active {
   background: var(--primary-blue);
-  color: var(--text-primary);
+  color: white;
   box-shadow: 0 4px 12px rgba(124, 140, 255, 0.3);
+}
+
+/* Market-specific active tab colors */
+.marketTab[data-market="Crypto"].active {
+  background: #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.marketTab[data-market="Stocks"].active {
+  background: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.marketTab[data-market="Forex"].active {
+  background: #f59e0b;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.marketTab[data-market="Commodities"].active {
+  background: #8b5cf6;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
 }
 
 .actions {
   display: flex;
   align-items: center;
   gap: 16px;
+  pointer-events: auto;
+  margin-left: auto;
 }
 
 .iconBtn {
@@ -94,18 +155,63 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, #00d4aa 0%, #00a88e 100%);
+  backdrop-filter: blur(10px);
+  border: none;
   border-radius: 10px;
-  color: var(--text-secondary);
+  color: #ffffff;
   font-size: 20px;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 212, 170, 0.3);
 }
 
 .iconBtn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-primary);
+  background: linear-gradient(135deg, #00ffcc 0%, #00d4aa 100%);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 212, 170, 0.4);
+}
+
+/* Market-specific button colors - only on Markets page */
+.topBar[data-page="markets"][data-market="Crypto"] .iconBtn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.topBar[data-page="markets"][data-market="Crypto"] .iconBtn:hover {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.topBar[data-page="markets"][data-market="Stocks"] .iconBtn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.topBar[data-page="markets"][data-market="Stocks"] .iconBtn:hover {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.topBar[data-page="markets"][data-market="Forex"] .iconBtn {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.topBar[data-page="markets"][data-market="Forex"] .iconBtn:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+.topBar[data-page="markets"][data-market="Commodities"] .iconBtn {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+}
+
+.topBar[data-page="markets"][data-market="Commodities"] .iconBtn:hover {
+  background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
 }
 
 .userMenu {
@@ -117,18 +223,63 @@
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, #00d4aa 0%, #00a88e 100%);
+  backdrop-filter: blur(10px);
+  border: none;
   border-radius: 10px;
-  color: var(--text-primary);
+  color: #ffffff;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 212, 170, 0.3);
 }
 
 .userBtn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, #00ffcc 0%, #00d4aa 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 212, 170, 0.4);
+}
+
+/* Market-specific user button colors - only on Markets page */
+.topBar[data-page="markets"][data-market="Crypto"] .userBtn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.topBar[data-page="markets"][data-market="Crypto"] .userBtn:hover {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.topBar[data-page="markets"][data-market="Stocks"] .userBtn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.topBar[data-page="markets"][data-market="Stocks"] .userBtn:hover {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.topBar[data-page="markets"][data-market="Forex"] .userBtn {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.topBar[data-page="markets"][data-market="Forex"] .userBtn:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+.topBar[data-page="markets"][data-market="Commodities"] .userBtn {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+}
+
+.topBar[data-page="markets"][data-market="Commodities"] .userBtn:hover {
+  background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
 }
 
 .userBtn svg {
@@ -139,37 +290,66 @@
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  background: rgba(26, 41, 66, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 12px;
   padding: 8px;
-  min-width: 150px;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.2s ease;
+  min-width: 200px;
   backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  animation: dropdownFadeIn 0.2s ease;
 }
 
-.userMenu:hover .dropdown {
-  opacity: 1;
-  visibility: visible;
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.dropdown button {
+.dropdownItem {
   width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   padding: 10px 16px;
   background: transparent;
   border: none;
   border-radius: 8px;
-  color: var(--text-primary);
+  color: #1a2942;
   font-size: 14px;
+  font-weight: 500;
   text-align: left;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.dropdown button:hover {
+.dropdownItem:hover {
   background: rgba(124, 140, 255, 0.1);
+}
+
+.dropdownItem svg {
+  font-size: 18px;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.dropdownDivider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.1);
+  margin: 8px 0;
+}
+
+.logoutItem {
+  color: #ff6b6b;
+}
+
+.logoutItem:hover {
+  background: rgba(255, 107, 107, 0.1);
 }
 
 @media (max-width: 1024px) {
@@ -181,6 +361,7 @@
 @media (max-width: 768px) {
   .topBar {
     padding: 16px;
+    left: 0;
   }
   
   .searchBox {
@@ -189,5 +370,9 @@
   
   .userBtn span {
     display: none;
+  }
+  
+  .actions {
+    gap: 12px;
   }
 }

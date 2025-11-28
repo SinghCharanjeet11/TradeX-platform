@@ -43,7 +43,7 @@ function TopGainerCard({ marketType = 'Crypto', data = [] }) {
       volume24h: 38400000000, 
       marketCap: 1320000000000,
       circulatingSupply: 19500000,
-      image: null 
+      image: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png'
     },
     Stocks: { 
       name: 'Apple Inc.', 
@@ -54,7 +54,7 @@ function TopGainerCard({ marketType = 'Crypto', data = [] }) {
       marketCap: 2800000000000,
       pe_ratio: 28.5,
       dividend_yield: 0.52,
-      image: null 
+      image: 'https://logo.clearbit.com/apple.com'
     },
     Forex: { 
       name: 'EUR/USD', 
@@ -65,7 +65,7 @@ function TopGainerCard({ marketType = 'Crypto', data = [] }) {
       bid: 1.0843,
       ask: 1.0847,
       spread: 0.0004,
-      image: null 
+      image: 'https://flagcdn.com/w80/eu.png'
     },
     Commodities: { 
       name: 'Gold', 
@@ -77,7 +77,7 @@ function TopGainerCard({ marketType = 'Crypto', data = [] }) {
       unit: 'per oz',
       high24h: 2055.30,
       low24h: 2038.20,
-      image: null 
+      image: 'https://cdn-icons-png.flaticon.com/512/2529/2529508.png'
     }
   }
 
@@ -102,7 +102,7 @@ function TopGainerCard({ marketType = 'Crypto', data = [] }) {
 
   const chartData = generateChartData()
   const change = displayGainer.change24h || displayGainer.change || 0
-  const isPositive = change > 0
+  const isPositive = change >= 0
 
   // Get market-specific stats
   const getMarketStats = () => {
@@ -194,8 +194,12 @@ function TopGainerCard({ marketType = 'Crypto', data = [] }) {
       <div className={styles.content}>
         <div className={styles.assetInfo}>
           <div className={styles.assetName}>
-            {displayGainer.image && (
+            {displayGainer.image ? (
               <img src={displayGainer.image} alt={displayGainer.symbol} className={styles.assetImage} />
+            ) : (
+              <div className={styles.assetIcon} style={{ background: `${marketColor}20`, color: marketColor }}>
+                {displayGainer.symbol?.substring(0, 2) || '??'}
+              </div>
             )}
             <div>
               <div className={styles.name}>{displayGainer.name}</div>
