@@ -1,0 +1,180 @@
+/* Paper Trading Theme Variables */
+:root {
+  /* Primary Practice Mode Colors */
+  --paper-primary: #ff9800;
+  --paper-primary-dark: #ff6f00;
+  --paper-primary-darker: #e65100;
+  --paper-primary-light: #ffb74d;
+  
+  /* Background Colors */
+  --paper-bg-primary: #0a0e27;
+  --paper-bg-secondary: #1e2139;
+  --paper-bg-tertiary: rgba(30, 30, 40, 0.6);
+  
+  /* Border Colors */
+  --paper-border: #2d3250;
+  --paper-border-hover: rgba(255, 152, 0, 0.5);
+  --paper-border-focus: #ff9800;
+  
+  /* Text Colors */
+  --paper-text-primary: #ffffff;
+  --paper-text-secondary: #8b92b0;
+  --paper-text-muted: #a0a0b0;
+  
+  /* Status Colors */
+  --paper-success: #00d4aa;
+  --paper-error: #ff4757;
+  --paper-warning: #eab308;
+  
+  /* Virtual Badge */
+  --paper-virtual-bg: linear-gradient(135deg, #ff9500, #ff6b00);
+  --paper-virtual-text: #ffffff;
+  
+  /* Shadows */
+  --paper-shadow-sm: 0 2px 8px rgba(255, 152, 0, 0.3);
+  --paper-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --paper-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+  
+  /* Transitions */
+  --paper-transition-fast: 0.2s ease;
+  --paper-transition-normal: 0.3s ease;
+  
+  /* Border Radius */
+  --paper-radius-sm: 6px;
+  --paper-radius-md: 8px;
+  --paper-radius-lg: 12px;
+  
+  /* Spacing */
+  --paper-spacing-xs: 0.5rem;
+  --paper-spacing-sm: 1rem;
+  --paper-spacing-md: 1.5rem;
+  --paper-spacing-lg: 2rem;
+  --paper-spacing-xl: 3rem;
+}
+
+/* Utility Classes for Paper Trading */
+.paper-virtual-badge {
+  background: var(--paper-virtual-bg);
+  color: var(--paper-virtual-text);
+  padding: 6px 12px;
+  border-radius: var(--paper-radius-sm);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  display: inline-block;
+}
+
+.paper-card {
+  background: var(--paper-bg-secondary);
+  border: 1px solid var(--paper-border);
+  border-radius: var(--paper-radius-lg);
+  padding: var(--paper-spacing-md);
+}
+
+.paper-button-primary {
+  background: var(--paper-primary);
+  color: var(--paper-text-primary);
+  border: none;
+  border-radius: var(--paper-radius-md);
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--paper-transition-fast);
+}
+
+.paper-button-primary:hover {
+  background: var(--paper-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--paper-shadow-md);
+}
+
+.paper-input {
+  background: rgba(20, 20, 30, 0.8);
+  border: 1px solid var(--paper-border);
+  border-radius: var(--paper-radius-md);
+  padding: 0.75rem 1rem;
+  color: var(--paper-text-primary);
+  font-size: 14px;
+  transition: all var(--paper-transition-fast);
+}
+
+.paper-input:hover {
+  border-color: var(--paper-border-hover);
+}
+
+.paper-input:focus {
+  outline: none;
+  border-color: var(--paper-border-focus);
+  box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+}
+
+.paper-text-success {
+  color: var(--paper-success);
+}
+
+.paper-text-error {
+  color: var(--paper-error);
+}
+
+.paper-text-warning {
+  color: var(--paper-warning);
+}
+
+/* Animation for Virtual Indicators */
+@keyframes pulse-orange {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.paper-pulse {
+  animation: pulse-orange 2s ease-in-out infinite;
+}
+
+/* Gradient Backgrounds */
+.paper-gradient-primary {
+  background: linear-gradient(135deg, var(--paper-primary) 0%, var(--paper-primary-dark) 100%);
+}
+
+.paper-gradient-secondary {
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.1) 0%, rgba(255, 111, 0, 0.1) 100%);
+}
+
+/* Practice Mode Banner Styles */
+.paper-banner {
+  background: linear-gradient(135deg, #ff9800 0%, #ff6f00 100%);
+  border-bottom: 3px solid var(--paper-primary-darker);
+  box-shadow: var(--paper-shadow-sm);
+}
+
+/* Virtual Amount Indicator */
+.paper-virtual-amount {
+  position: relative;
+}
+
+.paper-virtual-amount::after {
+  content: 'VIRTUAL';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  font-size: 8px;
+  color: var(--paper-primary);
+  font-weight: 700;
+  opacity: 0.6;
+}
+
+/* Responsive Utilities */
+@media (max-width: 768px) {
+  :root {
+    --paper-spacing-sm: 0.75rem;
+    --paper-spacing-md: 1rem;
+    --paper-spacing-lg: 1.5rem;
+  }
+  
+  .paper-virtual-amount::after {
+    display: none;
+  }
+}
