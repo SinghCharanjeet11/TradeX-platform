@@ -1,0 +1,411 @@
+.modalOverlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: 9999;
+  padding: 60px 20px 20px 20px;
+  overflow-y: auto;
+}
+
+.modal {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modalHeader h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a202c;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+}
+
+.modalHeader h2 svg {
+  font-size: 28px;
+  color: #00d4aa;
+}
+
+.closeBtn {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  color: #4a5568;
+  font-size: 28px;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  border-radius: 8px;
+}
+
+.closeBtn:hover {
+  color: #ef4444;
+  background: #fee;
+  border-color: #ef4444;
+}
+
+.modalBody {
+  padding: 24px;
+}
+
+.description {
+  color: #718096;
+  font-size: 15px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.platformsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.platformCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.platformCard:hover {
+  background: #edf2f7;
+  border-color: #00d4aa;
+  transform: translateY(-2px);
+}
+
+.platformIcon {
+  font-size: 40px;
+  color: #00d4aa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.platformInfo {
+  flex: 1;
+}
+
+.platformInfo h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a202c;
+  margin: 0 0 4px 0;
+}
+
+.platformInfo p {
+  font-size: 14px;
+  color: #718096;
+  margin: 0;
+}
+
+.connectArrow {
+  font-size: 24px;
+  color: #718096;
+  transition: all 0.3s;
+}
+
+.platformCard:hover .connectArrow {
+  color: #00d4aa;
+  transform: translateX(4px);
+}
+
+.securityNote {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(0, 212, 170, 0.1);
+  border: 1px solid rgba(0, 212, 170, 0.3);
+  border-radius: 12px;
+  margin-top: 24px;
+}
+
+.securityNote svg {
+  font-size: 24px;
+  color: #00d4aa;
+  flex-shrink: 0;
+}
+
+.securityNote strong {
+  display: block;
+  color: #1a202c;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.securityNote p {
+  color: #718096;
+  font-size: 13px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.backBtn {
+  background: none;
+  border: none;
+  color: #00d4aa;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px 0;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+
+.backBtn:hover {
+  color: #00ffcc;
+  transform: translateX(-4px);
+}
+
+.selectedPlatform {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: rgba(0, 212, 170, 0.1);
+  border: 1px solid rgba(0, 212, 170, 0.3);
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.selectedPlatform svg {
+  font-size: 48px;
+  color: #00d4aa;
+}
+
+.selectedPlatform h3 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a202c;
+  margin: 0;
+}
+
+.instructions {
+  color: #718096;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.helpBox {
+  padding: 16px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.helpBox strong {
+  display: block;
+  color: #1a202c;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.helpBox ol {
+  margin: 0;
+  padding-left: 20px;
+  color: #4a5568;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.helpBox li {
+  margin-bottom: 4px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formGroup label {
+  color: #1a202c;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.formGroup input {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: #1a202c;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.formGroup input:focus {
+  outline: none;
+  border-color: #00d4aa;
+  background: #ffffff;
+}
+
+.formGroup input::placeholder {
+  color: #718096;
+}
+
+.errorMessage {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  color: #ef4444;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.errorMessage svg {
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.errorText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.errorText > div {
+  line-height: 1.5;
+}
+
+.permissions {
+  padding: 16px;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.permissions h4 {
+  color: #1a202c;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+}
+
+.permissions ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.permissions li {
+  color: #718096;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modalActions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.cancelBtn,
+.connectBtn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.cancelBtn {
+  background: #f7fafc;
+  color: #718096;
+  border: 1px solid #e2e8f0;
+}
+
+.cancelBtn:hover:not(:disabled) {
+  background: #edf2f7;
+  color: #1a202c;
+}
+
+.connectBtn {
+  background: linear-gradient(135deg, #00d4aa 0%, #00a88e 100%);
+  color: #fff;
+}
+
+.connectBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #00ffcc 0%, #00d4aa 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 212, 170, 0.3);
+}
+
+.connectBtn:disabled,
+.cancelBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Scrollbar styling */
+.modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal::-webkit-scrollbar-track {
+  background: #f7fafc;
+  border-radius: 4px;
+}
+
+.modal::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
+}
+
+.modal::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
