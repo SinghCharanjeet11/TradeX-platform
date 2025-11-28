@@ -1,0 +1,128 @@
+.card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  border: 2px solid #00d4aa;
+  transition: all 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a202c;
+  margin: 0 0 24px 0;
+}
+
+.section {
+  margin-bottom: 24px;
+}
+
+.section:last-child {
+  margin-bottom: 0;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #718096;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.iconPositive {
+  color: #22c55e;
+  font-size: 20px;
+}
+
+.iconNegative {
+  color: #ef4444;
+  font-size: 20px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.assetItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.assetItem:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.assetInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.assetSymbol {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.assetName {
+  font-size: 12px;
+  color: #718096;
+}
+
+.assetStats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.assetValue {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.assetPerformance {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.positive {
+  color: #22c55e;
+}
+
+.negative {
+  color: #ef4444;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 40px 20px;
+  color: #718096;
+}
+
+.emptyState p {
+  margin: 0;
+}
