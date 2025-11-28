@@ -1,0 +1,183 @@
+.tableContainer {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 2px solid #00d4aa;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table thead {
+  background: rgba(0, 0, 0, 0.02);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.table th {
+  padding: 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s;
+}
+
+.sortable:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.headerCell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.headerCell svg {
+  font-size: 14px;
+  color: #00d4aa;
+}
+
+.table tbody tr {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.2s;
+}
+
+.table tbody tr:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.table td {
+  padding: 16px;
+  font-size: 14px;
+  color: #1a202c;
+}
+
+.assetCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.assetInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.symbol {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.name {
+  font-size: 12px;
+  color: #718096;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.account {
+  color: #718096;
+  font-size: 13px;
+}
+
+.quantity {
+  font-weight: 500;
+}
+
+.price {
+  font-weight: 500;
+  color: #1a202c;
+}
+
+.totalValue {
+  font-weight: 600;
+  color: #1a202c;
+  font-size: 15px;
+}
+
+.profitLoss {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.plAmount {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.plPercent {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.change {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.change svg {
+  font-size: 18px;
+}
+
+.positive {
+  color: #22c55e;
+}
+
+.negative {
+  color: #ef4444;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .tableContainer {
+    overflow-x: auto;
+  }
+
+  .table {
+    min-width: 1000px;
+  }
+}
+
+@media (max-width: 768px) {
+  .table th,
+  .table td {
+    padding: 12px 8px;
+    font-size: 12px;
+  }
+
+  .symbol {
+    font-size: 13px;
+  }
+
+  .name {
+    font-size: 11px;
+  }
+}
