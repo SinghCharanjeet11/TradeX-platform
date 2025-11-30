@@ -79,3 +79,28 @@
     padding: 12px;
   }
 }
+
+
+/* Dark Mode Support */
+[data-theme="dark"] .sidebar {
+  background: #1e293b;
+  border-right-color: #334155;
+}
+
+[data-theme="dark"] .logo {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .navItem {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .navItem:hover {
+  background: rgba(100, 116, 139, 0.1);
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .navItem.active {
+  background: rgba(0, 212, 170, 0.1);
+  color: #00d4aa;
+}

@@ -11,5 +11,20 @@ export default defineConfig({
         changeOrigin: true
       }
     }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunks
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'chart-vendor': ['recharts'],
+          'form-vendor': ['formik', 'yup'],
+          'animation-vendor': ['framer-motion'],
+          'utils-vendor': ['axios']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 600
   }
 })

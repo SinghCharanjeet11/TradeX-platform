@@ -308,3 +308,30 @@
     font-size: 8px;
   }
 }
+
+
+/* Dark Mode Support */
+[data-theme="dark"] .card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .title {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .subtitle {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .indexValue {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .indexLabel {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .description {
+  color: #94a3b8;
+}

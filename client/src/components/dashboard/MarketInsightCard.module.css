@@ -225,3 +225,30 @@
     padding: 20px;
   }
 }
+
+
+/* Dark Mode Support */
+[data-theme="dark"] .card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .title {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .insightItem {
+  border-bottom-color: #334155;
+}
+
+[data-theme="dark"] .insightTitle {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .insightDescription {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .insightTime {
+  color: #64748b;
+}

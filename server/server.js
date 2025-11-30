@@ -6,7 +6,6 @@ import marketRoutes from './routes/marketRoutes.js'
 import portfolioRoutes from './routes/portfolioRoutes.js'
 import holdingsRoutes from './routes/holdingsRoutes.js'
 import watchlistRoutes from './routes/watchlistRoutes.js'
-import ordersRoutes from './routes/ordersRoutes.js'
 import newsRoutes from './routes/newsRoutes.js'
 import priceRoutes from './routes/priceRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
@@ -45,7 +44,6 @@ app.use('/api/markets', marketRoutes)
 app.use('/api/portfolio', portfolioRoutes)
 app.use('/api/holdings', holdingsRoutes)
 app.use('/api/watchlist', watchlistRoutes)
-app.use('/api/orders', ordersRoutes)
 app.use('/api/news', newsRoutes)
 app.use('/api/prices', priceRoutes)
 app.use('/api/admin', adminRoutes)

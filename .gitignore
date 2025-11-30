@@ -24,7 +24,7 @@ Thumbs.db
 *.swo
 
 # Test scripts (development only)
-scripts/
+# scripts/
 
 # Build outputs
 dist/

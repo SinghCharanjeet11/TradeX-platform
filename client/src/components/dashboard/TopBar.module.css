@@ -376,3 +376,46 @@
     gap: 12px;
   }
 }
+
+
+/* Dark Mode Support */
+[data-theme="dark"] .topBar {
+  background: #1e293b;
+  border-bottom-color: #334155;
+}
+
+[data-theme="dark"] .searchBar {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .searchBar::placeholder {
+  color: #64748b;
+}
+
+[data-theme="dark"] .searchBar:focus {
+  border-color: #00d4aa;
+  background: #0f172a;
+}
+
+[data-theme="dark"] .iconButton {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .iconButton:hover {
+  background: rgba(100, 116, 139, 0.1);
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .userInfo {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .userName {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .userRole {
+  color: #94a3b8;
+}

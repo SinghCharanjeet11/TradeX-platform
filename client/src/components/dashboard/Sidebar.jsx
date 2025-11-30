@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom'
-import { MdDashboard, MdSwapHoriz, MdBarChart, MdAccountBalanceWallet, MdShowChart, MdSettings, MdNewspaper, MdPieChart, MdReceipt, MdSchool } from 'react-icons/md'
+import { MdDashboard, MdSwapHoriz, MdBarChart, MdAccountBalanceWallet, MdShowChart, MdSettings, MdNewspaper, MdPieChart, MdSchool } from 'react-icons/md'
 import styles from './Sidebar.module.css'
 
 function Sidebar() {
@@ -10,7 +10,6 @@ function Sidebar() {
     { icon: MdDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: MdPieChart, label: 'Portfolio', path: '/portfolio' },
     { icon: MdShowChart, label: 'Markets', path: '/markets' },
-    { icon: MdReceipt, label: 'Orders', path: '/orders' },
     { icon: MdSchool, label: 'Paper Trading', path: '/paper-trading' },
     { icon: MdNewspaper, label: 'News', path: '/news' },
     { icon: MdSwapHoriz, label: 'Exchange', path: '/exchange' },

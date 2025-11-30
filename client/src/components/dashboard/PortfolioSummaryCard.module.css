@@ -175,3 +175,26 @@
     align-items: center;
   }
 }
+
+
+/* Dark Mode Support */
+[data-theme="dark"] .card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .title {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .value {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .label {
+  color: #64748b;
+}
+
+[data-theme="dark"] .statItem {
+  border-color: #334155;
+}

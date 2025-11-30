@@ -1,17 +1,21 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import RegisterPage from './pages/RegisterPage'
-import SignInPage from './pages/SignInPage'
-import ForgotPasswordPage from './pages/ForgotPasswordPage'
-import ResetPasswordPage from './pages/ResetPasswordPage'
-import DashboardPage from './pages/DashboardPage'
-import PortfolioPage from './pages/PortfolioPage'
-import MarketsPage from './pages/MarketsPage'
-import OrdersPage from './pages/OrdersPage'
-import NewsPage from './pages/NewsPage'
-import SettingsPage from './pages/SettingsPage'
-import PaperTradingPage from './pages/PaperTradingPage'
-import TestPage from './pages/TestPage'
+import { ThemeProvider } from './contexts/ThemeContext'
+import LoadingScreen from './components/LoadingScreen'
+
+// Lazy load pages for better code splitting
+const RegisterPage = lazy(() => import('./pages/RegisterPage'))
+const SignInPage = lazy(() => import('./pages/SignInPage'))
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
+const DashboardPage = lazy(() => import('./pages/DashboardPage'))
+const PortfolioPage = lazy(() => import('./pages/PortfolioPage'))
+const MarketsPage = lazy(() => import('./pages/MarketsPage'))
+const NewsPage = lazy(() => import('./pages/NewsPage'))
+const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const PaperTradingPage = lazy(() => import('./pages/PaperTradingPage'))
+const TestPage = lazy(() => import('./pages/TestPage'))
 
 function AnimatedRoutes() {
   const location = useLocation()
@@ -39,7 +43,8 @@ function AnimatedRoutes() {
 
   return (
     <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
+      <Suspense fallback={<LoadingScreen />}>
+        <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Navigate to="/register" replace />} />
         <Route path="/test" element={<TestPage />} />
         <Route 
@@ -140,20 +145,7 @@ function AnimatedRoutes() {
             </motion.div>
           } 
         />
-        <Route 
-          path="/orders" 
-          element={
-            <motion.div
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              variants={pageVariants}
-              transition={pageTransition}
-            >
-              <OrdersPage />
-            </motion.div>
-          } 
-        />
+        <Route path="/orders" element={<Navigate to="/dashboard" replace />} />
         <Route 
           path="/news" 
           element={
@@ -196,16 +188,19 @@ function AnimatedRoutes() {
             </motion.div>
           } 
         />
-      </Routes>
+        </Routes>
+      </Suspense>
     </AnimatePresence>
   )
 }
 
 function App() {
   return (
-    <Router>
-      <AnimatedRoutes />
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <AnimatedRoutes />
+      </Router>
+    </ThemeProvider>
   )
 }
 
