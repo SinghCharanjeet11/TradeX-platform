@@ -1,46 +1,129 @@
 /**
  * useNews Hook
- * Custom hook for managing news state
+ * Custom hook for managing news state with enhanced features
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import newsService from '../services/newsService'
 
-export const useNews = (filters = {}) => {
+const AUTO_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const RETRY_DELAY = 30 * 1000; // 30 seconds
+
+export const useNews = (initialFilters = {}) => {
   const [news, setNews] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [filters, setFilters] = useState(initialFilters)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [cached, setCached] = useState(false)
+  const [stale, setStale] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
+  
+  const searchTimeoutRef = useRef(null)
+  const autoRefreshIntervalRef = useRef(null)
+  const retryTimeoutRef = useRef(null)
 
-  const fetchNews = useCallback(async () => {
+  const fetchNews = useCallback(async (isRetry = false) => {
     try {
-      setLoading(true)
+      if (!isRetry) {
+        setLoading(true)
+      }
       setError(null)
 
-      const response = await newsService.getNews(filters)
+      const response = await newsService.getNews({
+        ...filters,
+        search: searchQuery
+      })
 
       if (response.success) {
-        setNews(response.data)
+        setNews(response.data.articles || response.data)
+        setCached(response.data.cached || false)
+        setStale(response.data.stale || false)
+        setRetryCount(0)
       } else {
         throw new Error(response.error)
       }
     } catch (err) {
       console.error('[useNews] Error:', err)
       setError(err.message)
-      setNews([])
+      
+      // Retry logic
+      if (retryCount < 3) {
+        setRetryCount(prev => prev + 1)
+        retryTimeoutRef.current = setTimeout(() => {
+          fetchNews(true)
+        }, RETRY_DELAY)
+      }
     } finally {
       setLoading(false)
     }
-  }, [JSON.stringify(filters)])
+  }, [filters, searchQuery, retryCount])
 
+  // Debounced search
+  const handleSearchChange = useCallback((query) => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+
+    searchTimeoutRef.current = setTimeout(() => {
+      setSearchQuery(query)
+    }, 300) // 300ms debounce
+  }, [])
+
+  // Update filters
+  const updateFilters = useCallback((newFilters) => {
+    setFilters(prev => ({ ...prev, ...newFilters }))
+  }, [])
+
+  // Clear filters
+  const clearFilters = useCallback(() => {
+    setFilters({})
+    setSearchQuery('')
+  }, [])
+
+  // Initial fetch and when filters/search change
   useEffect(() => {
     fetchNews()
   }, [fetchNews])
+
+  // Auto-refresh every 5 minutes
+  useEffect(() => {
+    autoRefreshIntervalRef.current = setInterval(() => {
+      fetchNews(true) // Silent refresh
+    }, AUTO_REFRESH_INTERVAL)
+
+    return () => {
+      if (autoRefreshIntervalRef.current) {
+        clearInterval(autoRefreshIntervalRef.current)
+      }
+    }
+  }, [fetchNews])
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current)
+      }
+    }
+  }, [])
 
   return {
     news,
     loading,
     error,
-    refetch: fetchNews
+    filters,
+    searchQuery,
+    cached,
+    stale,
+    retryCount,
+    refetch: fetchNews,
+    updateFilters,
+    clearFilters,
+    handleSearchChange
   }
 }
 

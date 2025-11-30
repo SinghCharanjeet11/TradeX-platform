@@ -1,215 +1,286 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MdArrowForward, MdAccessTime } from 'react-icons/md'
+import { MdArrowForward, MdBookmark, MdBookmarkBorder, MdArrowBack } from 'react-icons/md'
 import Sidebar from '../components/dashboard/Sidebar'
-import TopBar from '../components/dashboard/TopBar'
 import LoadingScreen from '../components/LoadingScreen'
+import SearchBar from '../components/news/SearchBar'
+import ArticleModal from '../components/news/ArticleModal'
+import SentimentIndicator from '../components/news/SentimentIndicator'
+import ShareButton from '../components/news/ShareButton'
+import NewsFilters from '../components/news/NewsFilters'
+import BreakingNewsSection from '../components/news/BreakingNewsSection'
+import ErrorNotification, { ERROR_TYPES } from '../components/news/ErrorNotification'
+import newsService from '../services/newsService'
 import styles from './NewsPage.module.css'
 
 function NewsPage() {
   const navigate = useNavigate()
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [activeCategory, setActiveCategory] = useState('All')
-  const [activeMarket, setActiveMarket] = useState('Crypto')
+  const [news, setNews] = useState([])
+  const [allNews, setAllNews] = useState([]) // Store all news for switching back
+  const [showBookmarksOnly, setShowBookmarksOnly] = useState(false)
+  const [showReadingListOnly, setShowReadingListOnly] = useState(false)
+  const [readArticles, setReadArticles] = useState(new Set())
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedArticle, setSelectedArticle] = useState(null)
+  const [error, setError] = useState(null)
+  const [cached, setCached] = useState(false)
+  const [filters, setFilters] = useState({
+    category: 'all',
+    sentiment: 'all',
+    dateFrom: '',
+    dateTo: ''
+  })
+  const [showFilters, setShowFilters] = useState(false)
+  const [errorType, setErrorType] = useState(null)
+  const [retryCount, setRetryCount] = useState(0)
+  const [isOnline, setIsOnline] = useState(navigator.onLine)
 
+  // Fetch user (optional - news can be viewed without auth)
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const { authAPI } = await import('../services/api')
         const response = await authAPI.getCurrentUser()
         setUser(response.user)
-        setLoading(false)
       } catch (error) {
         console.error('[News] Error fetching user:', error)
-        navigate('/signin')
+        // Don't redirect - news can be viewed without authentication
+        setUser(null)
       }
     }
-
     fetchUser()
   }, [navigate])
 
-  const categories = ['All', 'News', 'Exclusives', 'Guides', 'Recommended']
-
-  // Comprehensive news data with category-specific content and images
-  const allNewsData = [
-    // Featured News
-    {
-      id: 1,
-      title: 'Top Analyst Unveils Ethereum Catalyst That Could Trigger Nearly 50% Surge for ETH',
-      excerpt: 'A prominent crypto analyst has identified key factors that could drive Ethereum to unprecedented heights in the coming months.',
-      category: 'News',
-      source: 'Blockchain News',
-      time: '2 hours ago',
-      tags: ['#Ethereum', '#Analytics'],
-      featured: true,
-      badge: 'BEST OF THE WEEK',
-      image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&q=80'
-    },
-    // News Category
-    {
-      id: 2,
-      title: 'US-Approved Spot Bitcoin ETFs Could Surpass Entire $50 Billion Crypto ETP Market',
-      excerpt: 'Industry experts predict massive institutional adoption following regulatory approval of Bitcoin ETFs.',
-      category: 'News',
-      source: 'CryptoDaily',
-      time: '3 hours ago',
-      image: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=400&q=80'
-    },
-    {
-      id: 3,
-      title: 'Over 65% of Crypto-Related Tweets Were Positive in 2023',
-      excerpt: 'Social sentiment analysis reveals growing optimism in the cryptocurrency community across platforms.',
-      category: 'News',
-      source: 'Market Watch',
-      time: '5 hours ago',
-      image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&q=80'
-    },
-    {
-      id: 4,
-      title: 'Solana Network Processes Record 65 Million Transactions in Single Day',
-      excerpt: 'SOL blockchain demonstrates unprecedented scalability as adoption surges.',
-      category: 'News',
-      source: 'Blockchain News',
-      time: '6 hours ago',
-      image: 'https://images.unsplash.com/photo-1639322537228-f710d846310a?w=400&q=80'
-    },
-    {
-      id: 5,
-      title: 'DeFi Total Value Locked Surpasses $100 Billion Milestone',
-      excerpt: 'Decentralized finance protocols see massive growth as institutional interest increases.',
-      category: 'News',
-      source: 'DeFi Pulse',
-      time: '8 hours ago',
-      image: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=400&q=80'
-    },
-    // Exclusives Category
-    {
-      id: 6,
-      title: 'Exclusive: Inside Look at Ethereum\'s Upcoming Dencun Upgrade',
-      excerpt: 'Core developers reveal groundbreaking features that will revolutionize Layer 2 scaling.',
-      category: 'Exclusives',
-      source: 'TradeX Exclusive',
-      time: '1 hour ago',
-      featured: true,
-      badge: 'EXCLUSIVE',
-      image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&q=80'
-    },
-    {
-      id: 7,
-      title: 'Interview: Vitalik Buterin on Ethereum\'s Future and Scalability',
-      excerpt: 'Exclusive conversation with Ethereum founder about the network\'s roadmap and vision.',
-      category: 'Exclusives',
-      source: 'TradeX Exclusive',
-      time: '4 hours ago',
-      image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&q=80'
-    },
-    {
-      id: 8,
-      title: 'Behind the Scenes: How Major Exchanges Prepare for Bull Markets',
-      excerpt: 'Exclusive access to top crypto exchanges reveals infrastructure upgrades.',
-      category: 'Exclusives',
-      source: 'TradeX Exclusive',
-      time: '1 day ago',
-      image: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=400&q=80'
-    },
-    // Guides Category
-    {
-      id: 9,
-      title: 'Complete Guide to Staking Ethereum: Maximize Your Returns in 2024',
-      excerpt: 'Step-by-step tutorial on how to stake ETH safely and optimize your rewards.',
-      category: 'Guides',
-      source: 'TradeX Academy',
-      time: '2 days ago',
-      featured: true,
-      badge: 'TRENDING GUIDE',
-      image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&q=80'
-    },
-    {
-      id: 10,
-      title: 'DeFi for Beginners: Understanding Liquidity Pools and Yield Farming',
-      excerpt: 'Learn the fundamentals of decentralized finance and start earning passive income.',
-      category: 'Guides',
-      source: 'TradeX Academy',
-      time: '3 days ago',
-      image: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=400&q=80'
-    },
-    {
-      id: 11,
-      title: 'How to Analyze Crypto Charts: Technical Analysis Masterclass',
-      excerpt: 'Master the art of reading charts and identifying profitable trading opportunities.',
-      category: 'Guides',
-      source: 'TradeX Academy',
-      time: '4 days ago',
-      image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&q=80'
-    },
-    {
-      id: 12,
-      title: 'Wallet Security 101: Protecting Your Crypto Assets',
-      excerpt: 'Essential security practices every crypto investor needs to know.',
-      category: 'Guides',
-      source: 'TradeX Academy',
-      time: '5 days ago',
-      image: 'https://images.unsplash.com/photo-1639322537228-f710d846310a?w=400&q=80'
-    },
-    // Recommended Category
-    {
-      id: 13,
-      title: 'Why Institutional Investors Are Betting Big on Bitcoin in 2024',
-      excerpt: 'Analysis of major institutional moves and what they mean for retail investors.',
-      category: 'Recommended',
-      source: 'Market Insights',
-      time: '6 hours ago',
-      featured: true,
-      badge: 'MUST READ',
-      image: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800&q=80'
-    },
-    {
-      id: 14,
-      title: 'The Rise of Layer 2 Solutions: Arbitrum and Optimism Lead the Way',
-      excerpt: 'How L2 networks are solving Ethereum\'s scalability challenges.',
-      category: 'Recommended',
-      source: 'Tech Analysis',
-      time: '12 hours ago',
-      image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&q=80'
-    },
-    {
-      id: 15,
-      title: 'NFT Market Shows Signs of Recovery: Blue Chips Rally',
-      excerpt: 'Premium NFT collections see renewed interest from collectors and investors.',
-      category: 'Recommended',
-      source: 'NFT Tracker',
-      time: '1 day ago',
-      image: 'https://images.unsplash.com/photo-1620321023374-d1a68fbc720d?w=400&q=80'
-    },
-    {
-      id: 16,
-      title: 'Central Bank Digital Currencies: The Future of Money?',
-      excerpt: 'Exploring how CBDCs could reshape the global financial system.',
-      category: 'Recommended',
-      source: 'Finance Today',
-      time: '2 days ago',
-      image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&q=80'
+  // Fetch news
+  const fetchNews = useCallback(async () => {
+    if (!isOnline) {
+      setErrorType(ERROR_TYPES.OFFLINE)
+      return
     }
-  ]
 
-  const filteredNews = activeCategory === 'All' 
-    ? allNewsData 
-    : allNewsData.filter(news => news.category === activeCategory)
+    try {
+      setLoading(true)
+      setError(null)
+      setErrorType(null)
 
-  const handleReadArticle = (newsId) => {
-    const article = allNewsData.find(n => n.id === newsId)
-    console.log('Opening article:', article?.title)
-    // In production, this would navigate to the full article or open a modal
-    alert(`Opening article:\n\n${article?.title}\n\nCategory: ${article?.category}\nSource: ${article?.source}`)
+      const requestFilters = {
+        category: filters.category !== 'all' ? filters.category : undefined,
+        sentiment: filters.sentiment !== 'all' ? filters.sentiment : undefined,
+        search: searchQuery || undefined,
+        limit: 50
+      }
+
+      // Set timeout for request
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('TIMEOUT')), 30000)
+      )
+
+      const response = await Promise.race([
+        newsService.getNews(requestFilters),
+        timeoutPromise
+      ])
+      
+      if (response.success) {
+        let articles = response.data.articles || response.data
+        
+        // Validate data
+        if (!Array.isArray(articles)) {
+          console.error('[News] Invalid data format:', articles)
+          setErrorType(ERROR_TYPES.INVALID_DATA)
+          setError('Received invalid data format')
+          return
+        }
+        
+        // Apply date range filter on client side
+        if (filters.dateFrom || filters.dateTo) {
+          articles = articles.filter(article => {
+            const articleDate = new Date(article.publishedAt)
+            const fromDate = filters.dateFrom ? new Date(filters.dateFrom) : null
+            const toDate = filters.dateTo ? new Date(filters.dateTo) : null
+            
+            if (fromDate && articleDate < fromDate) return false
+            if (toDate && articleDate > toDate) return false
+            return true
+          })
+        }
+        
+        setNews(articles)
+        setAllNews(articles) // Store all news
+        setCached(response.data.cached || response.cached)
+        setRetryCount(0) // Reset retry count on success
+      } else {
+        setError(response.error)
+        setErrorType(ERROR_TYPES.GENERAL)
+      }
+    } catch (err) {
+      console.error('[News] Error fetching news:', err)
+      
+      if (err.message === 'TIMEOUT') {
+        setErrorType(ERROR_TYPES.TIMEOUT)
+        setError('Request timed out')
+        
+        // Auto-retry with exponential backoff
+        if (retryCount < 3) {
+          const delay = Math.min(30000, 1000 * Math.pow(2, retryCount))
+          setTimeout(() => {
+            setRetryCount(prev => prev + 1)
+            fetchNews()
+          }, delay)
+        }
+      } else if (!navigator.onLine) {
+        setErrorType(ERROR_TYPES.OFFLINE)
+        setError('No internet connection')
+      } else {
+        setErrorType(ERROR_TYPES.GENERAL)
+        setError('Failed to load news')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }, [filters, searchQuery, isOnline, retryCount])
+
+  useEffect(() => {
+    fetchNews()
+  }, [fetchNews])
+
+  // Auto-refresh every 5 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchNews()
+    }, 5 * 60 * 1000)
+
+    return () => clearInterval(interval)
+  }, [fetchNews])
+
+  // Monitor online/offline status
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true)
+      setErrorType(null)
+      fetchNews()
+    }
+    
+    const handleOffline = () => {
+      setIsOnline(false)
+      setErrorType(ERROR_TYPES.OFFLINE)
+    }
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [fetchNews])
+
+  const categories = ['All', 'News', 'Analysis', 'Guides', 'Exclusives']
+
+  const handleSearch = (query) => {
+    setSearchQuery(query)
   }
 
-  const handleViewAll = () => {
-    console.log('View all recommended articles')
-    setActiveCategory('Recommended')
+  const handleFiltersChange = (newFilters) => {
+    setFilters(newFilters)
   }
 
-  if (loading) {
+  const handleDismissError = () => {
+    setError(null)
+    setErrorType(null)
+  }
+
+  const handleRetry = () => {
+    setRetryCount(0)
+    fetchNews()
+  }
+
+  const handleArticleClick = (article) => {
+    console.log('[NewsPage] Article clicked:', article)
+    console.log('[NewsPage] Article has body:', !!article.body)
+    console.log('[NewsPage] Article body length:', article.body?.length || 0)
+    setSelectedArticle(article)
+    // Mark article as read
+    setReadArticles(prev => new Set([...prev, article.id]))
+    // Store in localStorage
+    const stored = JSON.parse(localStorage.getItem('readArticles') || '[]')
+    if (!stored.includes(article.id)) {
+      localStorage.setItem('readArticles', JSON.stringify([...stored, article.id]))
+    }
+  }
+
+  const handleCloseModal = () => {
+    setSelectedArticle(null)
+  }
+
+  const handleToggleBookmark = async (articleId) => {
+    try {
+      const response = await newsService.toggleBookmark(articleId)
+      if (response.success) {
+        // Update both news and allNews
+        setNews(prevNews =>
+          prevNews.map(article =>
+            article.id === articleId
+              ? { ...article, isBookmarked: response.bookmarked }
+              : article
+          )
+        )
+        setAllNews(prevNews =>
+          prevNews.map(article =>
+            article.id === articleId
+              ? { ...article, isBookmarked: response.bookmarked }
+              : article
+          )
+        )
+        if (selectedArticle && selectedArticle.id === articleId) {
+          setSelectedArticle(prev => ({ ...prev, isBookmarked: response.bookmarked }))
+        }
+      }
+    } catch (error) {
+      console.error('[News] Error toggling bookmark:', error)
+    }
+  }
+
+  const handleShowBookmarks = () => {
+    const bookmarked = allNews.filter(article => article.isBookmarked)
+    if (bookmarked.length > 0) {
+      setNews(bookmarked)
+      setShowBookmarksOnly(true)
+      setShowReadingListOnly(false)
+    } else {
+      alert('No bookmarked articles yet!')
+    }
+  }
+
+  const handleShowReadingList = () => {
+    const readList = allNews.filter(article => readArticles.has(article.id))
+    if (readList.length > 0) {
+      setNews(readList)
+      setShowReadingListOnly(true)
+      setShowBookmarksOnly(false)
+    } else {
+      alert('No articles in your reading list yet!')
+    }
+  }
+
+  const handleShowAllNews = () => {
+    setNews(allNews)
+    setShowBookmarksOnly(false)
+    setShowReadingListOnly(false)
+  }
+
+  // Load read articles from localStorage on mount
+  useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem('readArticles') || '[]')
+    setReadArticles(new Set(stored))
+  }, [])
+
+  const filteredNews = news
+  const featuredArticle = filteredNews[0]
+  const regularNews = filteredNews.slice(1)
+
+  if (loading && news.length === 0) {
     return <LoadingScreen />
   }
 
@@ -219,113 +290,210 @@ function NewsPage() {
       
       <div className={styles.main}>
         <div className={styles.content}>
-          <div className={styles.header}>
-            <h1 className={styles.pageTitle}>Market News & Insights</h1>
-            <p className={styles.subtitle}>Stay updated with the latest financial news</p>
-          </div>
+          <div className={styles.headerRow}>
+            <div className={styles.headerLeft}>
+              <div className={styles.header}>
+                <h1 className={styles.pageTitle}>
+                  {showBookmarksOnly 
+                    ? 'Bookmarked Articles' 
+                    : showReadingListOnly 
+                    ? 'Reading List' 
+                    : 'Market News & Insights'}
+                </h1>
+              </div>
+              
+              <div className={styles.subtitle}>
+                {showBookmarksOnly 
+                  ? `Showing ${news.length} bookmarked article${news.length !== 1 ? 's' : ''}`
+                  : showReadingListOnly
+                  ? `${news.length} article${news.length !== 1 ? 's' : ''} you've read`
+                  : 'Stay updated with real-time financial news'
+                }
+                {cached && !showBookmarksOnly && !showReadingListOnly && <span className={styles.cachedBadge}>Cached</span>}
+              </div>
+            </div>
 
-          {/* Category Navigation */}
-          <div className={styles.categoryNav}>
-            {categories.map((category) => (
-              <button
-                key={category}
-                className={`${styles.categoryBtn} ${activeCategory === category ? styles.active : ''}`}
-                onClick={() => setActiveCategory(category)}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-
-          <div className={styles.newsLayout}>
-            {/* Left Column - Featured & List */}
-            <div className={styles.leftColumn}>
-              {/* Featured Article */}
-              {filteredNews.length > 0 && filteredNews[0].featured && (
-                <div className={styles.featuredArticle}>
-                  {filteredNews[0].badge && (
-                    <div className={styles.badge}>{filteredNews[0].badge}</div>
-                  )}
-                  <div className={styles.featuredMeta}>
-                    <span className={styles.source}>{filteredNews[0].source}</span>
-                    <span className={styles.dot}>•</span>
-                    <span className={styles.time}>{filteredNews[0].time}</span>
-                  </div>
-                  <h1 className={styles.featuredTitle}>{filteredNews[0].title}</h1>
-                  {filteredNews[0].tags && (
-                    <div className={styles.tags}>
-                      {filteredNews[0].tags.map((tag, index) => (
-                        <span key={index} className={styles.tag}>{tag}</span>
-                      ))}
-                    </div>
-                  )}
+            <div className={styles.headerButtons}>
+              {(showBookmarksOnly || showReadingListOnly) ? (
+                <button 
+                  className={styles.backBtn}
+                  onClick={handleShowAllNews}
+                  title="Back to All News"
+                >
+                  <MdArrowBack />
+                  <span>Back to All News</span>
+                </button>
+              ) : (
+                <>
                   <button 
-                    className={styles.readArticleBtn}
-                    onClick={() => handleReadArticle(filteredNews[0].id)}
+                    className={styles.readingListBtn}
+                    onClick={handleShowReadingList}
+                    title="View Reading List"
                   >
-                    Read article <MdArrowForward />
+                    <MdArrowForward />
+                    <span>Reading List</span>
                   </button>
+                  <button 
+                    className={styles.bookmarksBtn}
+                    onClick={handleShowBookmarks}
+                    title="View Bookmarks"
+                  >
+                    <MdBookmark />
+                    <span>Bookmarks</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className={styles.searchSection}>
+            <SearchBar onSearch={handleSearch} placeholder="Search news articles..." />
+            <button 
+              className={styles.filterToggleBtn}
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              {showFilters ? '✕ Hide Filters' : '⚙ Show Filters'}
+            </button>
+          </div>
+
+          {showFilters && !showBookmarksOnly && (
+            <NewsFilters filters={filters} onFiltersChange={handleFiltersChange} />
+          )}
+
+          {!showBookmarksOnly && <BreakingNewsSection onArticleClick={handleArticleClick} />}
+
+          {error && (
+            <div className={styles.errorMessage}>
+              <p>{error}</p>
+              <button onClick={fetchNews} className={styles.retryButton}>Retry</button>
+            </div>
+          )}
+
+          {loading && news.length === 0 && (
+            <div className={styles.loadingState}><p>Loading news...</p></div>
+          )}
+
+          {!loading && filteredNews.length === 0 && (
+            <div className={styles.emptyState}>
+              <p>No news articles found</p>
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className={styles.clearSearchButton}>
+                  Clear search
+                </button>
+              )}
+            </div>
+          )}
+
+          {filteredNews.length > 0 && (
+            <div className={styles.newsLayout}>
+              {/* Featured Article */}
+              {featuredArticle && (
+                <div className={styles.featuredArticle} onClick={() => handleArticleClick(featuredArticle)}>
+                  <div className={styles.featuredContent}>
+                    <div className={styles.badge}>FEATURED</div>
+                    <div className={styles.featuredMeta}>
+                      <span className={styles.source}>{featuredArticle.source}</span>
+                      <span className={styles.dot}>•</span>
+                      <span className={styles.time}>{newsService.formatDate(featuredArticle.publishedAt)}</span>
+                      {featuredArticle.sentiment !== undefined && (
+                        <>
+                          <span className={styles.dot}>•</span>
+                          <SentimentIndicator score={featuredArticle.sentiment} />
+                        </>
+                      )}
+                    </div>
+                    <h2 className={styles.featuredTitle}>{featuredArticle.title}</h2>
+                    {featuredArticle.categories && featuredArticle.categories.length > 0 && (
+                      <div className={styles.tags}>
+                        {featuredArticle.categories.slice(0, 3).map((cat, index) => (
+                          <span key={index} className={styles.tag}>{cat}</span>
+                        ))}
+                      </div>
+                    )}
+                    <button className={styles.readArticleBtn}>
+                      Read article <MdArrowForward />
+                    </button>
+                  </div>
+                  {featuredArticle.imageUrl && (
+                    <img src={featuredArticle.imageUrl} alt={featuredArticle.title} className={styles.featuredImage} />
+                  )}
                   <div className={styles.featuredGradient}></div>
                 </div>
               )}
 
-              {/* News List */}
-              <div className={styles.newsList}>
-                {filteredNews.slice(1, 4).map((news) => (
-                  <div 
-                    key={news.id} 
-                    className={styles.newsListItem}
-                    onClick={() => handleReadArticle(news.id)}
-                  >
-                    <div className={styles.newsListContent}>
-                      <div className={styles.newsListMeta}>
-                        <span className={styles.source}>{news.source}</span>
-                        <span className={styles.dot}>•</span>
-                        <span className={styles.time}>{news.time}</span>
-                      </div>
-                      <h3 className={styles.newsListTitle}>{news.title}</h3>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Right Column - Recommended */}
-            <div className={styles.rightColumn}>
-              <div className={styles.recommendedHeader}>
-                <h2 className={styles.recommendedTitle}>Recommended</h2>
-                <button 
-                  className={styles.viewAllBtn}
-                  onClick={handleViewAll}
+              {/* Regular News Cards */}
+              {regularNews.map((article) => (
+                <div 
+                  key={article.id} 
+                  className={`${styles.newsCard} ${readArticles.has(article.id) ? styles.readArticle : ''}`} 
+                  onClick={() => handleArticleClick(article)}
                 >
-                  View all <MdArrowForward />
-                </button>
-              </div>
-              <div className={styles.recommendedList}>
-                {filteredNews.slice(1).map((news) => (
-                  <div 
-                    key={news.id} 
-                    className={styles.recommendedCard}
-                    onClick={() => handleReadArticle(news.id)}
-                  >
-                    {news.image && (
-                      <img src={news.image} alt={news.title} className={styles.recommendedImage} />
-                    )}
-                    <div className={styles.recommendedContent}>
-                      <div className={styles.recommendedMeta}>
-                        <span className={styles.source}>{news.source}</span>
-                        <span className={styles.dot}>•</span>
-                        <span className={styles.time}>{news.time}</span>
+                  {readArticles.has(article.id) && (
+                    <div className={styles.readBadge}>Read</div>
+                  )}
+                  {article.imageUrl && (
+                    <img src={article.imageUrl} alt={article.title} className={styles.newsCardImage} />
+                  )}
+                  <div className={styles.newsCardContent}>
+                    <div className={styles.newsCardMeta}>
+                      <span className={styles.source}>{article.source}</span>
+                      <span className={styles.dot}>•</span>
+                      <span className={styles.time}>{newsService.formatDate(article.publishedAt)}</span>
+                      {article.sentiment !== undefined && (
+                        <>
+                          <span className={styles.dot}>•</span>
+                          <SentimentIndicator score={article.sentiment} size="small" />
+                        </>
+                      )}
+                    </div>
+                    <h3 className={styles.newsCardTitle}>{article.title}</h3>
+                    <div className={styles.newsCardFooter}>
+                      {article.categories && article.categories.length > 0 && (
+                        <div className={styles.tags}>
+                          {article.categories.slice(0, 2).map((cat, index) => (
+                            <span key={index} className={styles.tag}>{cat}</span>
+                          ))}
+                        </div>
+                      )}
+                      <div className={styles.cardActions}>
+                        <ShareButton 
+                          article={article}
+                          className={styles.shareBtn}
+                        />
+                        <button
+                          className={styles.bookmarkBtn}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleToggleBookmark(article.id)
+                          }}
+                        >
+                          {article.isBookmarked ? <MdBookmark /> : <MdBookmarkBorder />}
+                        </button>
                       </div>
-                      <h4 className={styles.recommendedTitle}>{news.title}</h4>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
-          </div>
+          )}
         </div>
       </div>
+
+      <ArticleModal
+        article={selectedArticle}
+        isOpen={!!selectedArticle}
+        onClose={handleCloseModal}
+        onToggleBookmark={handleToggleBookmark}
+      />
+
+      <ErrorNotification
+        error={error}
+        type={errorType}
+        onRetry={handleRetry}
+        onDismiss={handleDismissError}
+        retryCount={retryCount}
+        maxRetries={3}
+      />
     </div>
   )
 }

@@ -1,0 +1,185 @@
+.filtersContainer {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.filtersHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.filtersTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.activeCount {
+  background: var(--primary-color);
+  color: white;
+  font-size: 0.75rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.clearButton {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clearButton:hover {
+  background: var(--hover-bg);
+  border-color: var(--text-secondary);
+}
+
+.clearButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.filterSection {
+  margin-bottom: 1.5rem;
+}
+
+.filterSection:last-child {
+  margin-bottom: 0;
+}
+
+.filterLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+.categoryButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.categoryButton {
+  background: var(--hover-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.categoryButton:hover {
+  background: var(--card-bg);
+  border-color: var(--primary-color);
+}
+
+.categoryButton.active {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+.selectWrapper {
+  position: relative;
+}
+
+.select {
+  width: 100%;
+  background: var(--hover-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem;
+}
+
+.select:hover {
+  border-color: var(--primary-color);
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.dateInputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.dateInput {
+  background: var(--hover-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.dateInput:hover {
+  border-color: var(--primary-color);
+}
+
+.dateInput:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.dateInput::-webkit-calendar-picker-indicator {
+  filter: invert(0.5);
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .filtersContainer {
+    padding: 1rem;
+  }
+
+  .filtersHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .categoryButtons {
+    gap: 0.375rem;
+  }
+
+  .categoryButton {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .dateInputs {
+    grid-template-columns: 1fr;
+  }
+}

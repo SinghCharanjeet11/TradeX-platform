@@ -1,0 +1,136 @@
+.sentimentIndicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+}
+
+.labelContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.label {
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.percentage {
+  font-size: 10px;
+  opacity: 0.8;
+  font-weight: 500;
+}
+
+/* Size variants */
+.small {
+  padding: 4px 8px;
+  gap: 4px;
+}
+
+.small .icon {
+  font-size: 14px;
+}
+
+.small .label {
+  font-size: 11px;
+}
+
+.small .percentage {
+  font-size: 9px;
+}
+
+.medium {
+  padding: 8px 14px;
+}
+
+.large {
+  padding: 12px 18px;
+  gap: 10px;
+}
+
+.large .icon {
+  font-size: 22px;
+}
+
+.large .label {
+  font-size: 15px;
+}
+
+.large .percentage {
+  font-size: 12px;
+}
+
+/* Sentiment types */
+.positive {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.15) 100%);
+  color: #059669;
+  border: 2px solid rgba(16, 185, 129, 0.4);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+}
+
+.negative {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.15) 100%);
+  color: #dc2626;
+  border: 2px solid rgba(239, 68, 68, 0.4);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
+}
+
+.neutral {
+  background: linear-gradient(135deg, rgba(107, 114, 128, 0.2) 0%, rgba(75, 85, 99, 0.15) 100%);
+  color: #6b7280;
+  border: 2px solid rgba(107, 114, 128, 0.4);
+  box-shadow: 0 2px 8px rgba(107, 114, 128, 0.1);
+}
+
+/* Hover effects */
+.sentimentIndicator:hover {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.positive:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(5, 150, 105, 0.2) 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.negative:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(220, 38, 38, 0.2) 100%);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.neutral:hover {
+  background: linear-gradient(135deg, rgba(107, 114, 128, 0.25) 0%, rgba(75, 85, 99, 0.2) 100%);
+  box-shadow: 0 4px 12px rgba(107, 114, 128, 0.15);
+  border-color: rgba(107, 114, 128, 0.5);
+}
+
+/* Dark mode */
+[data-theme="dark"] .positive {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+[data-theme="dark"] .negative {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+[data-theme="dark"] .neutral {
+  background: rgba(156, 163, 175, 0.1);
+  border-color: rgba(156, 163, 175, 0.2);
+}

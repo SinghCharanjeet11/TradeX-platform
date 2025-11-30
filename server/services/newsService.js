@@ -1,141 +1,131 @@
 /**
  * News Service
- * Handles news fetching and filtering
+ * Handles news fetching, filtering, and caching with real API integration
  */
+
+import newsProvider from '../providers/newsProvider.js'
+import newsRepository from '../repositories/newsRepository.js'
+import cacheService from './cacheService.js'
+import holdingsRepository from '../repositories/holdingsRepository.js'
+import watchlistRepository from '../repositories/watchlistRepository.js'
+
+const CACHE_TTL = parseInt(process.env.NEWS_CACHE_TTL) || 300 // 5 minutes
+const STALE_CACHE_TTL = parseInt(process.env.NEWS_STALE_CACHE_TTL) || 3600 // 1 hour
+const CACHE_KEY_PREFIX = 'news:'
 
 export class NewsService {
   constructor() {
-    // Mock news data - will be replaced with real API in Step 9
-    this.newsArticles = [
-      {
-        id: 1,
-        title: 'Bitcoin Surges Past $67,000 as Institutional Interest Grows',
-        description: 'Major financial institutions continue to increase their cryptocurrency holdings, driving Bitcoin to new monthly highs.',
-        source: 'CryptoNews',
-        category: 'crypto',
-        symbols: ['BTC'],
-        publishedAt: new Date('2024-11-24T10:00:00Z'),
-        url: 'https://example.com/news/1',
-        image: 'https://via.placeholder.com/400x200/1e1e2e/3b82f6?text=Bitcoin+News',
-        sentiment: 'positive'
-      },
-      {
-        id: 2,
-        title: 'Ethereum 2.0 Upgrade Shows Promising Results',
-        description: 'Network efficiency improves by 40% following the latest protocol upgrade, reducing gas fees significantly.',
-        source: 'BlockchainDaily',
-        category: 'crypto',
-        symbols: ['ETH'],
-        publishedAt: new Date('2024-11-24T09:30:00Z'),
-        url: 'https://example.com/news/2',
-        image: 'https://via.placeholder.com/400x200/1e1e2e/10b981?text=Ethereum+News',
-        sentiment: 'positive'
-      },
-      {
-        id: 3,
-        title: 'Apple Announces Record Q4 Earnings',
-        description: 'Tech giant reports $90 billion in revenue, beating analyst expectations by 8%.',
-        source: 'MarketWatch',
-        category: 'stocks',
-        symbols: ['AAPL'],
-        publishedAt: new Date('2024-11-24T08:00:00Z'),
-        url: 'https://example.com/news/3',
-        image: 'https://via.placeholder.com/400x200/1e1e2e/3b82f6?text=Apple+Earnings',
-        sentiment: 'positive'
-      },
-      {
-        id: 4,
-        title: 'Federal Reserve Signals Potential Rate Cut',
-        description: 'Fed officials hint at monetary policy shift in upcoming meeting, markets react positively.',
-        source: 'Financial Times',
-        category: 'economy',
-        symbols: [],
-        publishedAt: new Date('2024-11-24T07:00:00Z'),
-        url: 'https://example.com/news/4',
-        image: 'https://via.placeholder.com/400x200/1e1e2e/fbbf24?text=Fed+News',
-        sentiment: 'neutral'
-      },
-      {
-        id: 5,
-        title: 'Tesla Stock Drops 5% on Production Concerns',
-        description: 'Manufacturing delays at Gigafactory raise questions about Q4 delivery targets.',
-        source: 'Bloomberg',
-        category: 'stocks',
-        symbols: ['TSLA'],
-        publishedAt: new Date('2024-11-23T16:00:00Z'),
-        url: 'https://example.com/news/5',
-        image: 'https://via.placeholder.com/400x200/1e1e2e/ef4444?text=Tesla+News',
-        sentiment: 'negative'
-      },
-      {
-        id: 6,
-        title: 'Gold Prices Reach 6-Month High',
-        description: 'Safe-haven demand pushes gold above $2,050 per ounce amid global uncertainty.',
-        source: 'Commodities Today',
-        category: 'commodities',
-        symbols: ['XAU'],
-        publishedAt: new Date('2024-11-23T14:00:00Z'),
-        url: 'https://example.com/news/6',
-        image: 'https://via.placeholder.com/400x200/1e1e2e/fbbf24?text=Gold+News',
-        sentiment: 'positive'
-      },
-      {
-        id: 7,
-        title: 'Solana Network Experiences Brief Outage',
-        description: 'Blockchain resumes normal operations after 2-hour downtime, team investigates cause.',
-        source: 'CryptoInsider',
-        category: 'crypto',
-        symbols: ['SOL'],
-        publishedAt: new Date('2024-11-23T12:00:00Z'),
-        url: 'https://example.com/news/7',
-        image: 'https://via.placeholder.com/400x200/1e1e2e/ef4444?text=Solana+News',
-        sentiment: 'negative'
-      },
-      {
-        id: 8,
-        title: 'EUR/USD Reaches Parity Amid Economic Data',
-        description: 'Euro strengthens against dollar following positive European economic indicators.',
-        source: 'ForexLive',
-        category: 'forex',
-        symbols: ['EURUSD'],
-        publishedAt: new Date('2024-11-23T10:00:00Z'),
-        url: 'https://example.com/news/8',
-        image: 'https://via.placeholder.com/400x200/1e1e2e/3b82f6?text=Forex+News',
-        sentiment: 'neutral'
-      }
-    ]
+    this.lastFetchTime = null
+    this.retryTimeout = null
   }
 
   /**
-   * Get all news with optional filters
+   * Get all news with optional filters and caching
+   * @param {Object} filters - Filter options
+   * @returns {Promise<{articles: Article[], cached: boolean, stale: boolean}>}
    */
   async getNews(filters = {}) {
-    let filtered = [...this.newsArticles]
+    try {
+      const cacheKey = `${CACHE_KEY_PREFIX}all:${JSON.stringify(filters)}`
+      
+      // Try to get from cache first
+      const cached = await cacheService.get(cacheKey)
+      if (cached) {
+        const age = Date.now() - cached.timestamp
+        if (age < CACHE_TTL * 1000) {
+          console.log('[NewsService] Serving from fresh cache')
+          return {
+            articles: await this.enrichArticles(cached.data, filters.userId),
+            cached: true,
+            stale: false
+          }
+        }
+      }
+
+      // Fetch from provider
+      try {
+        const articles = await newsProvider.getNews({
+          categories: filters.category ? [filters.category] : undefined,
+          symbols: filters.symbols,
+          limit: filters.limit || 50
+        })
+
+        // Calculate sentiment for each article
+        const enrichedArticles = articles.map(article => ({
+          ...article,
+          sentiment: this.calculateSentiment(article.body)
+        }))
+
+        // Cache the results
+        await cacheService.set(cacheKey, enrichedArticles, CACHE_TTL)
+        this.lastFetchTime = Date.now()
+
+        // Apply client-side filters
+        let filtered = this.applyFilters(enrichedArticles, filters)
+
+        return {
+          articles: await this.enrichArticles(filtered, filters.userId),
+          cached: false,
+          stale: false
+        }
+
+      } catch (providerError) {
+        console.error('[NewsService] Provider error, trying stale cache:', providerError.message)
+        
+        // Try to serve stale cache
+        if (cached) {
+          const age = Date.now() - cached.timestamp
+          if (age < STALE_CACHE_TTL * 1000) {
+            console.log('[NewsService] Serving from stale cache')
+            return {
+              articles: await this.enrichArticles(cached.data, filters.userId),
+              cached: true,
+              stale: true
+            }
+          }
+        }
+
+        // Schedule retry
+        this.scheduleRetry()
+        throw providerError
+      }
+
+    } catch (error) {
+      console.error('[NewsService] Error getting news:', error)
+      throw new Error(`Failed to fetch news: ${error.message}`)
+    }
+  }
+
+  /**
+   * Apply filters to articles
+   * @param {Article[]} articles - Articles to filter
+   * @param {Object} filters - Filter criteria
+   * @returns {Article[]}
+   */
+  applyFilters(articles, filters) {
+    let filtered = [...articles]
 
     // Filter by category
     if (filters.category && filters.category !== 'all') {
-      filtered = filtered.filter(article => article.category === filters.category)
-    }
-
-    // Filter by symbols (for personalized news)
-    if (filters.symbols && filters.symbols.length > 0) {
       filtered = filtered.filter(article => 
-        article.symbols.some(symbol => filters.symbols.includes(symbol))
+        article.category.toLowerCase() === filters.category.toLowerCase()
       )
     }
 
     // Filter by sentiment
-    if (filters.sentiment && filters.sentiment !== 'all') {
-      filtered = filtered.filter(article => article.sentiment === filters.sentiment)
+    if (filters.sentiment) {
+      filtered = filtered.filter(article => {
+        const sentiment = article.sentiment
+        if (filters.sentiment === 'positive') return sentiment > 0.3
+        if (filters.sentiment === 'negative') return sentiment < -0.3
+        if (filters.sentiment === 'neutral') return sentiment >= -0.3 && sentiment <= 0.3
+        return true
+      })
     }
 
-    // Search by title or description
+    // Filter by search query
     if (filters.search) {
-      const searchLower = filters.search.toLowerCase()
-      filtered = filtered.filter(article =>
-        article.title.toLowerCase().includes(searchLower) ||
-        article.description.toLowerCase().includes(searchLower)
-      )
+      filtered = this.filterBySearch(filtered, filters.search)
     }
 
     // Sort by date (newest first)
@@ -145,71 +135,297 @@ export class NewsService {
   }
 
   /**
-   * Get breaking news (last 24 hours)
+   * Enrich articles with bookmark status
+   * @param {Article[]} articles - Articles to enrich
+   * @param {number} userId - User ID
+   * @returns {Promise<Article[]>}
    */
-  async getBreakingNews() {
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
-    return this.newsArticles
-      .filter(article => new Date(article.publishedAt) > oneDayAgo)
-      .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))
-      .slice(0, 5)
-  }
-
-  /**
-   * Get personalized news based on user's holdings
-   */
-  async getPersonalizedNews(userSymbols = []) {
-    if (userSymbols.length === 0) {
-      return []
+  async enrichArticles(articles, userId) {
+    if (!userId || !articles || articles.length === 0) {
+      return articles
     }
 
-    return this.newsArticles
-      .filter(article => 
-        article.symbols.some(symbol => userSymbols.includes(symbol))
-      )
-      .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))
-      .slice(0, 10)
+    try {
+      const articleIds = articles.map(a => a.id)
+      const bookmarked = await newsRepository.getBookmarkedArticles(userId, articleIds)
+
+      return articles.map(article => ({
+        ...article,
+        isBookmarked: bookmarked.has(article.id)
+      }))
+    } catch (error) {
+      console.error('[NewsService] Error enriching articles:', error)
+      return articles
+    }
   }
 
   /**
-   * Get news by category
+   * Get breaking news (last 2 hours) with caching
+   * @returns {Promise<{articles: Article[], cached: boolean}>}
    */
-  async getNewsByCategory(category) {
-    return this.newsArticles
-      .filter(article => article.category === category)
-      .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))
+  async getBreakingNews() {
+    try {
+      const cacheKey = `${CACHE_KEY_PREFIX}breaking`
+      
+      // Try cache first (shorter TTL for breaking news)
+      const cached = await cacheService.get(cacheKey)
+      if (cached) {
+        const age = Date.now() - cached.timestamp
+        if (age < 120 * 1000) { // 2 minutes for breaking news
+          return {
+            articles: cached.data,
+            cached: true
+          }
+        }
+      }
+
+      // Fetch from provider
+      const articles = await newsProvider.getBreakingNews()
+
+      // Calculate sentiment
+      const enrichedArticles = articles.map(article => ({
+        ...article,
+        sentiment: this.calculateSentiment(article.body)
+      }))
+
+      // Cache for 2 minutes
+      await cacheService.set(cacheKey, enrichedArticles, 120)
+
+      return {
+        articles: enrichedArticles,
+        cached: false
+      }
+
+    } catch (error) {
+      console.error('[NewsService] Error getting breaking news:', error)
+      
+      // Try to serve stale cache
+      const cached = await cacheService.get(`${CACHE_KEY_PREFIX}breaking`)
+      if (cached) {
+        return {
+          articles: cached.data,
+          cached: true,
+          stale: true
+        }
+      }
+
+      throw new Error(`Failed to fetch breaking news: ${error.message}`)
+    }
+  }
+
+  /**
+   * Get personalized news based on user's holdings and watchlist
+   * @param {number} userId - User ID
+   * @returns {Promise<Article[]>}
+   */
+  async getPersonalizedNews(userId) {
+    try {
+      // Get user's holdings and watchlist
+      const [holdings, watchlist] = await Promise.all([
+        holdingsRepository.getHoldings(userId).catch(() => []),
+        watchlistRepository.getUserWatchlist(userId).catch(() => [])
+      ])
+
+      // Extract symbols
+      const holdingSymbols = holdings.map(h => h.symbol)
+      const watchlistSymbols = watchlist.map(w => w.symbol)
+      const allSymbols = [...new Set([...holdingSymbols, ...watchlistSymbols])]
+
+      if (allSymbols.length === 0) {
+        // Return general news if no symbols
+        return this.getNews({ limit: 20 })
+      }
+
+      const cacheKey = `${CACHE_KEY_PREFIX}personalized:${userId}`
+      
+      // Try cache
+      const cached = await cacheService.get(cacheKey)
+      if (cached) {
+        const age = Date.now() - cached.timestamp
+        if (age < CACHE_TTL * 1000) {
+          return {
+            articles: await this.enrichArticles(cached.data, userId),
+            cached: true
+          }
+        }
+      }
+
+      // Fetch news for user's symbols
+      const articles = await newsProvider.getNewsBySymbols(allSymbols)
+
+      // Calculate sentiment and prioritize
+      const enrichedArticles = articles.map(article => {
+        const matchedSymbols = article.symbols.filter(s => allSymbols.includes(s))
+        return {
+          ...article,
+          sentiment: this.calculateSentiment(article.body),
+          matchedSymbols,
+          relevanceScore: matchedSymbols.length
+        }
+      })
+
+      // Sort by relevance and date
+      enrichedArticles.sort((a, b) => {
+        if (a.relevanceScore !== b.relevanceScore) {
+          return b.relevanceScore - a.relevanceScore
+        }
+        return new Date(b.publishedAt) - new Date(a.publishedAt)
+      })
+
+      // Cache results
+      await cacheService.set(cacheKey, enrichedArticles, CACHE_TTL)
+
+      return {
+        articles: await this.enrichArticles(enrichedArticles, userId),
+        cached: false
+      }
+
+    } catch (error) {
+      console.error('[NewsService] Error getting personalized news:', error)
+      throw new Error(`Failed to fetch personalized news: ${error.message}`)
+    }
+  }
+
+  /**
+   * Calculate sentiment score for article content
+   * Simple sentiment analysis based on keyword matching
+   * @param {string} content - Article content
+   * @returns {number} Score between -1 and 1
+   */
+  calculateSentiment(content) {
+    if (!content) return 0
+
+    const contentLower = content.toLowerCase()
+
+    // Positive keywords
+    const positiveKeywords = [
+      'surge', 'gain', 'profit', 'growth', 'success', 'bullish', 'rally',
+      'breakthrough', 'record', 'high', 'positive', 'upgrade', 'strong',
+      'beat', 'exceed', 'optimistic', 'recovery', 'boom', 'soar'
+    ]
+
+    // Negative keywords
+    const negativeKeywords = [
+      'drop', 'fall', 'loss', 'decline', 'crash', 'bearish', 'concern',
+      'risk', 'negative', 'downgrade', 'weak', 'miss', 'fail', 'pessimistic',
+      'recession', 'crisis', 'plunge', 'tumble', 'slump'
+    ]
+
+    let positiveCount = 0
+    let negativeCount = 0
+
+    positiveKeywords.forEach(keyword => {
+      const regex = new RegExp(`\\b${keyword}\\b`, 'gi')
+      const matches = contentLower.match(regex)
+      if (matches) positiveCount += matches.length
+    })
+
+    negativeKeywords.forEach(keyword => {
+      const regex = new RegExp(`\\b${keyword}\\b`, 'gi')
+      const matches = contentLower.match(regex)
+      if (matches) negativeCount += matches.length
+    })
+
+    const total = positiveCount + negativeCount
+    if (total === 0) return 0
+
+    // Calculate score between -1 and 1
+    const score = (positiveCount - negativeCount) / total
+    return Math.max(-1, Math.min(1, score))
+  }
+
+  /**
+   * Filter articles by search query
+   * Supports multi-word search with OR logic
+   * @param {Article[]} articles - Articles to filter
+   * @param {string} query - Search query
+   * @returns {Article[]}
+   */
+  filterBySearch(articles, query) {
+    if (!query || query.trim() === '') {
+      return articles
+    }
+
+    const searchTerms = query.toLowerCase().trim().split(/\s+/)
+
+    return articles.filter(article => {
+      const titleLower = article.title.toLowerCase()
+      const bodyLower = article.body.toLowerCase()
+
+      // Match if any search term is found in title or body
+      return searchTerms.some(term => 
+        titleLower.includes(term) || bodyLower.includes(term)
+      )
+    })
+  }
+
+  /**
+   * Schedule retry after provider failure
+   */
+  scheduleRetry() {
+    if (this.retryTimeout) {
+      clearTimeout(this.retryTimeout)
+    }
+
+    this.retryTimeout = setTimeout(() => {
+      console.log('[NewsService] Retry timeout expired, ready for next request')
+      this.retryTimeout = null
+    }, 30000) // 30 seconds
   }
 
   /**
    * Get market sentiment summary
+   * @returns {Promise<Object>}
    */
   async getMarketSentiment() {
-    const recentNews = this.newsArticles.slice(0, 20)
-    
-    const sentimentCounts = {
-      positive: 0,
-      neutral: 0,
-      negative: 0
-    }
+    try {
+      const cacheKey = `${CACHE_KEY_PREFIX}sentiment`
+      
+      // Try cache
+      const cached = await cacheService.get(cacheKey)
+      if (cached) {
+        const age = Date.now() - cached.timestamp
+        if (age < CACHE_TTL * 1000) {
+          return cached.data
+        }
+      }
 
-    recentNews.forEach(article => {
-      sentimentCounts[article.sentiment]++
-    })
+      // Get recent news
+      const { articles } = await this.getNews({ limit: 50 })
+      
+      const sentimentCounts = {
+        positive: 0,
+        neutral: 0,
+        negative: 0
+      }
 
-    const total = recentNews.length
-    const sentimentScore = (
-      (sentimentCounts.positive * 1) + 
-      (sentimentCounts.neutral * 0) + 
-      (sentimentCounts.negative * -1)
-    ) / total
+      articles.forEach(article => {
+        const sentiment = article.sentiment
+        if (sentiment > 0.3) sentimentCounts.positive++
+        else if (sentiment < -0.3) sentimentCounts.negative++
+        else sentimentCounts.neutral++
+      })
 
-    return {
-      score: sentimentScore,
-      positive: sentimentCounts.positive,
-      neutral: sentimentCounts.neutral,
-      negative: sentimentCounts.negative,
-      total,
-      sentiment: sentimentScore > 0.2 ? 'bullish' : sentimentScore < -0.2 ? 'bearish' : 'neutral'
+      const total = articles.length
+      const avgSentiment = articles.reduce((sum, a) => sum + a.sentiment, 0) / total
+
+      const result = {
+        score: avgSentiment,
+        positive: sentimentCounts.positive,
+        neutral: sentimentCounts.neutral,
+        negative: sentimentCounts.negative,
+        total,
+        sentiment: avgSentiment > 0.2 ? 'bullish' : avgSentiment < -0.2 ? 'bearish' : 'neutral'
+      }
+
+      // Cache for 5 minutes
+      await cacheService.set(cacheKey, result, CACHE_TTL)
+
+      return result
+
+    } catch (error) {
+      console.error('[NewsService] Error getting market sentiment:', error)
+      throw new Error(`Failed to calculate market sentiment: ${error.message}`)
     }
   }
 }

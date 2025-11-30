@@ -1,0 +1,123 @@
+.notification {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: var(--card-bg);
+  border: 1px solid var(--error-color, #ff4444);
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  z-index: 1000;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.notification.offline {
+  border-color: #ff9800;
+}
+
+.notification.timeout {
+  border-color: #ff4444;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.icon {
+  font-size: 1.5rem;
+}
+
+.icon.error {
+  color: #ff4444;
+}
+
+.icon.warning {
+  color: #ff9800;
+}
+
+.title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.message {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.retryButton {
+  background: var(--primary-color);
+  border: none;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.retryButton:hover {
+  background: var(--primary-hover);
+}
+
+.retryButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dismissButton {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dismissButton:hover {
+  background: var(--hover-bg);
+  border-color: var(--text-secondary);
+}
+
+.countdown {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .notification {
+    bottom: 1rem;
+    right: 1rem;
+    left: 1rem;
+    max-width: none;
+  }
+}
