@@ -23,6 +23,11 @@ import {
   findValidResetToken,
   markTokenAsUsed
 } from '../repositories/resetTokenRepository.js'
+import {
+  is2FAEnabled,
+  verifyToken as verify2FAToken,
+  verifyAndUseBackupCode
+} from '../services/twoFactorService.js'
 
 /**
  * Register a new user

@@ -8,6 +8,13 @@ import {
   getCurrentUser
 } from '../controllers/authController.js'
 import {
+  setup2FA,
+  enable2FAEndpoint,
+  disable2FAEndpoint,
+  get2FAStatus,
+  regenerateBackupCodesEndpoint
+} from '../controllers/twoFactorController.js'
+import {
   validateRegistration,
   validateLogin,
   validateForgotPassword,
@@ -63,6 +70,13 @@ router.post(
 
 // Protected routes
 router.get('/me', requireAuth, getCurrentUser)
+
+// 2FA routes
+router.post('/2fa/setup', requireAuth, setup2FA)
+router.post('/2fa/enable', requireAuth, enable2FAEndpoint)
+router.post('/2fa/disable', requireAuth, disable2FAEndpoint)
+router.get('/2fa/status', requireAuth, get2FAStatus)
+router.post('/2fa/backup-codes/regenerate', requireAuth, regenerateBackupCodesEndpoint)
 
 // External account connection routes
 router.post('/connect-account', requireAuth, async (req, res) => {
