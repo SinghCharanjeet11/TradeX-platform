@@ -5,13 +5,13 @@
 
 import express from 'express';
 import paperTradingController from '../controllers/paperTradingController.js';
-import { authenticate } from '../middleware/auth.js';
+import { requireAuth } from '../middleware/auth.js';
 import { apiLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
 // Apply authentication to all routes
-router.use(authenticate);
+router.use(requireAuth);
 
 // Apply rate limiting
 router.use(apiLimiter);
