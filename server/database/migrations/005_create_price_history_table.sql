@@ -24,14 +24,30 @@ CREATE INDEX IF NOT EXISTS idx_price_history_symbol
 ON price_history(symbol);
 
 -- Add check constraint for valid asset types
-ALTER TABLE price_history 
-ADD CONSTRAINT chk_price_history_asset_type 
-CHECK (asset_type IN ('crypto', 'stocks', 'forex', 'commodities'));
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint 
+    WHERE conname = 'chk_price_history_asset_type'
+  ) THEN
+    ALTER TABLE price_history 
+    ADD CONSTRAINT chk_price_history_asset_type 
+    CHECK (asset_type IN ('crypto', 'stocks', 'forex', 'commodities'));
+  END IF;
+END $$;
 
 -- Add check constraint for positive prices
-ALTER TABLE price_history 
-ADD CONSTRAINT chk_price_history_positive_price 
-CHECK (price > 0);
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint 
+    WHERE conname = 'chk_price_history_positive_price'
+  ) THEN
+    ALTER TABLE price_history 
+    ADD CONSTRAINT chk_price_history_positive_price 
+    CHECK (price > 0);
+  END IF;
+END $$;
 
 -- Add comment to table
 COMMENT ON TABLE price_history IS 'Historical price data for all tracked assets';
