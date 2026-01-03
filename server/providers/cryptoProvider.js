@@ -9,14 +9,20 @@ import { apiConfig } from '../config/apiConfig.js';
 class CryptoProvider {
   constructor() {
     this.apiKey = process.env.COINGECKO_API_KEY;
-    // Use Pro API if key is available, otherwise use free API
-    this.baseUrl = this.apiKey 
+    // Check if it's a Pro API key (starts with 'CG-') or Demo key
+    this.isProKey = this.apiKey && this.apiKey.startsWith('CG-');
+    
+    // Use Pro API only for Pro keys, Demo keys use the regular API
+    this.baseUrl = this.isProKey 
       ? 'https://pro-api.coingecko.com/api/v3'
       : (apiConfig.coingecko.baseUrl || 'https://api.coingecko.com/api/v3');
     this.timeout = apiConfig.coingecko.timeout;
     this.retryConfig = apiConfig.retry;
     this.lastRequestTime = 0;
     this.minRequestInterval = this.apiKey ? 500 : 1500; // Faster with API key
+    
+    console.log(`[CryptoProvider] Initialized with ${this.apiKey ? (this.isProKey ? 'Pro' : 'Demo') + ' API key' : 'no API key'}`);
+    console.log(`[CryptoProvider] Using base URL: ${this.baseUrl}`);
   }
 
   /**
@@ -137,8 +143,13 @@ class CryptoProvider {
       };
       
       // Add API key header if available
+      // Pro keys use x-cg-pro-api-key, Demo keys use x-cg-demo-api-key
       if (this.apiKey) {
-        headers['x-cg-pro-api-key'] = this.apiKey;
+        if (this.isProKey) {
+          headers['x-cg-pro-api-key'] = this.apiKey;
+        } else {
+          headers['x-cg-demo-api-key'] = this.apiKey;
+        }
       }
       
       const response = await axios.get(endpoint, {
