@@ -13,6 +13,7 @@ import adminRoutes from './routes/adminRoutes.js'
 import paperTradingRoutes from './routes/paperTradingRoutes.js'
 import aiInsightsRoutes from './routes/aiInsightsRoutes.js'
 import dashboardRoutes from './routes/dashboardRoutes.js'
+import setupRoutes from './routes/setupRoutes.js'
 import { securityHeaders, corsOptions, setCsrfToken } from './middleware/security.js'
 import { validateConfig } from './config/apiConfig.js'
 import sessionCleanupJob from './jobs/sessionCleanup.js'
@@ -43,6 +44,7 @@ app.use(cookieParser())
 app.use(setCsrfToken)
 
 // Routes
+app.use('/api/setup', setupRoutes)
 app.use('/api/auth', authRoutes)
 app.use('/api/sessions', sessionRoutes)
 app.use('/api/dashboard', dashboardRoutes)
