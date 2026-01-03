@@ -17,8 +17,8 @@ CREATE TABLE IF NOT EXISTS paper_accounts (
 );
 
 -- Create indexes for performance
-CREATE INDEX idx_paper_accounts_user_id ON paper_accounts(user_id);
-CREATE INDEX idx_paper_accounts_leaderboard ON paper_accounts(current_balance DESC) 
+CREATE INDEX IF NOT EXISTS idx_paper_accounts_user_id ON paper_accounts(user_id);
+CREATE INDEX IF NOT EXISTS idx_paper_accounts_leaderboard ON paper_accounts(current_balance DESC) 
   WHERE leaderboard_visible = true;
 
 -- Add comment for documentation

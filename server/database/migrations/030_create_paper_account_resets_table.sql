@@ -9,8 +9,8 @@ CREATE TABLE IF NOT EXISTS paper_account_resets (
 );
 
 -- Create indexes for performance
-CREATE INDEX idx_paper_resets_user_id ON paper_account_resets(user_id);
-CREATE INDEX idx_paper_resets_date ON paper_account_resets(reset_at DESC);
+CREATE INDEX IF NOT EXISTS idx_paper_resets_user_id ON paper_account_resets(user_id);
+CREATE INDEX IF NOT EXISTS idx_paper_resets_date ON paper_account_resets(reset_at DESC);
 
 -- Add comment for documentation
 COMMENT ON TABLE paper_account_resets IS 'Audit log of paper trading account resets';
