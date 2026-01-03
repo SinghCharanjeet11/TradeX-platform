@@ -8,11 +8,15 @@ import { apiConfig } from '../config/apiConfig.js';
 
 class CryptoProvider {
   constructor() {
-    this.baseUrl = apiConfig.coingecko.baseUrl;
+    this.apiKey = process.env.COINGECKO_API_KEY;
+    // Use Pro API if key is available, otherwise use free API
+    this.baseUrl = this.apiKey 
+      ? 'https://pro-api.coingecko.com/api/v3'
+      : (apiConfig.coingecko.baseUrl || 'https://api.coingecko.com/api/v3');
     this.timeout = apiConfig.coingecko.timeout;
     this.retryConfig = apiConfig.retry;
     this.lastRequestTime = 0;
-    this.minRequestInterval = 1200; // Minimum 1.2 seconds between requests to avoid rate limiting
+    this.minRequestInterval = this.apiKey ? 500 : 1500; // Faster with API key
   }
 
   /**
@@ -126,13 +130,21 @@ class CryptoProvider {
       
       this.lastRequestTime = Date.now();
       
+      // Build headers
+      const headers = {
+        'Accept': 'application/json',
+        'User-Agent': 'TradeX-Platform/1.0'
+      };
+      
+      // Add API key header if available
+      if (this.apiKey) {
+        headers['x-cg-pro-api-key'] = this.apiKey;
+      }
+      
       const response = await axios.get(endpoint, {
         params,
         timeout: this.timeout,
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'TradeX-Platform/1.0'
-        }
+        headers
       });
 
       console.log(`[CryptoProvider] ${methodName} - Success`);
