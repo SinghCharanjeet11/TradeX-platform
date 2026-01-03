@@ -130,9 +130,7 @@ tradex-authentication/
 │   ├── routes/           # API routes
 │   ├── services/         # Business logic
 │   └── server.js
-├── scripts/              # Development & testing utilities
-│   ├── test-*.js        # Test scripts
-│   └── README.md        # Scripts documentation
+├── scripts/              # Utility scripts (if needed)
 └── package.json
 ```
 
@@ -192,26 +190,6 @@ To minimize API calls and stay within rate limits, the system implements smart c
 **Crypto data works but stocks/forex/commodities don't:**
 - Check that your Alpha Vantage API key is valid
 - Visit `/api/markets/health` to check API status
-
-## Development Scripts
-
-The `scripts/` directory contains utility scripts for testing and debugging:
-
-```bash
-# Test system health (database, server, APIs)
-node scripts/test-system-health.js
-
-# Test all backend API endpoints
-node scripts/test-backend.js
-
-# Verify API keys are configured correctly
-node scripts/test-api-keys.js
-
-# Quick health check
-node scripts/test-health.js
-```
-
-See `scripts/README.md` for complete documentation.
 
 ## License
 
