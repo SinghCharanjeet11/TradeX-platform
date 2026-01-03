@@ -2,12 +2,29 @@ import axios from 'axios'
 
 // Get API URL from environment variable
 // VITE_API_URL must be set at build time for production
-const API_URL = import.meta.env.VITE_API_URL || ''
+// Fallback to production API URL if env var is not set and we're on the production domain
+const getApiUrl = () => {
+  // First, try the environment variable
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL
+  }
+  
+  // Fallback: if we're on the production frontend domain, use the production API
+  if (typeof window !== 'undefined' && window.location.hostname === 'tradex-platform.onrender.com') {
+    return 'https://tradex-api-zsyj.onrender.com'
+  }
+  
+  // Default: empty string (relative URLs for local development with proxy)
+  return ''
+}
+
+const API_URL = getApiUrl()
 
 // Debug logging for production troubleshooting
 if (import.meta.env.MODE !== 'development') {
   console.log('[API] Mode:', import.meta.env.MODE)
   console.log('[API] VITE_API_URL:', import.meta.env.VITE_API_URL)
+  console.log('[API] Hostname:', typeof window !== 'undefined' ? window.location.hostname : 'N/A')
   console.log('[API] Using API_URL:', API_URL)
 }
 
