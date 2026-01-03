@@ -72,7 +72,7 @@ export const setCsrfToken = (req, res, next) => {
     res.cookie('csrf_token', token, {
       httpOnly: false, // Allow JavaScript to read for sending in headers
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     })
   }
