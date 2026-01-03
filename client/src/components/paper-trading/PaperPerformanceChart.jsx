@@ -75,14 +75,18 @@ function PaperPerformanceChart() {
   const generateYAxisLabels = () => {
     if (!chartData) return [];
     
-    const { minValue, maxValue } = chartData;
+    const { minValue, maxValue, range } = chartData;
     const labels = [];
     const steps = 5;
     
+    // Handle case where all values are the same (range is 0)
+    const effectiveRange = range === 0 ? 1 : range;
+    
     for (let i = 0; i <= steps; i++) {
-      const value = minValue + ((maxValue - minValue) / steps) * i;
-      const y = 60 - 5 - ((value - minValue) / (maxValue - minValue)) * 50;
-      labels.push({ value, y });
+      const value = minValue + (effectiveRange / steps) * i;
+      const normalizedY = range === 0 ? 0.5 : (value - minValue) / effectiveRange;
+      const y = 60 - 5 - normalizedY * 50;
+      labels.push({ value, y: isNaN(y) ? 30 : y });
     }
     
     return labels.reverse();
