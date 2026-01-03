@@ -1,7 +1,7 @@
 -- Create notifications table
 CREATE TABLE IF NOT EXISTS notifications (
   id SERIAL PRIMARY KEY,
-  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   type VARCHAR(50) NOT NULL CHECK (type IN ('price_alert', 'portfolio_milestone', 'news', 'system')),
   title VARCHAR(200) NOT NULL,
   message TEXT NOT NULL,

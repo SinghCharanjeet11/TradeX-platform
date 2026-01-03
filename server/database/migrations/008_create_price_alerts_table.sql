@@ -1,7 +1,7 @@
 -- Create price_alerts table
 CREATE TABLE IF NOT EXISTS price_alerts (
   id SERIAL PRIMARY KEY,
-  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   symbol VARCHAR(20) NOT NULL,
   name VARCHAR(100) NOT NULL,
   asset_type VARCHAR(20) NOT NULL CHECK (asset_type IN ('crypto', 'stocks', 'forex', 'commodities')),
