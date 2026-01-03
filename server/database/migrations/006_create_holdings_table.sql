@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS holdings (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_holdings_user_id ON holdings(user_id);
-CREATE INDEX idx_holdings_symbol ON holdings(symbol);
-CREATE INDEX idx_holdings_account ON holdings(account);
-CREATE UNIQUE INDEX idx_holdings_user_symbol_type ON holdings(user_id, symbol, asset_type);
+CREATE INDEX IF NOT EXISTS idx_holdings_user_id ON holdings(user_id);
+CREATE INDEX IF NOT EXISTS idx_holdings_symbol ON holdings(symbol);
+CREATE INDEX IF NOT EXISTS idx_holdings_account ON holdings(account);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_holdings_user_symbol_type ON holdings(user_id, symbol, asset_type);
