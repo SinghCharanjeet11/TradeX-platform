@@ -3,61 +3,61 @@
   display: flex;
   align-items: center;
   width: 100%;
-  max-width: 500px;
+  max-width: 320px;
 }
 
 .searchIcon {
   position: absolute;
-  left: 16px;
-  font-size: 20px;
-  color: #718096;
+  left: 6px;
+  font-size: 18px;
+  color: #9ca3af;
   pointer-events: none;
   z-index: 1;
 }
 
 .searchInput {
   width: 100%;
-  padding: 12px 48px 12px 48px;
-  background: #ffffff;
+  padding: 8px 32px 8px 32px;
+  background: transparent;
   border: none;
-  border-bottom: 3px solid #00d4aa;
+  border-bottom: 2px solid #4fd1c5;
   border-radius: 0;
   color: #1a202c;
   font-size: 14px;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  font-weight: 400;
+  transition: all 0.3s ease;
 }
 
 .searchInput::placeholder {
-  color: #a0aec0;
+  color: #9ca3af;
+  font-weight: 400;
 }
 
 .searchInput:focus {
   outline: none;
-  background: #ffffff;
-  border-bottom-color: #00d4aa;
-  box-shadow: 0 2px 0 0 rgba(0, 212, 170, 0.1);
+  background: transparent;
+  border-bottom-color: #38b2ac;
 }
 
 .clearButton {
   position: absolute;
-  right: 12px;
+  right: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: #f7fafc;
+  width: 20px;
+  height: 20px;
+  background: transparent;
   border: none;
   border-radius: 50%;
-  color: #718096;
-  font-size: 18px;
+  color: #9ca3af;
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .clearButton:hover {
-  background: #e2e8f0;
+  background: rgba(0, 0, 0, 0.05);
   color: #1a202c;
 }
 
@@ -67,32 +67,31 @@
 
 /* Dark mode support */
 [data-theme="dark"] .searchInput {
-  background: rgba(255, 255, 255, 0.03);
-  border-bottom-color: rgba(255, 255, 255, 0.1);
+  background: transparent;
+  border-bottom-color: #4fd1c5;
   color: #f1f5f9;
 }
 
 [data-theme="dark"] .searchInput:focus {
-  background: rgba(255, 255, 255, 0.05);
-  border-bottom-color: #00d4aa;
-  box-shadow: 0 2px 0 0 rgba(0, 212, 170, 0.2);
+  background: transparent;
+  border-bottom-color: #38b2ac;
 }
 
 [data-theme="dark"] .searchInput::placeholder {
-  color: #64748b;
+  color: #6b7280;
 }
 
 [data-theme="dark"] .searchIcon {
-  color: #94a3b8;
+  color: #9ca3af;
 }
 
 [data-theme="dark"] .clearButton {
-  background: rgba(255, 255, 255, 0.1);
-  color: #94a3b8;
+  background: transparent;
+  color: #9ca3af;
 }
 
 [data-theme="dark"] .clearButton:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.1);
   color: #f1f5f9;
 }
 
@@ -103,7 +102,11 @@
   }
 
   .searchInput {
-    padding: 10px 40px 10px 40px;
+    padding: 6px 28px 6px 28px;
     font-size: 13px;
+  }
+
+  .searchIcon {
+    font-size: 16px;
   }
 }

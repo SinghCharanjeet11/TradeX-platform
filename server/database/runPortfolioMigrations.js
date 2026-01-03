@@ -3,13 +3,18 @@
  * Executes migrations for portfolio_snapshots, price_history, and holdings enhancements
  */
 
-import { query } from '../config/database.js';
-import fs from 'fs';
+import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Load .env from server directory
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
+
+import { query } from '../config/database.js';
+import fs from 'fs';
 
 const migrations = [
   '004_create_portfolio_snapshots_table.sql',

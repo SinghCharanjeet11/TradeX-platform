@@ -237,22 +237,47 @@
   border-color: #334155;
 }
 
-[data-theme="dark"] .title {
+[data-theme="dark"] .titleRow h3 {
   color: #f1f5f9;
 }
 
-[data-theme="dark"] .assetItem {
-  border-bottom-color: #334155;
+[data-theme="dark"] .periodSelector {
+  background: rgba(255, 255, 255, 0.05);
 }
 
-[data-theme="dark"] .assetName {
-  color: #f1f5f9;
-}
-
-[data-theme="dark"] .assetSymbol {
+[data-theme="dark"] .periodBtn {
   color: #94a3b8;
 }
 
-[data-theme="dark"] .assetPrice {
+[data-theme="dark"] .periodBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
   color: #f1f5f9;
+}
+
+[data-theme="dark"] .name {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .symbol {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .price {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .stats {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .statLabel {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .statValue {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .emptyState {
+  color: #94a3b8;
 }

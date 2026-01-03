@@ -34,10 +34,15 @@ export const getWatchlist = async (req, res) => {
  */
 export const addToWatchlist = async (req, res) => {
   try {
+    console.log('[WatchlistController] POST /api/watchlist called')
+    console.log('[WatchlistController] User:', req.user?.id)
+    console.log('[WatchlistController] Body:', req.body)
+    
     const userId = req.user.id
     const { symbol, name, assetType } = req.body
 
     if (!symbol || !name || !assetType) {
+      console.log('[WatchlistController] Missing required fields')
       return res.status(400).json({
         success: false,
         error: 'Missing required fields'
@@ -49,6 +54,8 @@ export const addToWatchlist = async (req, res) => {
       name,
       assetType
     })
+
+    console.log('[WatchlistController] Successfully added to watchlist:', watchlistItem)
 
     res.status(201).json({
       success: true,

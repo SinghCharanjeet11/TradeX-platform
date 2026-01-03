@@ -45,12 +45,13 @@ function Header() {
   return (
     <header className={styles.header}>
       <div className={styles.logo}>
-        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-          <rect x="2" y="2" width="32" height="32" rx="8" stroke="#7c8cff" strokeWidth="2"/>
-          <path d="M8 22L13 17L18 20L28 10" stroke="#7c8cff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M23 10H28V15" stroke="#7c8cff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-        <span>TradeX</span>
+        <div className={styles.logoIcon}>
+          <svg width="24" height="24" viewBox="0 0 36 36" fill="none">
+            <path d="M10 22L14 18L18 20L26 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M21 12H26V17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+        <span className={styles.logoText}>TradeX</span>
       </div>
       
       {isAuthenticated ? (

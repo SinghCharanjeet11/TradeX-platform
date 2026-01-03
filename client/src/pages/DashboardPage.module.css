@@ -2,13 +2,14 @@
   display: flex;
   min-height: 100vh;
   background: #ffffff;
+  position: relative;
 }
 
 .main {
   flex: 1;
-  margin-left: 200px;
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
 }
 
 .content {
@@ -17,31 +18,74 @@
   flex: 1;
 }
 
+.dashboardContent {
+  padding: 32px;
+  padding-top: 80px;
+  flex: 1;
+}
+
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
-  padding-bottom: 24px;
-  border-bottom: 2px solid #e2e8f0;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, rgba(0, 212, 170, 0.08) 0%, rgba(0, 168, 142, 0.03) 100%);
+  border-radius: 16px;
+  border-left: 4px solid #00d4aa;
   min-height: 40px;
+  box-shadow: 0 2px 8px rgba(0, 212, 170, 0.08);
+  backdrop-filter: blur(8px);
 }
 
 .titleRow {
-  margin-bottom: 32px;
+  margin-bottom: 24px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, rgba(0, 212, 170, 0.08) 0%, rgba(0, 168, 142, 0.03) 100%);
+  border-radius: 16px;
+  border-left: 4px solid #00d4aa;
+  box-shadow: 0 2px 8px rgba(0, 212, 170, 0.08);
+  backdrop-filter: blur(8px);
+}
+
+/* Market-specific title row colors */
+.titleRowCrypto {
+  background: linear-gradient(135deg, rgba(0, 212, 170, 0.08) 0%, rgba(0, 168, 142, 0.03) 100%);
+  border-left-color: #00d4aa;
+  box-shadow: 0 2px 8px rgba(0, 212, 170, 0.08);
+}
+
+.titleRowStocks {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(37, 99, 235, 0.03) 100%);
+  border-left-color: #3b82f6;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.08);
+}
+
+.titleRowForex {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(217, 119, 6, 0.03) 100%);
+  border-left-color: #f59e0b;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.08);
+}
+
+.titleRowCommodities {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(139, 92, 246, 0.03) 100%);
+  border-left-color: #a855f7;
+  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.08);
 }
 
 .pageTitle {
-  font-size: 32px;
+  font-size: 26px;
   font-weight: 700;
   color: #1a202c;
-  margin: 0 0 4px 0;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.5px;
 }
 
 .subtitle {
   font-size: 14px;
   color: #718096;
   margin: 0;
+  font-weight: 500;
 }
 
 .updated {
@@ -85,9 +129,9 @@
   width: 140px;
   height: 140px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6b7fff 0%, #8b9fff 100%);
+  background: linear-gradient(135deg, #00d4aa 0%, #00a88e 100%);
   border: none;
-  box-shadow: 0 8px 24px rgba(124, 140, 255, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 212, 170, 0.4);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -100,7 +144,7 @@
 
 .goProBtn:hover {
   transform: scale(1.05);
-  box-shadow: 0 12px 32px rgba(124, 140, 255, 0.5);
+  box-shadow: 0 12px 32px rgba(0, 212, 170, 0.5);
 }
 
 .goProText {
@@ -140,16 +184,25 @@
 }
 
 @media (max-width: 768px) {
-  .main {
-    margin-left: 70px;
-  }
-  
   .content {
     padding: 16px;
+    padding-top: 70px;
+  }
+  
+  .titleRow {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .pageTitle {
+    font-size: 20px;
+    line-height: 1.3;
   }
   
   .grid {
     grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
   }
   
   .goProBtn {
@@ -168,31 +221,42 @@
   }
 }
 
-
-.connectBtn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #00d4aa 0%, #00a88e 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
+@media (max-width: 480px) {
+  .content {
+    padding: 12px;
+    padding-top: 60px;
+  }
+  
+  .titleRow {
+    padding: 12px 14px;
+    margin-bottom: 12px;
+  }
+  
+  .pageTitle {
+    font-size: 18px;
+  }
+  
+  .grid {
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .goProBtn {
+    width: 60px;
+    height: 60px;
+    bottom: 12px;
+    left: 12px;
+  }
+  
+  .goProText {
+    font-size: 12px;
+  }
+  
+  .goProSubtext {
+    display: none;
+  }
 }
 
-.connectBtn:hover {
-  background: linear-gradient(135deg, #00ffcc 0%, #00d4aa 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 212, 170, 0.3);
-}
-
-.connectBtn svg {
-  font-size: 20px;
-}
 
 .emptyState {
   display: flex;
@@ -295,8 +359,32 @@
   background: #0f172a;
 }
 
-[data-theme="dark"] .header {
-  border-bottom-color: #334155;
+[data-theme="dark"] .header,
+[data-theme="dark"] .titleRow {
+  background: linear-gradient(135deg, rgba(0, 212, 170, 0.12) 0%, rgba(0, 168, 142, 0.06) 100%);
+  border-left-color: #00d4aa;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Dark mode market-specific title row colors */
+[data-theme="dark"] .titleRowCrypto {
+  background: linear-gradient(135deg, rgba(0, 212, 170, 0.12) 0%, rgba(0, 168, 142, 0.06) 100%);
+  border-left-color: #00d4aa;
+}
+
+[data-theme="dark"] .titleRowStocks {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(37, 99, 235, 0.06) 100%);
+  border-left-color: #3b82f6;
+}
+
+[data-theme="dark"] .titleRowForex {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(217, 119, 6, 0.06) 100%);
+  border-left-color: #f59e0b;
+}
+
+[data-theme="dark"] .titleRowCommodities {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(139, 92, 246, 0.06) 100%);
+  border-left-color: #a855f7;
 }
 
 [data-theme="dark"] .titleRow h1,
@@ -310,4 +398,25 @@
 
 [data-theme="dark"] .updated {
   color: #94a3b8;
+}
+
+[data-theme="dark"] .emptyState {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .emptyIcon {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .emptyState h2 {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .emptyState p {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .loading {
+  background: #0f172a;
 }

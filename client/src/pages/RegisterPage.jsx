@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 import Header from '../components/Header'
 import FormInput from '../components/FormInput'
 import Button from '../components/Button'
@@ -8,6 +9,7 @@ import styles from './RegisterPage.module.css'
 
 function RegisterPage() {
   const navigate = useNavigate()
+  const { checkAuth } = useAuth()
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -74,6 +76,9 @@ function RegisterPage() {
       const { authAPI } = await import('../services/api')
       await authAPI.register(formData)
       
+      // Registration automatically logs the user in, so update auth context
+      await checkAuth()
+      
       // Success - show loading transition then redirect to dashboard
       setShowLoadingTransition(true)
     } catch (error) {
@@ -85,6 +90,23 @@ function RegisterPage() {
 
   const handleLoadingComplete = () => {
     navigate('/dashboard')
+  }
+
+  const handleGoogleLogin = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/oauth/google`)
+      const data = await response.json()
+      
+      if (data.success && data.authUrl) {
+        // Redirect to Google OAuth
+        window.location.href = data.authUrl
+      } else {
+        alert('Failed to initiate Google login')
+      }
+    } catch (error) {
+      console.error('Google login error:', error)
+      alert('Failed to initiate Google login')
+    }
   }
 
   const isFormValid = () => {
@@ -169,7 +191,7 @@ function RegisterPage() {
             </div>
 
             <div className={styles.socialButtons}>
-              <button className={styles.socialBtn} onClick={() => console.log('Google login')}>
+              <button className={styles.socialBtn} onClick={handleGoogleLogin}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                   <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -177,12 +199,6 @@ function RegisterPage() {
                   <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                 </svg>
                 Google
-              </button>
-              <button className={styles.socialBtn} onClick={() => console.log('X login')}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                </svg>
-                X
               </button>
             </div>
 

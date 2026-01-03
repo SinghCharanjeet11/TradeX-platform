@@ -5,11 +5,13 @@ import styles from './PerformanceChart.module.css'
 
 const TIMEFRAMES = [
   { value: '1D', label: '1D' },
-  { value: '1W', label: '1W' },
+  { value: '5D', label: '5D' },
   { value: '1M', label: '1M' },
-  { value: '3M', label: '3M' },
+  { value: '6M', label: '6M' },
+  { value: 'YTD', label: 'YTD' },
   { value: '1Y', label: '1Y' },
-  { value: 'ALL', label: 'ALL' }
+  { value: '5Y', label: '5Y' },
+  { value: 'MAX', label: 'MAX' }
 ]
 
 function PerformanceChart() {
@@ -57,6 +59,22 @@ function PerformanceChart() {
     return `M ${pathPoints.join(' L ')}`
   }
 
+  const generateYAxisLabels = () => {
+    if (!chartData) return []
+    
+    const { minValue, maxValue } = chartData
+    const labels = []
+    const steps = 5
+    
+    for (let i = 0; i <= steps; i++) {
+      const value = minValue + ((maxValue - minValue) / steps) * i
+      const y = 60 - 5 - ((value - minValue) / (maxValue - minValue)) * 50
+      labels.push({ value, y })
+    }
+    
+    return labels.reverse()
+  }
+
   return (
     <div className={styles.card}>
       <div className={styles.header}>
@@ -93,46 +111,68 @@ function PerformanceChart() {
         {loading ? (
           <div className={styles.loading}>Loading chart...</div>
         ) : chartData ? (
-          <svg
-            viewBox="0 0 100 60"
-            className={styles.chart}
-            preserveAspectRatio="none"
-          >
-            {/* Grid lines */}
-            <line x1="0" y1="15" x2="100" y2="15" className={styles.gridLine} />
-            <line x1="0" y1="30" x2="100" y2="30" className={styles.gridLine} />
-            <line x1="0" y1="45" x2="100" y2="45" className={styles.gridLine} />
-
-            {/* Area under curve */}
-            <defs>
-              <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop
-                  offset="0%"
-                  stopColor={chartData.isPositive ? '#22c55e' : '#ef4444'}
-                  stopOpacity="0.3"
+          <div className={styles.chartWrapper}>
+            <svg
+              viewBox="0 0 100 60"
+              className={styles.chart}
+              preserveAspectRatio="none"
+            >
+              {/* Horizontal grid lines */}
+              {generateYAxisLabels().map((label, index) => (
+                <line
+                  key={index}
+                  x1="0"
+                  y1={label.y}
+                  x2="100"
+                  y2={label.y}
+                  className={styles.gridLine}
                 />
-                <stop
-                  offset="100%"
-                  stopColor={chartData.isPositive ? '#22c55e' : '#ef4444'}
-                  stopOpacity="0"
-                />
-              </linearGradient>
-            </defs>
+              ))}
 
-            <path
-              d={`${generatePath()} L 100,60 L 0,60 Z`}
-              fill="url(#chartGradient)"
-            />
+              {/* Area under curve */}
+              <defs>
+                <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop
+                    offset="0%"
+                    stopColor={chartData.isPositive ? '#22c55e' : '#ef4444'}
+                    stopOpacity="0.3"
+                  />
+                  <stop
+                    offset="100%"
+                    stopColor={chartData.isPositive ? '#22c55e' : '#ef4444'}
+                    stopOpacity="0"
+                  />
+                </linearGradient>
+              </defs>
 
-            {/* Line */}
-            <path
-              d={generatePath()}
-              fill="none"
-              stroke={chartData.isPositive ? '#22c55e' : '#ef4444'}
-              strokeWidth="0.5"
-              className={styles.chartLine}
-            />
-          </svg>
+              <path
+                d={`${generatePath()} L 100,60 L 0,60 Z`}
+                fill="url(#chartGradient)"
+              />
+
+              {/* Line */}
+              <path
+                d={generatePath()}
+                fill="none"
+                stroke={chartData.isPositive ? '#22c55e' : '#ef4444'}
+                strokeWidth="0.5"
+                className={styles.chartLine}
+              />
+            </svg>
+            
+            {/* Y-axis labels */}
+            <div className={styles.yAxisLabels}>
+              {generateYAxisLabels().map((label, index) => (
+                <div
+                  key={index}
+                  className={styles.yAxisLabel}
+                  style={{ top: `${(label.y / 60) * 100}%` }}
+                >
+                  {portfolioService.formatCurrency(label.value)}
+                </div>
+              ))}
+            </div>
+          </div>
         ) : (
           <div className={styles.emptyState}>No data available</div>
         )}

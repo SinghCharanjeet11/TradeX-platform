@@ -1,75 +1,46 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MdAdd } from 'react-icons/md'
-import Sidebar from '../components/dashboard/Sidebar'
 import TopBar from '../components/dashboard/TopBar'
 import LoadingScreen from '../components/LoadingScreen'
 import ConnectAccountModal from '../components/dashboard/ConnectAccountModal'
 import ConnectedAccounts from '../components/dashboard/ConnectedAccounts'
 import PortfolioSummaryCard from '../components/dashboard/PortfolioSummaryCard'
-import AssetAllocationCard from '../components/dashboard/AssetAllocationCard'
-import PerformanceChart from '../components/dashboard/PerformanceChart'
-import TopPerformersCard from '../components/dashboard/TopPerformersCard'
+import BreakingNewsSection from '../components/news/BreakingNewsSection'
+import ArticleModal from '../components/news/ArticleModal'
 import WatchlistCard from '../components/dashboard/WatchlistCard'
 import AlertsCard from '../components/dashboard/AlertsCard'
-import { usePortfolio } from '../hooks/usePortfolio'
+import RecommendationsCard from '../components/dashboard/RecommendationsCard'
+import { useAuth } from '../contexts/AuthContext'
+import { DashboardDataProvider } from '../contexts/DashboardDataContext'
 import styles from './DashboardPage.module.css'
 
 function DashboardPage() {
   console.log('[Dashboard] Rendering DashboardPage')
   
   const navigate = useNavigate()
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const { user, loading: authLoading, isAuthenticated } = useAuth()
   const [showConnectModal, setShowConnectModal] = useState(false)
   const [connectedAccounts, setConnectedAccounts] = useState([])
-  const [error, setError] = useState(null)
+  const [selectedArticle, setSelectedArticle] = useState(null)
   
-  // Use portfolio hook for portfolio data - with error handling
-  const { 
-    portfolio, 
-    loading: portfolioLoading, 
-    error: portfolioError,
-    refreshing, 
-    refreshPortfolio 
-  } = usePortfolio()
-
-  // Log portfolio errors
+  
+  // Handle authentication - redirect if not authenticated after loading completes
   useEffect(() => {
-    if (portfolioError) {
-      console.error('[Dashboard] Portfolio error:', portfolioError)
+    console.log('[Dashboard] Auth check:', { authLoading, isAuthenticated })
+    if (!authLoading && !isAuthenticated) {
+      console.log('[Dashboard] Not authenticated, redirecting to sign in...')
+      navigate('/signin', { replace: true })
     }
-  }, [portfolioError])
+  }, [authLoading, isAuthenticated, navigate])
 
-  // Log when component mounts
+  // Fetch connected accounts when authenticated
   useEffect(() => {
-    console.log('[Dashboard] Component mounted')
-  }, [])
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        console.log('[Dashboard] Fetching user...')
-        const { authAPI } = await import('../services/api')
-        const response = await authAPI.getCurrentUser()
-        console.log('[Dashboard] User fetched:', response.user)
-        setUser(response.user)
-        
-        // Fetch connected accounts
-        await fetchConnectedAccounts()
-        
-        setLoading(false)
-      } catch (error) {
-        console.error('[Dashboard] Error fetching user:', error)
-        setError(error.message)
-        setLoading(false)
-        // Don't navigate away, show error instead
-        // navigate('/signin')
-      }
+    if (isAuthenticated) {
+      console.log('[Dashboard] Fetching connected accounts...')
+      fetchConnectedAccounts()
     }
-
-    fetchUser()
-  }, [navigate])
+  }, [isAuthenticated])
 
   const fetchConnectedAccounts = async () => {
     try {
@@ -133,47 +104,32 @@ function DashboardPage() {
     }
   }
 
-  if (loading) {
+  // Show loading screen while checking authentication
+  if (authLoading) {
     console.log('[Dashboard] Showing loading screen')
     return <LoadingScreen />
   }
 
-  if (error) {
-    console.log('[Dashboard] Showing error:', error)
-    return (
-      <div style={{ padding: '50px', color: 'white', background: '#1a1d29', minHeight: '100vh' }}>
-        <h1>Error Loading Dashboard</h1>
-        <p>{error}</p>
-        <button onClick={() => window.location.reload()}>Reload</button>
-      </div>
-    )
+  // Don't render dashboard if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return null
   }
 
   console.log('[Dashboard] Rendering main dashboard, user:', user)
 
   return (
-    <div className={styles.dashboard}>
-      <Sidebar />
-      
-      <div className={styles.main}>
-        <TopBar user={user} />
-        
-        <div className={styles.content}>
-          {/* Header */}
-          <div className={styles.header}>
-            <div>
-              <h1 className={styles.pageTitle}>Dashboard Overview</h1>
-              <p className={styles.subtitle}>Monitor your portfolio and market insights</p>
-            </div>
-            <button 
-              className={styles.connectBtn}
-              onClick={() => {
-                window.scrollTo({ top: 0, behavior: 'instant' })
-                setShowConnectModal(true)
-              }}
-            >
-              <MdAdd /> Connect Account
-            </button>
+    <DashboardDataProvider>
+      <div className={styles.dashboard}>
+        <div className={styles.main}>
+          <TopBar user={user} />
+          
+          <div className={styles.dashboardContent}>
+            {/* Header */}
+            <div className={styles.header}>
+              <div>
+                <h1 className={styles.pageTitle}>Dashboard Overview</h1>
+                <p className={styles.subtitle}>Monitor your portfolio and market insights</p>
+              </div>
           </div>
           
           {connectedAccounts.length > 0 ? (
@@ -184,31 +140,26 @@ function DashboardPage() {
                   accounts={connectedAccounts}
                   onDisconnect={handleDisconnect}
                   onRefresh={handleRefresh}
+                  onConnectNew={() => {
+                    window.scrollTo({ top: 0, behavior: 'instant' })
+                    setShowConnectModal(true)
+                  }}
                 />
               </div>
 
               {/* Portfolio Summary Section */}
               <div className={styles.section}>
-                <PortfolioSummaryCard 
-                  portfolio={portfolio || {}}
-                  onRefresh={refreshPortfolio}
-                  refreshing={refreshing}
-                />
+                <PortfolioSummaryCard />
               </div>
 
-              {/* Charts Grid */}
-              <div className={styles.chartsGrid}>
-                <div className={styles.chartItem}>
-                  <PerformanceChart />
-                </div>
-                <div className={styles.chartItem}>
-                  <AssetAllocationCard allocation={portfolio?.allocation} />
-                </div>
-              </div>
-
-              {/* Top Performers */}
+              {/* Breaking News Section */}
               <div className={styles.section}>
-                <TopPerformersCard topPerformers={portfolio?.topPerformers} />
+                <BreakingNewsSection onArticleClick={setSelectedArticle} />
+              </div>
+
+              {/* AI Recommendations */}
+              <div className={styles.section}>
+                <RecommendationsCard />
               </div>
 
               {/* Watchlist and Alerts Grid */}
@@ -225,7 +176,7 @@ function DashboardPage() {
             <div className={styles.emptyState}>
               <div className={styles.emptyIcon}>🔗</div>
               <h2>Connect Your Trading Accounts</h2>
-              <p>Link your Binance, Coinbase, or Robinhood accounts to view your portfolio and track real-time changes all in one place.</p>
+              <p>Link your Binance account to view your portfolio and track real-time changes all in one place.</p>
               <button 
                 className={styles.connectBtnLarge}
                 onClick={() => {
@@ -237,6 +188,7 @@ function DashboardPage() {
               </button>
             </div>
           )}
+          </div>
         </div>
       </div>
 
@@ -245,7 +197,14 @@ function DashboardPage() {
         onClose={() => setShowConnectModal(false)}
         onConnect={handleConnect}
       />
-    </div>
+
+      {selectedArticle && (
+        <ArticleModal
+          article={selectedArticle}
+          onClose={() => setSelectedArticle(null)}
+        />
+      )}
+    </DashboardDataProvider>
   )
 }
 

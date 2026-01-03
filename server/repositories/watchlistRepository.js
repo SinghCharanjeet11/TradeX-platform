@@ -62,7 +62,7 @@ class WatchlistRepository {
    */
   async getUserAlerts(userId) {
     const result = await query(
-      'SELECT id, user_id as "userId", symbol, name, asset_type as "assetType", target_price as "targetPrice", condition, current_price as "currentPrice", is_active as "active", triggered_at as "triggeredAt", created_at as "createdAt" FROM price_alerts WHERE user_id = $1 AND is_active = true ORDER BY created_at DESC',
+      'SELECT id, user_id as "userId", symbol, name, asset_type as "assetType", target_price as "targetPrice", condition, current_price as "currentPrice", initial_price as "initialPrice", is_active as "active", triggered_at as "triggeredAt", created_at as "createdAt" FROM price_alerts WHERE user_id = $1 AND is_active = true ORDER BY created_at DESC',
       [userId]
     );
     return result.rows.map(row => ({
@@ -76,8 +76,8 @@ class WatchlistRepository {
    */
   async createAlert(userId, alertData) {
     const result = await query(
-      'INSERT INTO price_alerts (user_id, symbol, name, asset_type, target_price, condition, current_price) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, user_id as "userId", symbol, name, asset_type as "assetType", target_price as "targetPrice", condition, current_price as "currentPrice", is_active as "active", created_at as "createdAt"',
-      [userId, alertData.symbol, alertData.name, alertData.assetType, alertData.targetPrice, alertData.condition, alertData.currentPrice]
+      'INSERT INTO price_alerts (user_id, symbol, name, asset_type, target_price, condition, current_price, initial_price) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, user_id as "userId", symbol, name, asset_type as "assetType", target_price as "targetPrice", condition, current_price as "currentPrice", initial_price as "initialPrice", is_active as "active", created_at as "createdAt"',
+      [userId, alertData.symbol, alertData.name, alertData.assetType, alertData.targetPrice, alertData.condition, alertData.currentPrice, alertData.initialPrice || alertData.currentPrice]
     );
     return {
       ...result.rows[0],
@@ -99,6 +99,7 @@ class WatchlistRepository {
 
   /**
    * Update alert status
+   * CRITICAL FIX: Use proper SQL placeholders with $ sign ($1, $2, etc.)
    */
   async updateAlert(alertId, updates) {
     const setClauses = [];
@@ -106,25 +107,24 @@ class WatchlistRepository {
     let paramCount = 1;
 
     if (updates.active !== undefined) {
-      setClauses.push(`is_active = $${paramCount++}`);
+      setClauses.push('is_active = $' + paramCount++);
       values.push(updates.active);
     }
     if (updates.triggeredAt !== undefined) {
-      setClauses.push(`triggered_at = $${paramCount++}`);
+      setClauses.push('triggered_at = $' + paramCount++);
       values.push(updates.triggeredAt);
     }
     if (updates.currentPrice !== undefined) {
-      setClauses.push(`current_price = $${paramCount++}`);
+      setClauses.push('current_price = $' + paramCount++);
       values.push(updates.currentPrice);
     }
 
     if (setClauses.length === 0) return null;
 
     values.push(alertId);
-    const result = await query(
-      `UPDATE price_alerts SET ${setClauses.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = $${paramCount} RETURNING *`,
-      values
-    );
+    const sqlQuery = 'UPDATE price_alerts SET ' + setClauses.join(', ') + ', updated_at = CURRENT_TIMESTAMP WHERE id = $' + paramCount + ' RETURNING *';
+    
+    const result = await query(sqlQuery, values);
     return result.rows[0];
   }
 
@@ -133,7 +133,7 @@ class WatchlistRepository {
    */
   async getAllActiveAlerts() {
     const result = await query(
-      'SELECT id, user_id as "userId", symbol, name, asset_type as "assetType", target_price as "targetPrice", condition, current_price as "currentPrice", is_active as "active", triggered_at as "triggeredAt", created_at as "createdAt" FROM price_alerts WHERE is_active = true AND triggered_at IS NULL',
+      'SELECT id, user_id as "userId", symbol, name, asset_type as "assetType", target_price as "targetPrice", condition, current_price as "currentPrice", initial_price as "initialPrice", is_active as "active", triggered_at as "triggeredAt", created_at as "createdAt" FROM price_alerts WHERE is_active = true AND triggered_at IS NULL',
       []
     );
     return result.rows.map(row => ({

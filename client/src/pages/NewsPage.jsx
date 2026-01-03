@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { MdArrowForward, MdBookmark, MdBookmarkBorder, MdArrowBack } from 'react-icons/md'
-import Sidebar from '../components/dashboard/Sidebar'
-import LoadingScreen from '../components/LoadingScreen'
+import { useAuth } from '../contexts/AuthContext'
 import SearchBar from '../components/news/SearchBar'
 import ArticleModal from '../components/news/ArticleModal'
 import SentimentIndicator from '../components/news/SentimentIndicator'
@@ -14,8 +12,7 @@ import newsService from '../services/newsService'
 import styles from './NewsPage.module.css'
 
 function NewsPage() {
-  const navigate = useNavigate()
-  const [user, setUser] = useState(null)
+  const { user } = useAuth() // News can be viewed without auth, so we just get the user if available
   const [loading, setLoading] = useState(true)
   const [news, setNews] = useState([])
   const [allNews, setAllNews] = useState([]) // Store all news for switching back
@@ -28,30 +25,12 @@ function NewsPage() {
   const [cached, setCached] = useState(false)
   const [filters, setFilters] = useState({
     category: 'all',
-    sentiment: 'all',
-    dateFrom: '',
-    dateTo: ''
+    sentiment: 'all'
   })
   const [showFilters, setShowFilters] = useState(false)
   const [errorType, setErrorType] = useState(null)
   const [retryCount, setRetryCount] = useState(0)
   const [isOnline, setIsOnline] = useState(navigator.onLine)
-
-  // Fetch user (optional - news can be viewed without auth)
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const { authAPI } = await import('../services/api')
-        const response = await authAPI.getCurrentUser()
-        setUser(response.user)
-      } catch (error) {
-        console.error('[News] Error fetching user:', error)
-        // Don't redirect - news can be viewed without authentication
-        setUser(null)
-      }
-    }
-    fetchUser()
-  }, [navigate])
 
   // Fetch news
   const fetchNews = useCallback(async () => {
@@ -66,8 +45,6 @@ function NewsPage() {
       setErrorType(null)
 
       const requestFilters = {
-        category: filters.category !== 'all' ? filters.category : undefined,
-        sentiment: filters.sentiment !== 'all' ? filters.sentiment : undefined,
         search: searchQuery || undefined,
         limit: 50
       }
@@ -93,21 +70,27 @@ function NewsPage() {
           return
         }
         
-        // Apply date range filter on client side
-        if (filters.dateFrom || filters.dateTo) {
-          articles = articles.filter(article => {
-            const articleDate = new Date(article.publishedAt)
-            const fromDate = filters.dateFrom ? new Date(filters.dateFrom) : null
-            const toDate = filters.dateTo ? new Date(filters.dateTo) : null
-            
-            if (fromDate && articleDate < fromDate) return false
-            if (toDate && articleDate > toDate) return false
-            return true
-          })
+        // Fetch bookmarks to mark bookmarked articles
+        let bookmarkedIds = []
+        if (user) {
+          try {
+            const bookmarksResponse = await newsService.getBookmarks()
+            if (bookmarksResponse.success && bookmarksResponse.data) {
+              bookmarkedIds = bookmarksResponse.data
+            }
+          } catch (bookmarkErr) {
+            console.error('[News] Error fetching bookmarks:', bookmarkErr)
+          }
         }
         
-        setNews(articles)
+        // Mark bookmarked articles
+        articles = articles.map(article => ({
+          ...article,
+          isBookmarked: bookmarkedIds.includes(article.id)
+        }))
+        
         setAllNews(articles) // Store all news
+        setNews(articles)
         setCached(response.data.cached || response.cached)
         setRetryCount(0) // Reset retry count on success
       } else {
@@ -139,7 +122,7 @@ function NewsPage() {
     } finally {
       setLoading(false)
     }
-  }, [filters, searchQuery, isOnline, retryCount])
+  }, [searchQuery, isOnline, retryCount, user])
 
   useEffect(() => {
     fetchNews()
@@ -175,8 +158,6 @@ function NewsPage() {
       window.removeEventListener('offline', handleOffline)
     }
   }, [fetchNews])
-
-  const categories = ['All', 'News', 'Analysis', 'Guides', 'Exclusives']
 
   const handleSearch = (query) => {
     setSearchQuery(query)
@@ -253,17 +234,6 @@ function NewsPage() {
     }
   }
 
-  const handleShowReadingList = () => {
-    const readList = allNews.filter(article => readArticles.has(article.id))
-    if (readList.length > 0) {
-      setNews(readList)
-      setShowReadingListOnly(true)
-      setShowBookmarksOnly(false)
-    } else {
-      alert('No articles in your reading list yet!')
-    }
-  }
-
   const handleShowAllNews = () => {
     setNews(allNews)
     setShowBookmarksOnly(false)
@@ -276,18 +246,35 @@ function NewsPage() {
     setReadArticles(new Set(stored))
   }, [])
 
-  const filteredNews = news
+  // Apply client-side filters
+  const filteredNews = news.filter(article => {
+    // Category filter
+    if (filters.category !== 'all') {
+      const articleCategories = article.categories || []
+      const articleCategory = article.category || ''
+      const hasCategory = articleCategories.some(cat => 
+        cat.toLowerCase() === filters.category.toLowerCase()
+      ) || articleCategory.toLowerCase() === filters.category.toLowerCase()
+      
+      if (!hasCategory) return false
+    }
+    
+    // Sentiment filter
+    if (filters.sentiment !== 'all') {
+      const sentiment = article.sentiment || 0
+      if (filters.sentiment === 'positive' && sentiment <= 0.3) return false
+      if (filters.sentiment === 'negative' && sentiment >= -0.3) return false
+      if (filters.sentiment === 'neutral' && (sentiment < -0.3 || sentiment > 0.3)) return false
+    }
+    
+    return true
+  })
+  
   const featuredArticle = filteredNews[0]
   const regularNews = filteredNews.slice(1)
 
-  if (loading && news.length === 0) {
-    return <LoadingScreen />
-  }
-
   return (
     <div className={styles.newsPage}>
-      <Sidebar />
-      
       <div className={styles.main}>
         <div className={styles.content}>
           <div className={styles.headerRow}>
@@ -314,7 +301,7 @@ function NewsPage() {
             </div>
 
             <div className={styles.headerButtons}>
-              {(showBookmarksOnly || showReadingListOnly) ? (
+              {showBookmarksOnly ? (
                 <button 
                   className={styles.backBtn}
                   onClick={handleShowAllNews}
@@ -324,24 +311,14 @@ function NewsPage() {
                   <span>Back to All News</span>
                 </button>
               ) : (
-                <>
-                  <button 
-                    className={styles.readingListBtn}
-                    onClick={handleShowReadingList}
-                    title="View Reading List"
-                  >
-                    <MdArrowForward />
-                    <span>Reading List</span>
-                  </button>
-                  <button 
-                    className={styles.bookmarksBtn}
-                    onClick={handleShowBookmarks}
-                    title="View Bookmarks"
-                  >
-                    <MdBookmark />
-                    <span>Bookmarks</span>
-                  </button>
-                </>
+                <button 
+                  className={styles.bookmarksBtn}
+                  onClick={handleShowBookmarks}
+                  title="View Bookmarks"
+                >
+                  <MdBookmark />
+                  <span>Bookmarks</span>
+                </button>
               )}
             </div>
           </div>
@@ -370,7 +347,20 @@ function NewsPage() {
           )}
 
           {loading && news.length === 0 && (
-            <div className={styles.loadingState}><p>Loading news...</p></div>
+            <div className={styles.loadingState}>
+              <div className={styles.hourglassContainer}>
+                <div className={styles.hourglass}>
+                  <div className={styles.hourglassTop}>
+                    <div className={styles.sandTop}></div>
+                  </div>
+                  <div className={styles.hourglassMiddle}></div>
+                  <div className={styles.hourglassBottom}>
+                    <div className={styles.sandBottom}></div>
+                  </div>
+                </div>
+              </div>
+              <p>Loading news...</p>
+            </div>
           )}
 
           {!loading && filteredNews.length === 0 && (

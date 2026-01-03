@@ -4,6 +4,11 @@
   border: 2px solid #00d4aa;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s;
+}
+
+.tableContainer:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .table {
@@ -148,7 +153,7 @@
 }
 
 .positive {
-  color: #22c55e;
+  color: #10b981;
 }
 
 .negative {
@@ -180,4 +185,181 @@
   .name {
     font-size: 11px;
   }
+}
+
+
+/* Source badge styles */
+.sourceBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.linkIcon {
+  font-size: 12px;
+}
+
+/* Exchange row styling */
+.exchangeRow {
+  background: rgba(240, 185, 11, 0.03);
+}
+
+.exchangeRow:hover {
+  background: rgba(240, 185, 11, 0.06);
+}
+
+/* Checkbox styling */
+.checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #00d4aa;
+}
+
+.checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Actions column */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.actionBtn {
+  background: transparent;
+  border: none;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #718096;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.actionBtn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1a202c;
+}
+
+.actionBtn svg {
+  font-size: 18px;
+}
+
+.deleteBtn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.syncedLabel {
+  font-size: 11px;
+  color: #10b981;
+  font-weight: 500;
+  padding: 4px 8px;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 6px;
+}
+
+/* Skeleton loading */
+.skeletonRow td {
+  padding: 16px;
+}
+
+.skeleton {
+  height: 20px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Dark mode support */
+[data-theme="dark"] .tableContainer {
+  background: #1e293b;
+  border-color: #00d4aa;
+}
+
+[data-theme="dark"] .table thead {
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .table th {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .table tbody tr {
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="dark"] .table td {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .symbol {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .name {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .account {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .price {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .totalValue {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .exchangeRow {
+  background: rgba(240, 185, 11, 0.05);
+}
+
+[data-theme="dark"] .exchangeRow:hover {
+  background: rgba(240, 185, 11, 0.08);
+}
+
+[data-theme="dark"] .actionBtn {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .actionBtn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .sortable:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="dark"] .skeleton {
+  background: linear-gradient(90deg, #334155 25%, #475569 50%, #334155 75%);
+  background-size: 200% 100%;
 }

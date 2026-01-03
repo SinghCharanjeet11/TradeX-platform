@@ -81,14 +81,18 @@
   margin: 0;
 }
 
+.tableWrapper {
+  overflow: hidden;
+}
+
 .table {
-  overflow-x: auto;
+  width: 100%;
 }
 
 .tableHeader,
 .tableRow {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr 1.2fr 1.2fr;
+  grid-template-columns: 2fr 1fr 1fr 1.2fr 1.2fr;
   gap: 1rem;
   padding: 0.75rem 1rem;
   align-items: center;
@@ -103,6 +107,8 @@
   letter-spacing: 0.5px;
   font-weight: 600;
   margin-bottom: 0.5rem;
+  position: relative;
+  z-index: 1;
 }
 
 .tableBody {
@@ -154,12 +160,13 @@
   width: fit-content;
 }
 
-.col1, .col2, .col3, .col4, .col5, .col6 {
+.col1, .col2, .col3, .col4, .col5 {
   font-size: 0.875rem;
   color: #1a202c;
+  position: relative;
 }
 
-.col6 {
+.col5 {
   text-align: right;
 }
 
@@ -171,7 +178,7 @@
 @media (max-width: 1024px) {
   .tableHeader,
   .tableRow {
-    grid-template-columns: 1.5fr 0.8fr 0.8fr 0.8fr 1fr 1fr;
+    grid-template-columns: 1.5fr 0.8fr 0.8fr 1fr 1fr;
     gap: 0.5rem;
     padding: 0.75rem 0.5rem;
   }
@@ -193,11 +200,11 @@
     gap: 0.5rem;
   }
 
-  .col3, .col4 {
+  .col3 {
     display: none;
   }
 
-  .col6 {
+  .col5 {
     text-align: left;
   }
 }

@@ -174,49 +174,49 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 4px;
-  background: transparent;
+  padding: 10px 12px;
+  background: #ffffff !important;
   border: none;
-  border-bottom: 2px solid #10b981;
+  border-bottom: 2px solid #00d4aa;
   border-radius: 0;
   margin-bottom: 14px;
   transition: all 0.2s ease;
 }
 
 .search:focus-within {
-  border-bottom-color: #10b981;
+  border-bottom-color: #00d4aa;
 }
 
 .container[data-market="Crypto"] .search {
-  border-bottom-color: #10b981;
+  border-bottom-color: #00d4aa;
 }
 
 .container[data-market="Crypto"] .search:focus-within {
-  border-bottom-color: #10b981;
+  border-bottom-color: #00d4aa;
 }
 
 .container[data-market="Stocks"] .search {
-  border-bottom-color: #3b82f6;
+  border-bottom-color: #00d4aa;
 }
 
 .container[data-market="Stocks"] .search:focus-within {
-  border-bottom-color: #3b82f6;
+  border-bottom-color: #00d4aa;
 }
 
 .container[data-market="Forex"] .search {
-  border-bottom-color: #f59e0b;
+  border-bottom-color: #00d4aa;
 }
 
 .container[data-market="Forex"] .search:focus-within {
-  border-bottom-color: #f59e0b;
+  border-bottom-color: #00d4aa;
 }
 
 .container[data-market="Commodities"] .search {
-  border-bottom-color: #8b5cf6;
+  border-bottom-color: #00d4aa;
 }
 
 .container[data-market="Commodities"] .search:focus-within {
-  border-bottom-color: #8b5cf6;
+  border-bottom-color: #00d4aa;
 }
 
 .search svg {
@@ -225,7 +225,7 @@
 }
 
 .search input {
-  background: transparent;
+  background: #ffffff !important;
   border: none;
   color: #1a202c;
   font-size: 13px;
@@ -241,10 +241,10 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 4px;
-  background: transparent;
+  padding: 10px 12px;
+  background: #ffffff !important;
   border: none;
-  border-bottom: 2px solid #10b981;
+  border-bottom: 2px solid #00d4aa;
   border-radius: 0;
   color: #1a202c;
   font-size: 13px;
@@ -254,40 +254,40 @@
 }
 
 .filterBtn:hover {
-  background: transparent;
-  border-bottom-color: #10b981;
+  background: #ffffff;
+  border-bottom-color: #00d4aa;
 }
 
 .container[data-market="Crypto"] .filterBtn {
-  border-bottom-color: #10b981;
+  border-bottom-color: #00d4aa;
 }
 
 .container[data-market="Crypto"] .filterBtn:hover {
-  border-bottom-color: #10b981;
+  border-bottom-color: #00d4aa;
 }
 
 .container[data-market="Stocks"] .filterBtn {
-  border-bottom-color: #3b82f6;
+  border-bottom-color: #00d4aa;
 }
 
 .container[data-market="Stocks"] .filterBtn:hover {
-  border-bottom-color: #3b82f6;
+  border-bottom-color: #00d4aa;
 }
 
 .container[data-market="Forex"] .filterBtn {
-  border-bottom-color: #f59e0b;
+  border-bottom-color: #00d4aa;
 }
 
 .container[data-market="Forex"] .filterBtn:hover {
-  border-bottom-color: #f59e0b;
+  border-bottom-color: #00d4aa;
 }
 
 .container[data-market="Commodities"] .filterBtn {
-  border-bottom-color: #8b5cf6;
+  border-bottom-color: #00d4aa;
 }
 
 .container[data-market="Commodities"] .filterBtn:hover {
-  border-bottom-color: #8b5cf6;
+  border-bottom-color: #00d4aa;
 }
 
 .tableWrapper {
@@ -562,6 +562,123 @@
     border-bottom: none;
     padding-bottom: 12px;
   }
+  
+  .table th:nth-child(4),
+  .table td:nth-child(4),
+  .table th:nth-child(5),
+  .table td:nth-child(5) {
+    display: none;
+  }
+  
+  .miniChart {
+    width: 80px;
+    height: 40px;
+  }
+  
+  .coinIcon {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+  
+  .coinImage {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .coinName {
+    font-size: 13px;
+  }
+  
+  .coinSymbol {
+    font-size: 10px;
+  }
+  
+  .price {
+    font-size: 13px;
+  }
+  
+  .positive, .negative {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    border-radius: 12px;
+    border-width: 1px;
+  }
+  
+  .header {
+    padding: 12px 12px 0 12px;
+  }
+  
+  .header h2 {
+    font-size: 16px;
+  }
+  
+  .tableWrapper {
+    padding: 0 12px 8px 12px;
+  }
+  
+  .table th {
+    padding: 12px 8px;
+    font-size: 10px;
+  }
+  
+  .table td {
+    padding: 12px 8px;
+    font-size: 12px;
+  }
+  
+  .table th:nth-child(6),
+  .table td:nth-child(6) {
+    display: none;
+  }
+  
+  .nameCell {
+    gap: 8px;
+  }
+  
+  .coinIcon {
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
+  }
+  
+  .coinImage {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .coinName {
+    font-size: 12px;
+  }
+  
+  .price {
+    font-size: 12px;
+  }
+  
+  .footer {
+    padding: 10px 12px;
+  }
+  
+  .pagination button {
+    padding: 6px 10px;
+    font-size: 12px;
+    min-width: 32px;
+  }
+  
+  .tab {
+    padding: 10px 12px;
+    font-size: 11px;
+  }
+  
+  .search input {
+    width: 140px;
+    font-size: 12px;
+  }
 }
 
 .loadingState {
@@ -793,4 +910,167 @@
 
 .alertBtn:active {
   transform: scale(0.95);
+}
+
+
+/* Dark Mode Support */
+[data-theme="dark"] .container {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .header h2 {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .updated {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .headerActions {
+  border-bottom-color: #334155;
+}
+
+[data-theme="dark"] .tab {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .tab:hover {
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .tab.active {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .search {
+  background: #0f172a !important;
+  border-bottom-color: #00d4aa;
+}
+
+[data-theme="dark"] .search input {
+  background: #0f172a !important;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .search input::placeholder {
+  color: #64748b;
+}
+
+[data-theme="dark"] .search svg {
+  color: #64748b;
+}
+
+[data-theme="dark"] .filterBtn {
+  background: #0f172a !important;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .filterBtn:hover {
+  background: #1e293b;
+}
+
+[data-theme="dark"] .table th {
+  color: #94a3b8;
+  border-bottom-color: #334155;
+}
+
+[data-theme="dark"] .table td {
+  color: #f1f5f9;
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .clickableRow:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="dark"] .coinName {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .coinName:hover {
+  color: #00d4aa;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .coinSymbol {
+  color: #64748b;
+}
+
+[data-theme="dark"] .price {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .favoriteBtn {
+  color: #475569;
+}
+
+[data-theme="dark"] .favoriteBtn:hover {
+  color: #f59e0b;
+}
+
+[data-theme="dark"] .footer {
+  border-top-color: #334155;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .pagination button {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .pagination button:hover:not(:disabled) {
+  background: #334155;
+  border-color: #475569;
+}
+
+[data-theme="dark"] .rowsSelect {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .rowsSelect:hover {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+[data-theme="dark"] .filterMenu {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .filterMenu button {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .filterMenu button:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .footerInfo {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .alertBtn {
+  color: #64748b;
+}
+
+[data-theme="dark"] .alertBtn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #3b82f6;
+}
+
+[data-theme="dark"] .tableWrapper::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .tableWrapper::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+[data-theme="dark"] .tableWrapper::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }

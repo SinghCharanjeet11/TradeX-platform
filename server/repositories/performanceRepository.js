@@ -89,7 +89,7 @@ class PerformanceRepository {
               profit_loss as "profitLoss", profit_loss_percent as "profitLossPercent",
               holdings_count as "holdingsCount", created_at as "createdAt"
        FROM portfolio_snapshots
-       WHERE user_id = $1 AND snapshot_date >= CURRENT_DATE - $2
+       WHERE user_id = $1 AND snapshot_date >= CURRENT_DATE - INTERVAL '1 day' * $2
        ORDER BY snapshot_date ASC`,
       [userId, days]
     );

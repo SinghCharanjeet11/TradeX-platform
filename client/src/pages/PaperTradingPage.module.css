@@ -1,6 +1,7 @@
 .page {
   min-height: 100vh;
   background: #f7fafc;
+  position: relative;
 }
 
 .loading {
@@ -40,17 +41,62 @@
   margin-bottom: 2rem;
 }
 
+.headerButtons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
 .title {
   font-size: 2rem;
   font-weight: 700;
   color: #1a202c;
   margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.refreshIndicator {
+  font-size: 0.875rem;
+  color: #ff9800;
+  font-weight: 500;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 .subtitle {
   font-size: 1rem;
   color: #718096;
   margin: 0;
+}
+
+.refreshButton {
+  padding: 0.75rem 1.5rem;
+  background: #ffffff;
+  color: #10b981;
+  border: 2px solid #10b981;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.refreshButton:hover:not(:disabled) {
+  background: #10b981;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.refreshButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .resetButton {
@@ -105,9 +151,12 @@
 }
 
 .statValue {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #1a202c;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.2;
 }
 
 .statChange {
@@ -193,6 +242,12 @@
     gap: 1rem;
   }
 
+  .headerButtons {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .refreshButton,
   .resetButton {
     width: 100%;
   }

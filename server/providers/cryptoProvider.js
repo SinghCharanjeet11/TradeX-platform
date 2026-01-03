@@ -11,6 +11,8 @@ class CryptoProvider {
     this.baseUrl = apiConfig.coingecko.baseUrl;
     this.timeout = apiConfig.coingecko.timeout;
     this.retryConfig = apiConfig.retry;
+    this.lastRequestTime = 0;
+    this.minRequestInterval = 1200; // Minimum 1.2 seconds between requests to avoid rate limiting
   }
 
   /**
@@ -59,20 +61,10 @@ class CryptoProvider {
   async getMarketChart(id, days = 7) {
     const endpoint = `${this.baseUrl}/coins/${id}/market_chart`;
     
-    // Determine interval based on timeframe
-    let interval;
-    if (days <= 1) {
-      interval = 'hourly'; // For 1 day or less, use hourly data
-    } else if (days <= 90) {
-      interval = 'daily'; // For up to 90 days, use daily data
-    } else {
-      interval = 'daily'; // For longer periods, use daily data
-    }
-    
+    // Build params - CoinGecko doesn't accept 'interval' parameter for market_chart endpoint
     const params = {
       vs_currency: 'usd',
-      days: days === 'max' ? 'max' : days,
-      interval: interval
+      days: days === 'max' ? 'max' : days
     };
 
     return this._makeRequest(endpoint, params, 'getMarketChart');
@@ -120,13 +112,26 @@ class CryptoProvider {
    */
   async _makeRequest(endpoint, params, methodName, attempt = 1) {
     try {
+      // Rate limiting: ensure minimum interval between requests
+      const now = Date.now();
+      const timeSinceLastRequest = now - this.lastRequestTime;
+      if (timeSinceLastRequest < this.minRequestInterval) {
+        const waitTime = this.minRequestInterval - timeSinceLastRequest;
+        console.log(`[CryptoProvider] Rate limiting: waiting ${waitTime}ms before request`);
+        await this._sleep(waitTime);
+      }
+      
       console.log(`[CryptoProvider] ${methodName} - Attempt ${attempt}/${this.retryConfig.maxAttempts}`);
+      console.log(`[CryptoProvider] Endpoint: ${endpoint}`);
+      
+      this.lastRequestTime = Date.now();
       
       const response = await axios.get(endpoint, {
         params,
         timeout: this.timeout,
         headers: {
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'User-Agent': 'TradeX-Platform/1.0'
         }
       });
 
@@ -135,6 +140,12 @@ class CryptoProvider {
 
     } catch (error) {
       console.error(`[CryptoProvider] ${methodName} - Error:`, error.message);
+      
+      // Log more details for debugging
+      if (error.response) {
+        console.error(`[CryptoProvider] Status: ${error.response.status}`);
+        console.error(`[CryptoProvider] Response:`, error.response.data);
+      }
 
       // Check if we should retry
       if (attempt < this.retryConfig.maxAttempts && this._shouldRetry(error)) {
@@ -161,7 +172,19 @@ class CryptoProvider {
     }
 
     const status = error.response.status;
-    return status >= 500 && status < 600; // Server errors
+    
+    // Retry on server errors (5xx)
+    if (status >= 500 && status < 600) {
+      return true;
+    }
+    
+    // Retry on rate limiting (429)
+    if (status === 429) {
+      console.log('[CryptoProvider] Rate limited by CoinGecko, will retry...');
+      return true;
+    }
+    
+    return false;
   }
 
   /**

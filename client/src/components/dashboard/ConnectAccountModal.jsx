@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { MdClose, MdLink, MdCheckCircle, MdError } from 'react-icons/md'
-import { SiBinance, SiCoinbase } from 'react-icons/si'
-import { FaRobot } from 'react-icons/fa'
+import { SiBinance } from 'react-icons/si'
 import styles from './ConnectAccountModal.module.css'
 
 const SUPPORTED_PLATFORMS = [
@@ -13,26 +12,6 @@ const SUPPORTED_PLATFORMS = [
     fields: [
       { name: 'apiKey', label: 'API Key', type: 'text', placeholder: 'Enter your Binance API Key' },
       { name: 'apiSecret', label: 'API Secret', type: 'password', placeholder: 'Enter your Binance API Secret' }
-    ]
-  },
-  {
-    id: 'coinbase',
-    name: 'Coinbase',
-    icon: SiCoinbase,
-    description: 'Connect your Coinbase account to sync portfolio and trades',
-    fields: [
-      { name: 'apiKey', label: 'API Key', type: 'text', placeholder: 'Enter your Coinbase API Key' },
-      { name: 'apiSecret', label: 'API Secret', type: 'password', placeholder: 'Enter your Coinbase API Secret' }
-    ]
-  },
-  {
-    id: 'robinhood',
-    name: 'Robinhood',
-    icon: FaRobot,
-    description: 'Connect your Robinhood account to sync portfolio and trades',
-    fields: [
-      { name: 'username', label: 'Username', type: 'text', placeholder: 'Enter your Robinhood username' },
-      { name: 'password', label: 'Password', type: 'password', placeholder: 'Enter your Robinhood password' }
     ]
   }
 ]
@@ -220,12 +199,23 @@ function ConnectAccountModal({ isOpen, onClose, onConnect }) {
                       {platform.fields.map((field) => (
                         <div key={field.name} className={styles.formGroup}>
                           <label>{field.label}</label>
-                          <input
-                            type={field.type}
-                            placeholder={field.placeholder}
-                            value={formData[field.name] || ''}
-                            onChange={(e) => handleInputChange(field.name, e.target.value)}
-                          />
+                          {field.type === 'textarea' ? (
+                            <textarea
+                              className={styles.textarea}
+                              placeholder={field.placeholder}
+                              value={formData[field.name] || ''}
+                              onChange={(e) => handleInputChange(field.name, e.target.value)}
+                              rows={6}
+                              spellCheck={false}
+                            />
+                          ) : (
+                            <input
+                              type={field.type}
+                              placeholder={field.placeholder}
+                              value={formData[field.name] || ''}
+                              onChange={(e) => handleInputChange(field.name, e.target.value)}
+                            />
+                          )}
                         </div>
                       ))}
                     </div>

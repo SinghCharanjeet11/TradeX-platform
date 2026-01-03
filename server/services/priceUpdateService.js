@@ -1,10 +1,12 @@
 /**
  * Price Update Service
- * Handles real-time price updates for holdings
+ * Handles real-time price updates for holdings and alerts
  */
 
 import { query } from '../config/database.js';
 import holdingsRepository from '../repositories/holdingsRepository.js';
+import watchlistRepository from '../repositories/watchlistRepository.js';
+import marketService from './marketService.js';
 
 class PriceUpdateService {
   constructor() {
@@ -15,29 +17,74 @@ class PriceUpdateService {
   /**
    * Get current prices for holdings
    * @param {Array<String>} symbols - Array of symbols
+   * @param {String} assetType - Asset type (crypto, stock, forex, commodity)
    * @returns {Promise<Object>} Price data by symbol
    */
-  async getCurrentPrices(symbols) {
+  async getCurrentPrices(symbols, assetType = 'crypto') {
     try {
-      // For now, return mock prices
-      // In production, this would call external APIs (CoinGecko, Alpha Vantage, etc.)
       const prices = {};
       
+      // Fetch real market data based on asset type
+      let marketData;
+      switch (assetType.toLowerCase()) {
+        case 'crypto':
+        case 'cryptocurrency':
+          const cryptoResult = await marketService.getCryptoMarketData();
+          marketData = cryptoResult.success ? cryptoResult.data : [];
+          break;
+        case 'stock':
+        case 'stocks':
+          const stocksResult = await marketService.getStocksMarketData();
+          marketData = stocksResult.success ? stocksResult.data : [];
+          break;
+        case 'forex':
+          const forexResult = await marketService.getForexMarketData();
+          marketData = forexResult.success ? forexResult.data : [];
+          break;
+        case 'commodity':
+        case 'commodities':
+          const commoditiesResult = await marketService.getCommoditiesMarketData();
+          marketData = commoditiesResult.success ? commoditiesResult.data : [];
+          break;
+        default:
+          marketData = [];
+      }
+
+      // Map symbols to prices from market data
       for (const symbol of symbols) {
-        // Simulate price with small random change
-        const basePrice = this._getBasePrice(symbol);
-        const change = (Math.random() - 0.5) * 0.02; // ±1% change
-        prices[symbol] = {
-          price: basePrice * (1 + change),
-          change24h: (Math.random() - 0.5) * 10, // ±5% 24h change
-          lastUpdated: new Date()
-        };
+        const asset = marketData.find(item => 
+          item.symbol === symbol || item.id === symbol
+        );
+        
+        if (asset) {
+          prices[symbol] = {
+            price: asset.current_price || asset.price || this._getBasePrice(symbol),
+            change24h: asset.price_change_percentage_24h || asset.change24h || 0,
+            lastUpdated: new Date()
+          };
+        } else {
+          // Fallback to base price if not found in market data
+          prices[symbol] = {
+            price: this._getBasePrice(symbol),
+            change24h: 0,
+            lastUpdated: new Date()
+          };
+        }
       }
 
       return prices;
     } catch (error) {
       console.error('[PriceUpdateService] Error getting current prices:', error);
-      throw error;
+      // Fallback to base prices on error
+      const prices = {};
+      for (const symbol of symbols) {
+        prices[symbol] = {
+          price: this._getBasePrice(symbol),
+          change24h: 0,
+          lastUpdated: new Date()
+        };
+      }
+      return prices;
     }
   }
 
@@ -54,38 +101,103 @@ class PriceUpdateService {
         holdings = await holdingsRepository.getUserHoldings(userId);
       } else {
         // Get all holdings from all users
-        const result = await query('SELECT DISTINCT symbol, asset_type FROM holdings');
-        holdings = result.rows;
+        const result = await query('SELECT DISTINCT id, symbol, asset_type FROM holdings');
+        holdings = result.rows.map(row => ({
+          id: row.id,
+          symbol: row.symbol,
+          assetType: row.asset_type
+        }));
       }
 
       if (holdings.length === 0) {
         return 0;
       }
 
-      // Get unique symbols
-      const symbols = [...new Set(holdings.map(h => h.symbol))];
-      
-      // Get current prices
-      const prices = await this.getCurrentPrices(symbols);
+      // Group holdings by asset type
+      const holdingsByType = {};
+      holdings.forEach(holding => {
+        const type = holding.assetType || 'crypto';
+        if (!holdingsByType[type]) {
+          holdingsByType[type] = [];
+        }
+        holdingsByType[type].push(holding);
+      });
 
-      // Update holdings with new prices
+      // Update holdings with new prices (grouped by asset type for efficiency)
       let updateCount = 0;
-      for (const holding of holdings) {
-        const priceData = prices[holding.symbol];
-        if (priceData) {
-          await holdingsRepository.updateHoldingPrice(holding.id, priceData.price);
-          
-          // Store price history
-          await this._storePriceHistory(holding.symbol, holding.assetType, priceData.price);
-          updateCount++;
+      for (const [assetType, typeHoldings] of Object.entries(holdingsByType)) {
+        const symbols = [...new Set(typeHoldings.map(h => h.symbol))];
+        const prices = await this.getCurrentPrices(symbols, assetType);
+
+        for (const holding of typeHoldings) {
+          const priceData = prices[holding.symbol];
+          if (priceData) {
+            await holdingsRepository.updateHoldingPrice(holding.id, priceData.price);
+            
+            // Store price history
+            await this._storePriceHistory(holding.symbol, holding.assetType, priceData.price);
+            updateCount++;
+          }
         }
       }
+
+      // Also update alert prices
+      await this.refreshAlertPrices();
 
       console.log(`[PriceUpdateService] Updated ${updateCount} holdings`);
       return updateCount;
     } catch (error) {
       console.error('[PriceUpdateService] Error refreshing prices:', error);
       // Don't throw - we want to retry on next interval
+      return 0;
+    }
+  }
+
+  /**
+   * Refresh prices for all active alerts
+   * @returns {Promise<Number>} Number of alerts updated
+   */
+  async refreshAlertPrices() {
+    try {
+      // Get all active alerts
+      const alerts = await watchlistRepository.getAllActiveAlerts();
+      
+      if (alerts.length === 0) {
+        return 0;
+      }
+
+      // Group alerts by asset type
+      const alertsByType = {};
+      alerts.forEach(alert => {
+        const type = alert.assetType || 'crypto';
+        if (!alertsByType[type]) {
+          alertsByType[type] = [];
+        }
+        alertsByType[type].push(alert);
+      });
+
+      // Update alerts with new prices (grouped by asset type for efficiency)
+      let updateCount = 0;
+      for (const [assetType, typeAlerts] of Object.entries(alertsByType)) {
+        const symbols = [...new Set(typeAlerts.map(a => a.symbol))];
+        const prices = await this.getCurrentPrices(symbols, assetType);
+
+        for (const alert of typeAlerts) {
+          const priceData = prices[alert.symbol];
+          if (priceData) {
+            await watchlistRepository.updateAlert(alert.id, {
+              currentPrice: priceData.price
+            });
+            updateCount++;
+          }
+        }
+      }
+
+      console.log(`[PriceUpdateService] Updated ${updateCount} alert prices`);
+      return updateCount;
+    } catch (error) {
+      console.error('[PriceUpdateService] Error refreshing alert prices:', error);
+      // Don't throw - we want to continue even if alert updates fail
       return 0;
     }
   }

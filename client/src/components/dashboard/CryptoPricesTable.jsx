@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LineChart, Line, ResponsiveContainer, Tooltip } from 'recharts'
+import { ResponsiveContainer, Tooltip, Area, AreaChart } from 'recharts'
 import { MdSearch, MdFilterList, MdStar, MdStarBorder, MdNotifications } from 'react-icons/md'
 import AssetDetailModal from './AssetDetailModal'
 import WatchlistButton from '../markets/WatchlistButton'
@@ -41,12 +41,76 @@ const formatLargeNumber = (num) => {
   return value.toFixed(2)
 }
 
+// Asset Image component with fallback handling
+const AssetImage = ({ src, symbol, name, marketType }) => {
+  const [imgError, setImgError] = useState(false)
+  const [imgLoaded, setImgLoaded] = useState(false)
+  
+  // Get market-specific color for fallback icon
+  const getMarketColor = () => {
+    switch (marketType) {
+      case 'Stocks': return { bg: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', shadow: 'rgba(59, 130, 246, 0.4)' }
+      case 'Forex': return { bg: 'linear-gradient(135deg, #f59e0b, #d97706)', shadow: 'rgba(245, 158, 11, 0.4)' }
+      case 'Commodities': return { bg: 'linear-gradient(135deg, #8b5cf6, #6d28d9)', shadow: 'rgba(139, 92, 246, 0.4)' }
+      default: return { bg: 'linear-gradient(135deg, #10b981, #059669)', shadow: 'rgba(16, 185, 129, 0.4)' }
+    }
+  }
+  
+  const colors = getMarketColor()
+  
+  // Show fallback if no src, error loading, or still loading
+  if (!src || imgError) {
+    return (
+      <div 
+        className={styles.coinIcon}
+        style={{ 
+          background: colors.bg,
+          boxShadow: `0 2px 8px ${colors.shadow}`
+        }}
+        title={name || symbol}
+      >
+        {symbol ? symbol.substring(0, 2).toUpperCase() : '?'}
+      </div>
+    )
+  }
+  
+  return (
+    <>
+      {!imgLoaded && (
+        <div 
+          className={styles.coinIcon}
+          style={{ 
+            background: colors.bg,
+            boxShadow: `0 2px 8px ${colors.shadow}`
+          }}
+        >
+          {symbol ? symbol.substring(0, 2).toUpperCase() : '?'}
+        </div>
+      )}
+      <img 
+        src={src} 
+        alt={symbol} 
+        className={styles.coinImage}
+        style={{ display: imgLoaded ? 'block' : 'none' }}
+        onError={() => setImgError(true)}
+        onLoad={() => setImgLoaded(true)}
+      />
+    </>
+  )
+}
+
 const marketData = {
   Crypto: [
     { id: 1, name: 'Bitcoin', symbol: 'BTC', price: 67245, change: 2.15, marketCap: 1320000000000, volume: 38400000000, supply: 'BTC 19.5M', chart: [64000, 65000, 64500, 66000, 67000, 66500, 67245], image: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png' },
     { id: 2, name: 'Ethereum', symbol: 'ETH', price: 3120, change: 0.84, marketCap: 380200000000, volume: 18100000000, supply: 'ETH 120.5M', chart: [3050, 3080, 3100, 3090, 3110, 3115, 3120], image: 'https://cryptologos.cc/logos/ethereum-eth-logo.png' },
     { id: 3, name: 'Solana', symbol: 'SOL', price: 152.40, change: -1.92, marketCap: 67800000000, volume: 3900000000, supply: 'SOL 445M', chart: [158, 156, 155, 154, 153, 152.5, 152.40], image: 'https://cryptologos.cc/logos/solana-sol-logo.png' },
     { id: 4, name: 'BNB', symbol: 'BNB', price: 584.10, change: 0.34, marketCap: 85300000000, volume: 1800000000, supply: 'BNB 146M', chart: [580, 581, 582, 583, 584, 583.5, 584.10], image: 'https://cryptologos.cc/logos/bnb-bnb-logo.png' },
+    { id: 5, name: 'Ripple', symbol: 'XRP', price: 0.62, change: 1.23, marketCap: 33000000000, volume: 1200000000, supply: 'XRP 53B', chart: [0.60, 0.61, 0.615, 0.618, 0.62, 0.621, 0.62], image: 'https://cryptologos.cc/logos/xrp-xrp-logo.png' },
+    { id: 6, name: 'Cardano', symbol: 'ADA', price: 0.58, change: -0.45, marketCap: 20500000000, volume: 850000000, supply: 'ADA 35B', chart: [0.59, 0.585, 0.583, 0.582, 0.581, 0.58, 0.58], image: 'https://cryptologos.cc/logos/cardano-ada-logo.png' },
+    { id: 7, name: 'Dogecoin', symbol: 'DOGE', price: 0.095, change: 3.45, marketCap: 13500000000, volume: 950000000, supply: 'DOGE 142B', chart: [0.09, 0.091, 0.092, 0.093, 0.094, 0.0945, 0.095], image: 'https://cryptologos.cc/logos/dogecoin-doge-logo.png' },
+    { id: 8, name: 'Polygon', symbol: 'MATIC', price: 0.85, change: 2.15, marketCap: 7900000000, volume: 420000000, supply: 'MATIC 9.3B', chart: [0.82, 0.83, 0.835, 0.84, 0.845, 0.848, 0.85], image: 'https://cryptologos.cc/logos/polygon-matic-logo.png' },
+    { id: 9, name: 'Polkadot', symbol: 'DOT', price: 7.25, change: -1.15, marketCap: 9200000000, volume: 380000000, supply: 'DOT 1.3B', chart: [7.35, 7.32, 7.30, 7.28, 7.27, 7.26, 7.25], image: 'https://cryptologos.cc/logos/polkadot-new-dot-logo.png' },
+    { id: 10, name: 'Avalanche', symbol: 'AVAX', price: 38.50, change: 1.85, marketCap: 14200000000, volume: 620000000, supply: 'AVAX 369M', chart: [37.5, 37.8, 38.0, 38.2, 38.3, 38.4, 38.50], image: 'https://cryptologos.cc/logos/avalanche-avax-logo.png' },
   ],
   Stocks: [
     { id: 5, name: 'Apple Inc.', symbol: 'AAPL', price: 178.25, change: 1.45, marketCap: 2800000000000, volume: 52300000, supply: 'Shares 15.5B', chart: [175, 176, 176.5, 177, 177.5, 178, 178.25], image: 'https://logo.clearbit.com/apple.com' },
@@ -70,15 +134,17 @@ const marketData = {
 
 // Generate chart data for items that don't have it
 const generateChartData = (price, change) => {
-  const points = 7
+  const points = 30 // Increased from 7 to 30 for more detailed charts
   const changeDecimal = (change || 0) / 100
   const startPrice = price / (1 + changeDecimal)
   
   return Array.from({ length: points }, (_, i) => {
     const progress = i / (points - 1)
     const value = startPrice + (price - startPrice) * progress
-    const variance = (Math.random() - 0.5) * (price * 0.01)
-    return value + variance
+    // Add realistic price fluctuations
+    const variance = (Math.random() - 0.5) * (price * 0.015)
+    const trend = Math.sin(i / 3) * (price * 0.005) // Add wave pattern for realism
+    return value + variance + trend
   })
 }
 
@@ -121,6 +187,8 @@ function CryptoPricesTable({ marketType = 'Crypto', data = [], loading = false, 
     image: item.image || getDefaultImage(marketType, item.symbol)
   })) : (marketData[marketType] || marketData.Crypto)
   
+  console.log('[CryptoPricesTable] Data length:', data.length, 'Cryptos length:', cryptos.length)
+  
   // Apply search filter
   if (searchTerm) {
     cryptos = cryptos.filter(item => 
@@ -131,8 +199,21 @@ function CryptoPricesTable({ marketType = 'Crypto', data = [], loading = false, 
   
   // Apply tab filters
   if (activeTab === 'Gainers') {
+    // Show all items with positive change
     cryptos = cryptos.filter(item => (item.change24h || item.change || 0) > 0)
       .sort((a, b) => (b.change24h || b.change || 0) - (a.change24h || a.change || 0))
+  } else if (activeTab === 'Losers') {
+    // Show all items with negative change (sorted by most negative first)
+    cryptos = cryptos.filter(item => (item.change24h || item.change || 0) < 0)
+      .sort((a, b) => (a.change24h || a.change || 0) - (b.change24h || b.change || 0))
+  } else if (activeTab === 'Watchlist') {
+    // Filter to only show watchlist items
+    const watchlistSymbols = new Set(watchlist.map(item => item.symbol))
+    cryptos = cryptos.filter(item => watchlistSymbols.has(item.symbol))
+  } else if (activeTab === 'Precious Metals') {
+    // Show only precious metals (Gold, Silver, Platinum, Palladium)
+    const preciousMetalsSymbols = ['XAU', 'XAG', 'XPT', 'XPD']
+    cryptos = cryptos.filter(item => preciousMetalsSymbols.includes(item.symbol))
   } else if (activeTab === 'All ATH') {
     cryptos = cryptos.filter(item => (item.change24h || item.change || 0) > 5)
   }
@@ -154,9 +235,7 @@ function CryptoPricesTable({ marketType = 'Crypto', data = [], loading = false, 
   const paginatedCryptos = cryptos.slice(startIndex, endIndex)
   
   // Reset to page 1 when filters change
-  const handleFilterChange = () => {
-    setCurrentPage(1)
-  }
+  // Note: handleFilterChange can be used for future filter implementations
   
   // Market-specific tabs
   const marketTabs = {
@@ -167,12 +246,6 @@ function CryptoPricesTable({ marketType = 'Crypto', data = [], loading = false, 
   }
   
   const tabs = marketTabs[marketType] || marketTabs.Crypto
-  
-  // Filter by watchlist if Watchlist tab is active
-  if (activeTab === 'Watchlist') {
-    const watchlistSymbols = new Set(watchlist.map(item => item.symbol))
-    cryptos = cryptos.filter(item => watchlistSymbols.has(item.symbol))
-  }
   
   const handleRowClick = (crypto) => {
     console.log('Clicked:', crypto.name)
@@ -217,13 +290,26 @@ function CryptoPricesTable({ marketType = 'Crypto', data = [], loading = false, 
             ))}
           </div>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <div className={styles.search}>
-              <MdSearch />
+            <div 
+              className={styles.search} 
+              style={{ 
+                background: '#ffffff', 
+                backgroundColor: '#ffffff',
+                borderBottom: '2px solid #00d4aa',
+                borderBottomColor: '#00d4aa'
+              }}
+            >
+              <MdSearch style={{ color: '#666666' }} />
               <input 
                 type="text" 
                 placeholder="Search" 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                style={{ 
+                  background: '#ffffff', 
+                  backgroundColor: '#ffffff',
+                  color: '#000000'
+                }}
               />
             </div>
             <div className={styles.filterDropdown}>
@@ -285,11 +371,12 @@ function CryptoPricesTable({ marketType = 'Crypto', data = [], loading = false, 
                   </td>
                   <td>
                     <div className={styles.nameCell}>
-                      {crypto.image ? (
-                        <img src={crypto.image} alt={crypto.symbol} className={styles.coinImage} />
-                      ) : (
-                        <div className={styles.coinIcon}>{crypto.symbol[0]}</div>
-                      )}
+                      <AssetImage 
+                        src={crypto.image} 
+                        symbol={crypto.symbol} 
+                        name={crypto.name}
+                        marketType={marketType}
+                      />
                       <div>
                         <div className={styles.coinName}>
                           {crypto.name}
@@ -315,7 +402,21 @@ function CryptoPricesTable({ marketType = 'Crypto', data = [], loading = false, 
                     <div className={styles.miniChart}>
                       {crypto?.chart ? (
                         <ResponsiveContainer width="100%" height={60}>
-                          <LineChart data={crypto.chart.map((v, i) => ({ value: v, index: i }))}>
+                          <AreaChart data={crypto.chart.map((v, i) => ({ value: v, index: i }))}>
+                            <defs>
+                              <linearGradient id={`gradient-${crypto.id || crypto.symbol}`} x1="0" y1="0" x2="0" y2="1">
+                                <stop 
+                                  offset="5%" 
+                                  stopColor={(crypto?.change24h || crypto?.change || 0) >= 0 ? '#10b981' : '#ef4444'} 
+                                  stopOpacity={0.4}
+                                />
+                                <stop 
+                                  offset="95%" 
+                                  stopColor={(crypto?.change24h || crypto?.change || 0) >= 0 ? '#10b981' : '#ef4444'} 
+                                  stopOpacity={0.05}
+                                />
+                              </linearGradient>
+                            </defs>
                             <Tooltip 
                               content={({ active, payload }) => {
                                 if (active && payload && payload.length) {
@@ -329,14 +430,15 @@ function CryptoPricesTable({ marketType = 'Crypto', data = [], loading = false, 
                               }}
                               cursor={{ stroke: 'rgba(255, 255, 255, 0.2)', strokeWidth: 1 }}
                             />
-                            <Line 
+                            <Area 
                               type="monotone" 
                               dataKey="value" 
                               stroke={(crypto?.change24h || crypto?.change || 0) >= 0 ? '#10b981' : '#ef4444'}
                               strokeWidth={2}
+                              fill={`url(#gradient-${crypto.id || crypto.symbol})`}
                               dot={false}
                             />
-                          </LineChart>
+                          </AreaChart>
                         </ResponsiveContainer>
                       ) : (
                         <span className={styles.noChart}>-</span>
@@ -429,7 +531,15 @@ function CryptoPricesTable({ marketType = 'Crypto', data = [], loading = false, 
             <option value={20}>Show Rows: 20</option>
             <option value={50}>Show Rows: 50</option>
           </select>
-          <button className={styles.viewAllBtn}>View All</button>
+          <button 
+            className={styles.viewAllBtn}
+            onClick={() => {
+              setItemsPerPage(totalItems)
+              setCurrentPage(1)
+            }}
+          >
+            View All
+          </button>
         </div>
       </div>
 

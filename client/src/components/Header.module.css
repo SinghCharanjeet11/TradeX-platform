@@ -19,10 +19,33 @@
   color: #1a202c;
 }
 
+.logoIcon {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 212, 170, 0.3);
+  flex-shrink: 0;
+}
+
+.logoText {
+  font-size: 22px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.5px;
+}
+
 .logo svg {
-  width: 32px;
-  height: 32px;
-  color: #00d4aa;
+  width: 24px;
+  height: 24px;
+  color: white;
 }
 
 .nav {
@@ -211,6 +234,16 @@
   
   .logo {
     font-size: 18px;
+  }
+
+  .logoIcon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+  }
+
+  .logoText {
+    font-size: 20px;
   }
   
   .navBtn {

@@ -67,3 +67,25 @@
   font-size: 12px;
   color: #ef4444;
 }
+
+/* Dark Mode Support */
+[data-theme="dark"] .label {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .input {
+  border-bottom-color: #475569;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .input:focus {
+  border-bottom-color: #00d4aa;
+}
+
+[data-theme="dark"] .icon {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .helperText {
+  color: #94a3b8;
+}

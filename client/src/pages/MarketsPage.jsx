@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Sidebar from '../components/dashboard/Sidebar'
+import { useAuth } from '../contexts/AuthContext'
 import TopBar from '../components/dashboard/TopBar'
 import BalanceCard from '../components/dashboard/BalanceCard'
 import TopGainerCard from '../components/dashboard/TopGainerCard'
@@ -12,8 +12,7 @@ import styles from './DashboardPage.module.css'
 
 function MarketsPage() {
   const navigate = useNavigate()
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const { user, loading, isAuthenticated } = useAuth()
   const [activeMarket, setActiveMarket] = useState('Crypto')
   const [marketData, setMarketData] = useState([])
   const [marketLoading, setMarketLoading] = useState(false)
@@ -21,23 +20,12 @@ function MarketsPage() {
   const [lastUpdate, setLastUpdate] = useState(null)
   const [isCached, setIsCached] = useState(false)
 
+  // Redirect if not authenticated
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        console.log('[Markets] Fetching user...')
-        const { authAPI } = await import('../services/api')
-        const response = await authAPI.getCurrentUser()
-        console.log('[Markets] User fetched:', response.user)
-        setUser(response.user)
-        setLoading(false)
-      } catch (error) {
-        console.error('[Markets] Error fetching user:', error)
-        navigate('/signin')
-      }
+    if (!loading && !isAuthenticated) {
+      navigate('/signin', { replace: true })
     }
-
-    fetchUser()
-  }, [navigate])
+  }, [loading, isAuthenticated, navigate])
 
   // Fetch market data based on active market
   const fetchMarketData = async (market) => {
@@ -66,9 +54,12 @@ function MarketsPage() {
       }
 
       console.log(`[Markets] ${market} response:`, response)
+      console.log(`[Markets] ${market} response.data:`, response.data)
+      console.log(`[Markets] ${market} response.data.length:`, response.data?.length)
       
       if (response.success) {
         console.log(`[Markets] ${market} data loaded:`, response.data.length, 'items')
+        console.log(`[Markets] First 5 items:`, response.data.slice(0, 5))
         setMarketData(response.data)
         setLastUpdate(new Date())
         setIsCached(response.metadata?.cached || false)
@@ -83,8 +74,10 @@ function MarketsPage() {
         }
       }
     } catch (error) {
-      console.error('Error fetching market data:', error)
-      setMarketError(null)
+      console.error('[Markets] Error fetching market data:', error)
+      console.error('[Markets] Error details:', error.response?.data || error.message)
+      setMarketError(error.message)
+      setMarketData([]) // Clear data on error
     } finally {
       setMarketLoading(false)
     }
@@ -116,13 +109,11 @@ function MarketsPage() {
 
   return (
     <div className={styles.dashboard}>
-      <Sidebar />
-      
       <div className={styles.main}>
         <TopBar user={user} activeMarket={activeMarket} onMarketChange={setActiveMarket} />
         
         <div className={styles.content}>
-          <div className={styles.titleRow}>
+          <div className={`${styles.titleRow} ${styles[`titleRow${activeMarket}`]}`}>
             <h1 className={styles.pageTitle}>{activeMarket} Market Insights!</h1>
           </div>
           
@@ -144,11 +135,6 @@ function MarketsPage() {
           />
         </div>
       </div>
-
-      <button className={styles.goProBtn}>
-        <span className={styles.goProText}>Go Pro</span>
-        <span className={styles.goProSubtext}>Unlock real-time data and premium tools</span>
-      </button>
     </div>
   )
 }

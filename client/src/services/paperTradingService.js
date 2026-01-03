@@ -76,10 +76,41 @@ const paperTradingService = {
    */
   async executePaperOrder(orderData) {
     try {
+      console.log('[PaperTradingService - Frontend] ===== EXECUTING ORDER =====');
+      console.log('[PaperTradingService - Frontend] Order data received:', orderData);
+      console.log('[PaperTradingService - Frontend] Data types:', {
+        quantity: typeof orderData.quantity,
+        price: typeof orderData.price,
+        quantityValue: orderData.quantity,
+        priceValue: orderData.price
+      });
+      
+      // CRITICAL: Validate data before sending
+      const qtyStr = String(orderData.quantity);
+      const prcStr = String(orderData.price);
+      
+      const qtyDecimals = (qtyStr.match(/\./g) || []).length;
+      const prcDecimals = (prcStr.match(/\./g) || []).length;
+      
+      if (qtyDecimals > 1 || prcDecimals > 1) {
+        console.error('[PaperTradingService - Frontend] ❌ DUPLICATE DECIMALS DETECTED!');
+        console.error('[PaperTradingService - Frontend] Quantity:', qtyStr, 'Decimals:', qtyDecimals);
+        console.error('[PaperTradingService - Frontend] Price:', prcStr, 'Decimals:', prcDecimals);
+        throw new Error(`Invalid number format: quantity="${qtyStr}", price="${prcStr}"`);
+      }
+      
+      console.log('[PaperTradingService - Frontend] ✅ Validation passed, sending to API...');
+      
       const response = await api.post('/paper-trading/orders', orderData);
+      
+      console.log('[PaperTradingService - Frontend] ===== API RESPONSE =====');
+      console.log('[PaperTradingService - Frontend] Response:', response.data);
+      
       return response.data;
     } catch (error) {
-      console.error('[PaperTradingService] Error executing order:', error);
+      console.error('[PaperTradingService - Frontend] ===== ERROR =====');
+      console.error('[PaperTradingService - Frontend] Error:', error);
+      console.error('[PaperTradingService - Frontend] Error response:', error.response?.data);
       throw error;
     }
   },
@@ -91,7 +122,8 @@ const paperTradingService = {
   async getPerformanceHistory(period = '30d') {
     try {
       const response = await api.get(`/paper-trading/performance?period=${period}`);
-      return response.data;
+      // Return the data object which contains { history: [...] }
+      return response.data.data || response.data;
     } catch (error) {
       console.error('[PaperTradingService] Error getting performance history:', error);
       throw error;

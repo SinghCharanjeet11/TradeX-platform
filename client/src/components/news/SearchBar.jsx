@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { MdSearch, MdClose } from 'react-icons/md'
 import styles from './SearchBar.module.css'
 
-function SearchBar({ onSearch, placeholder = 'Search news...', debounceMs = 300 }) {
+function SearchBar({ onSearch, placeholder = 'Search news articles...', debounceMs = 300 }) {
   const [query, setQuery] = useState('')
   const debounceTimer = useRef(null)
 

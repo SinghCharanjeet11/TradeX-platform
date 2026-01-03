@@ -41,19 +41,31 @@ function WatchlistButton({ asset, onToggle }) {
         setIsInWatchlist(false)
         if (onToggle) onToggle(false)
       } else {
+        console.log('[WatchlistButton] Adding to watchlist:', {
+          symbol: asset.symbol,
+          name: asset.name,
+          assetType: asset.assetType
+        })
+        
         const response = await watchlistService.addToWatchlist({
           symbol: asset.symbol,
           name: asset.name,
           assetType: asset.assetType
         })
 
+        console.log('[WatchlistButton] Response:', response)
+
         if (response.success) {
           setIsInWatchlist(true)
           if (onToggle) onToggle(true)
+        } else {
+          console.error('[WatchlistButton] Failed to add:', response.error)
+          throw new Error(response.error || 'Failed to add to watchlist')
         }
       }
     } catch (error) {
-      console.error('Error toggling watchlist:', error)
+      console.error('[WatchlistButton] Error toggling watchlist:', error)
+      alert(`Failed to add to watchlist: ${error.message}`)
       // Revert on error
       setIsInWatchlist(!isInWatchlist)
     } finally {

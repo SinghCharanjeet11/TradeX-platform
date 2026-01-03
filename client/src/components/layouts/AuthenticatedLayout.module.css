@@ -1,0 +1,29 @@
+.layoutContent {
+  margin-left: 260px;
+  min-height: 100vh;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.layoutContent.collapsed {
+  margin-left: 80px;
+}
+
+@media (max-width: 768px) {
+  .layoutContent {
+    margin-left: 72px;
+  }
+  
+  .layoutContent.collapsed {
+    margin-left: 72px;
+  }
+}
+
+@media (max-width: 480px) {
+  .layoutContent {
+    margin-left: 64px;
+  }
+  
+  .layoutContent.collapsed {
+    margin-left: 64px;
+  }
+}

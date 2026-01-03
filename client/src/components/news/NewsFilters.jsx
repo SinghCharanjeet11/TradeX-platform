@@ -18,54 +18,46 @@ const SENTIMENT_OPTIONS = [
 ];
 
 export default function NewsFilters({ filters, onFiltersChange }) {
-  const [localFilters, setLocalFilters] = useState({
-    category: 'all',
-    sentiment: 'all',
-    dateFrom: '',
-    dateTo: '',
-    ...filters
-  });
+  const [selectedCategory, setSelectedCategory] = useState(filters?.category || 'all');
+  const [selectedSentiment, setSelectedSentiment] = useState(filters?.sentiment || 'all');
 
   useEffect(() => {
-    setLocalFilters(prev => ({ ...prev, ...filters }));
+    if (filters) {
+      setSelectedCategory(filters.category || 'all');
+      setSelectedSentiment(filters.sentiment || 'all');
+    }
   }, [filters]);
 
   const handleCategoryChange = (category) => {
-    const newFilters = { ...localFilters, category };
-    setLocalFilters(newFilters);
-    onFiltersChange(newFilters);
+    setSelectedCategory(category);
+    onFiltersChange({
+      category,
+      sentiment: selectedSentiment
+    });
   };
 
   const handleSentimentChange = (e) => {
     const sentiment = e.target.value;
-    const newFilters = { ...localFilters, sentiment };
-    setLocalFilters(newFilters);
-    onFiltersChange(newFilters);
-  };
-
-  const handleDateChange = (field, value) => {
-    const newFilters = { ...localFilters, [field]: value };
-    setLocalFilters(newFilters);
-    onFiltersChange(newFilters);
+    setSelectedSentiment(sentiment);
+    onFiltersChange({
+      category: selectedCategory,
+      sentiment
+    });
   };
 
   const handleClearFilters = () => {
-    const defaultFilters = {
+    setSelectedCategory('all');
+    setSelectedSentiment('all');
+    onFiltersChange({
       category: 'all',
-      sentiment: 'all',
-      dateFrom: '',
-      dateTo: ''
-    };
-    setLocalFilters(defaultFilters);
-    onFiltersChange(defaultFilters);
+      sentiment: 'all'
+    });
   };
 
   const getActiveFilterCount = () => {
     let count = 0;
-    if (localFilters.category !== 'all') count++;
-    if (localFilters.sentiment !== 'all') count++;
-    if (localFilters.dateFrom) count++;
-    if (localFilters.dateTo) count++;
+    if (selectedCategory !== 'all') count++;
+    if (selectedSentiment !== 'all') count++;
     return count;
   };
 
@@ -97,8 +89,9 @@ export default function NewsFilters({ filters, onFiltersChange }) {
           {CATEGORIES.map(cat => (
             <button
               key={cat.value}
+              type="button"
               className={`${styles.categoryButton} ${
-                localFilters.category === cat.value ? styles.active : ''
+                selectedCategory === cat.value ? styles.active : ''
               }`}
               onClick={() => handleCategoryChange(cat.value)}
             >
@@ -117,7 +110,7 @@ export default function NewsFilters({ filters, onFiltersChange }) {
           <select
             id="sentiment-filter"
             className={styles.select}
-            value={localFilters.sentiment}
+            value={selectedSentiment}
             onChange={handleSentimentChange}
           >
             {SENTIMENT_OPTIONS.map(option => (
@@ -126,30 +119,6 @@ export default function NewsFilters({ filters, onFiltersChange }) {
               </option>
             ))}
           </select>
-        </div>
-      </div>
-
-      {/* Date Range Filter */}
-      <div className={styles.filterSection}>
-        <label className={styles.filterLabel}>Date Range</label>
-        <div className={styles.dateInputs}>
-          <input
-            type="date"
-            className={styles.dateInput}
-            value={localFilters.dateFrom}
-            onChange={(e) => handleDateChange('dateFrom', e.target.value)}
-            max={localFilters.dateTo || new Date().toISOString().split('T')[0]}
-            placeholder="From"
-          />
-          <input
-            type="date"
-            className={styles.dateInput}
-            value={localFilters.dateTo}
-            onChange={(e) => handleDateChange('dateTo', e.target.value)}
-            min={localFilters.dateFrom}
-            max={new Date().toISOString().split('T')[0]}
-            placeholder="To"
-          />
         </div>
       </div>
     </div>

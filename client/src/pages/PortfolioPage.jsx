@@ -1,74 +1,95 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MdSearch, MdFileDownload, MdRefresh, MdFilterList } from 'react-icons/md'
-import Sidebar from '../components/dashboard/Sidebar'
+import { MdFileDownload, MdRefresh } from 'react-icons/md'
 import TopBar from '../components/dashboard/TopBar'
 import LoadingScreen from '../components/LoadingScreen'
 import HoldingsTable from '../components/portfolio/HoldingsTable'
 import PortfolioSummaryBar from '../components/portfolio/PortfolioSummaryBar'
+import PortfolioPerformanceChart from '../components/portfolio/PortfolioPerformanceChart'
+import PortfolioAllocationChart from '../components/portfolio/PortfolioAllocationChart'
+import PortfolioOptimizationCard from '../components/portfolio/PortfolioOptimizationCard'
+import PortfolioFilters from '../components/portfolio/PortfolioFilters'
+import PaginationControls from '../components/portfolio/PaginationControls'
+import { useAuth } from '../contexts/AuthContext'
 import { useHoldings } from '../hooks/useHoldings'
+import { usePerformance } from '../hooks/usePerformance'
+import { useRealtime } from '../hooks/useRealtime'
+import { useFilters } from '../hooks/useFilters'
 import holdingsService from '../services/holdingsService'
 import styles from './PortfolioPage.module.css'
 import topBarStyles from '../components/dashboard/TopBar.module.css'
 
-const ASSET_TYPES = [
-  { value: 'all', label: 'All Assets' },
-  { value: 'crypto', label: 'Cryptocurrency' },
-  { value: 'stocks', label: 'Stocks' },
-  { value: 'forex', label: 'Forex' },
-  { value: 'commodities', label: 'Commodities' }
-]
-
 function PortfolioPage() {
   const navigate = useNavigate()
-  const [user, setUser] = useState(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedAssetType, setSelectedAssetType] = useState('all')
+  const { user, loading: authLoading, isAuthenticated } = useAuth()
+  
+  // Export state
   const [exporting, setExporting] = useState(false)
 
+  // Holdings hook with pagination
   const {
     holdings,
     summary,
     loading,
     error,
-    filters,
-    updateFilters,
+    pagination,
+    changePage,
+    changePageSize,
     refetch
-  } = useHoldings({
-    assetType: selectedAssetType,
-    search: searchQuery
-  })
+  } = useHoldings({}, true, isAuthenticated)
+  
+  // Extract pagination values for easier use
+  const currentPage = pagination.page
+  const pageSize = pagination.pageSize
+  const totalCount = pagination.totalItems
 
-  // Fetch user on mount
-  useState(() => {
-    const fetchUser = async () => {
-      try {
-        const { authAPI } = await import('../services/api')
-        const response = await authAPI.getCurrentUser()
-        setUser(response.user)
-      } catch (error) {
-        console.error('[Portfolio] Error fetching user:', error)
-        navigate('/signin')
-      }
+  // Performance data hook
+  const {
+    performanceData,
+    allocationData,
+    timeRange,
+    setTimeRange,
+    loading: performanceLoading
+  } = usePerformance('30D', isAuthenticated)
+
+  // Real-time price updates (60 seconds interval)
+  const { lastUpdate, startPolling, stopPolling } = useRealtime(
+    60000,
+    isAuthenticated
+  )
+
+  // Filtering hook
+  const {
+    setSearchTerm,
+    updateFilters,
+    clearFilters,
+    filteredHoldings,
+    hasActiveFilters,
+    filteredCount
+  } = useFilters(holdings)
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/signin', { replace: true })
     }
-    fetchUser()
-  }, [navigate])
+  }, [authLoading, isAuthenticated, navigate])
 
-  const handleSearch = (e) => {
-    const value = e.target.value
-    setSearchQuery(value)
-    updateFilters({ search: value })
-  }
+  // Start/stop real-time polling
+  useEffect(() => {
+    if (isAuthenticated) {
+      startPolling(refetch)
+    }
+    return () => stopPolling()
+  }, [isAuthenticated, startPolling, stopPolling, refetch])
 
-  const handleAssetTypeChange = (type) => {
-    setSelectedAssetType(type)
-    updateFilters({ assetType: type })
-  }
-
+  // Handlers
   const handleExport = async () => {
     try {
       setExporting(true)
-      await holdingsService.exportToCSV(filters)
+      const dataToExport = filteredHoldings
+      
+      await holdingsService.exportToCSV(dataToExport)
     } catch (error) {
       console.error('[Portfolio] Export error:', error)
       alert('Failed to export holdings')
@@ -77,20 +98,18 @@ function PortfolioPage() {
     }
   }
 
-  const handleSort = (sortBy) => {
-    const currentSortBy = filters.sortBy
-    const currentSortOrder = filters.sortOrder || 'desc'
-
-    // Toggle sort order if clicking same column
-    const newSortOrder = currentSortBy === sortBy && currentSortOrder === 'desc' 
-      ? 'asc' 
-      : 'desc'
-
-    updateFilters({ sortBy, sortOrder: newSortOrder })
+  const handleAllocationClick = (assetType) => {
+    updateFilters({ assetType })
   }
 
-  if (loading && !holdings.length) {
+  if (authLoading || (loading && !holdings.length)) {
     return <LoadingScreen />
+  }
+
+  // Handle authentication errors
+  if (error === 'authentication_required') {
+    navigate('/signin')
+    return null
   }
 
   const additionalActions = (
@@ -107,7 +126,7 @@ function PortfolioPage() {
       <button
         className={topBarStyles.userBtn}
         onClick={handleExport}
-        disabled={exporting}
+        disabled={exporting || holdings.length === 0}
         style={{ gap: '8px' }}
       >
         <MdFileDownload />
@@ -116,76 +135,110 @@ function PortfolioPage() {
     </>
   )
 
+  const displayHoldings = filteredHoldings.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  )
+
   return (
     <div className={styles.portfolioPage}>
-      <Sidebar />
-
       <div className={styles.main}>
         <TopBar user={user} additionalActions={additionalActions} />
 
-        <div className={styles.content}>
+        <div className={styles.portfolioContent}>
           {/* Header */}
           <div className={styles.header}>
             <div>
               <h1 className={styles.pageTitle}>Portfolio</h1>
-              <p className={styles.subtitle}>View and manage all your holdings</p>
+              <p className={styles.subtitle}>
+                View your connected exchange holdings
+                {lastUpdate && (
+                  <span className={styles.lastUpdate}>
+                    {' • '}Last updated {Math.floor((new Date() - lastUpdate) / 1000)}s ago
+                  </span>
+                )}
+              </p>
             </div>
           </div>
 
           {/* Summary Bar */}
           {summary && <PortfolioSummaryBar summary={summary} />}
 
-          {/* Filters */}
-          <div className={styles.filters}>
-            <div className={styles.searchBox}>
-              <MdSearch className={styles.searchIcon} />
-              <input
-                type="text"
-                placeholder="Search by symbol or name..."
-                value={searchQuery}
-                onChange={handleSearch}
-                className={styles.searchInput}
+          {/* Charts Section */}
+          <div className={styles.chartsSection}>
+            <div className={styles.chartCard}>
+              <PortfolioPerformanceChart
+                data={performanceData}
+                timeRange={timeRange}
+                onTimeRangeChange={setTimeRange}
+                loading={performanceLoading}
               />
             </div>
-
-            <div className={styles.assetTypeFilters}>
-              {ASSET_TYPES.map((type) => (
-                <button
-                  key={type.value}
-                  className={`${styles.filterBtn} ${
-                    selectedAssetType === type.value ? styles.active : ''
-                  }`}
-                  onClick={() => handleAssetTypeChange(type.value)}
-                >
-                  {type.label}
-                </button>
-              ))}
+            <div className={styles.chartCard}>
+              <PortfolioAllocationChart
+                data={allocationData}
+                onSegmentClick={handleAllocationClick}
+                loading={performanceLoading}
+              />
             </div>
           </div>
+
+          {/* Portfolio Optimization */}
+          <div className={styles.optimizationSection}>
+            <PortfolioOptimizationCard />
+          </div>
+
+          {/* Filters */}
+          <PortfolioFilters
+            onFilterChange={updateFilters}
+            onSearchChange={setSearchTerm}
+            totalCount={totalCount}
+            filteredCount={filteredCount}
+            onClearFilters={clearFilters}
+          />
 
           {/* Holdings Table */}
           {error ? (
             <div className={styles.error}>
               <p>Error loading holdings: {error}</p>
-              <button onClick={refetch}>Try Again</button>
+              <button onClick={refetch} className={styles.retryButton}>
+                Try Again
+              </button>
             </div>
-          ) : holdings.length === 0 ? (
+          ) : filteredHoldings.length === 0 ? (
             <div className={styles.emptyState}>
-              <MdFilterList className={styles.emptyIcon} />
+              <div className={styles.emptyIcon}>📊</div>
               <h3>No holdings found</h3>
               <p>
-                {searchQuery || selectedAssetType !== 'all'
-                  ? 'Try adjusting your filters'
-                  : 'Connect an account to see your holdings'}
+                {hasActiveFilters
+                  ? 'Try adjusting your filters or search terms'
+                  : 'Connect your Binance account to see your holdings here'}
               </p>
+              {!hasActiveFilters && (
+                <button onClick={() => navigate('/settings')} className={styles.addButton}>
+                  Connect Account
+                </button>
+              )}
             </div>
           ) : (
-            <HoldingsTable
-              holdings={holdings}
-              onSort={handleSort}
-              sortBy={filters.sortBy}
-              sortOrder={filters.sortOrder}
-            />
+            <>
+              <HoldingsTable
+                holdings={displayHoldings}
+                loading={loading}
+              />
+
+              {/* Pagination */}
+              {filteredHoldings.length > 20 && (
+                <PaginationControls
+                  currentPage={currentPage}
+                  totalPages={Math.ceil(filteredCount / pageSize)}
+                  pageSize={pageSize}
+                  totalItems={filteredCount}
+                  onPageChange={changePage}
+                  onPageSizeChange={changePageSize}
+                />
+              )}
+            </>
           )}
         </div>
       </div>

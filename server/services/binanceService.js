@@ -7,6 +7,27 @@ const Binance = binanceModule.default
 import connectedAccountsRepository from '../repositories/connectedAccountsRepository.js'
 
 class BinanceService {
+  constructor() {
+    this.serverTimeOffset = 0
+  }
+
+  /**
+   * Get server time offset to sync with Binance
+   */
+  async syncServerTime() {
+    try {
+      const client = Binance()
+      const serverTime = await client.time()
+      const localTime = Date.now()
+      this.serverTimeOffset = serverTime - localTime
+      console.log(`[BinanceService] Time offset: ${this.serverTimeOffset}ms`)
+      return this.serverTimeOffset
+    } catch (error) {
+      console.error('[BinanceService] Error syncing server time:', error)
+      return 0
+    }
+  }
+
   /**
    * Create Binance client with user credentials
    */
@@ -23,10 +44,14 @@ class BinanceService {
       const trimmedKey = credentials.apiKey?.trim()
       const trimmedSecret = credentials.apiSecret?.trim()
 
-      // Create Binance client
+      // Sync time before creating client
+      await this.syncServerTime()
+
+      // Create Binance client with time offset
       const client = Binance({
         apiKey: trimmedKey,
-        apiSecret: trimmedSecret
+        apiSecret: trimmedSecret,
+        getTime: () => Date.now() + this.serverTimeOffset
       })
 
       return client
@@ -219,9 +244,14 @@ class BinanceService {
 
       console.log('[BinanceService] Testing connection with key:', trimmedKey.substring(0, 10) + '...')
 
+      // Sync time before testing connection
+      await this.syncServerTime()
+      console.log('[BinanceService] Time synced, offset:', this.serverTimeOffset, 'ms')
+
       const client = Binance({
         apiKey: trimmedKey,
-        apiSecret: trimmedSecret
+        apiSecret: trimmedSecret,
+        getTime: () => Date.now() + this.serverTimeOffset
       })
 
       // Try to get account info
@@ -245,7 +275,7 @@ class BinanceService {
       } else if (error.message && error.message.includes('API-key')) {
         errorMessage = 'Invalid API Key format. Please check that you copied the entire API Key correctly.'
       } else if (error.message && error.message.includes('Timestamp')) {
-        errorMessage = 'Server time synchronization error. Please try again.'
+        errorMessage = 'Server time synchronization error. Your computer clock may be significantly out of sync. Please sync your system time and try again.'
       } else if (error.message && error.message.includes('IP')) {
         errorMessage = 'IP address not whitelisted. Please check your Binance API settings.'
       } else if (error.message) {

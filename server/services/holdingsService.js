@@ -1,13 +1,19 @@
 /**
  * Holdings Service
  * Business logic for portfolio holdings
+ * Fetches data ONLY from connected exchange accounts (Binance)
+ * Paper trading data is NOT included - that's handled separately
  */
 
 import holdingsRepository from '../repositories/holdingsRepository.js'
+import connectedAccountsRepository from '../repositories/connectedAccountsRepository.js'
+import binanceService from './binanceService.js'
 
 class HoldingsService {
   /**
    * Get all holdings with optional filters
+   * ONLY fetches holdings from connected exchange accounts (Binance)
+   * Does NOT include manual/paper trading holdings
    * @param {Number} userId - User ID
    * @param {Object} filters - Filter options
    * @returns {Promise<Object>} Holdings data with metadata
@@ -16,7 +22,9 @@ class HoldingsService {
     try {
       const { assetType, search, sortBy, sortOrder } = filters
 
-      let holdings = await holdingsRepository.getUserHoldings(userId)
+      // ONLY fetch holdings from connected exchange accounts
+      // No manual holdings - those are for paper trading only
+      let holdings = await this._fetchConnectedAccountHoldings(userId)
 
       // Apply asset type filter
       if (assetType && assetType !== 'all') {
@@ -52,13 +60,133 @@ class HoldingsService {
   }
 
   /**
+   * Fetch holdings from all connected exchange accounts
+   * @param {Number} userId - User ID
+   * @returns {Promise<Array>} Holdings from connected accounts
+   */
+  async _fetchConnectedAccountHoldings(userId) {
+    try {
+      // Get all connected accounts for user
+      const connectedAccounts = await connectedAccountsRepository.getByUserId(userId)
+      
+      if (!connectedAccounts || connectedAccounts.length === 0) {
+        return []
+      }
+
+      const allHoldings = []
+
+      // Fetch holdings from each connected account
+      for (const account of connectedAccounts) {
+        try {
+          let accountHoldings = []
+          
+          switch (account.platform) {
+            case 'binance':
+              accountHoldings = await this._fetchBinanceHoldings(userId, account)
+              break
+            default:
+              console.log(`[HoldingsService] Unsupported platform: ${account.platform}`)
+          }
+
+          allHoldings.push(...accountHoldings)
+          
+          // Update last sync time
+          await connectedAccountsRepository.updateLastSync(userId, account.platform)
+        } catch (err) {
+          console.error(`[HoldingsService] Error fetching from ${account.platform}:`, err.message)
+          // Continue with other accounts even if one fails
+        }
+      }
+
+      return allHoldings
+    } catch (error) {
+      console.error('[HoldingsService] Error fetching connected account holdings:', error)
+      return []
+    }
+  }
+
+  /**
+   * Fetch holdings from Binance account
+   */
+  async _fetchBinanceHoldings(userId, account) {
+    try {
+      const portfolioData = await binanceService.getPortfolioValue(userId)
+      
+      if (!portfolioData || !portfolioData.holdings) {
+        return []
+      }
+
+      // Get 24h price changes
+      const symbols = portfolioData.holdings.map(h => h.asset)
+      const priceChanges = await binanceService.get24hChange(symbols)
+
+      return portfolioData.holdings.map(holding => ({
+        id: `binance-${holding.asset}`, // Virtual ID for exchange holdings
+        symbol: holding.asset,
+        name: this._getAssetName(holding.asset),
+        assetType: 'crypto',
+        quantity: holding.amount,
+        avgBuyPrice: holding.priceUSD, // Use current price as avg (no purchase history from API)
+        currentPrice: holding.priceUSD,
+        totalValue: holding.valueUSD,
+        profitLoss: 0, // Can't calculate without purchase history
+        profitLossPercent: 0,
+        priceChange24h: priceChanges[holding.asset]?.priceChangePercent || 0,
+        source: 'binance',
+        account: account.account_name || 'Binance',
+        isExchangeHolding: true
+      }))
+    } catch (error) {
+      console.error('[HoldingsService] Error fetching Binance holdings:', error)
+      return []
+    }
+  }
+
+  /**
+   * Get human-readable name for crypto asset
+   */
+  _getAssetName(symbol) {
+    const names = {
+      'BTC': 'Bitcoin',
+      'ETH': 'Ethereum',
+      'BNB': 'Binance Coin',
+      'USDT': 'Tether',
+      'USDC': 'USD Coin',
+      'XRP': 'Ripple',
+      'ADA': 'Cardano',
+      'DOGE': 'Dogecoin',
+      'SOL': 'Solana',
+      'DOT': 'Polkadot',
+      'MATIC': 'Polygon',
+      'SHIB': 'Shiba Inu',
+      'LTC': 'Litecoin',
+      'AVAX': 'Avalanche',
+      'LINK': 'Chainlink',
+      'UNI': 'Uniswap',
+      'ATOM': 'Cosmos',
+      'XLM': 'Stellar',
+      'ALGO': 'Algorand',
+      'VET': 'VeChain',
+      'FIL': 'Filecoin',
+      'NEAR': 'NEAR Protocol',
+      'APE': 'ApeCoin',
+      'SAND': 'The Sandbox',
+      'MANA': 'Decentraland',
+      'BUSD': 'Binance USD'
+    }
+    return names[symbol] || symbol
+  }
+
+  /**
    * Get holdings grouped by asset type
+   * ONLY includes holdings from connected exchange accounts (Binance)
    * @param {Number} userId - User ID
    * @returns {Promise<Object>} Holdings grouped by type
    */
   async getHoldingsByType(userId) {
     try {
-      const holdings = await holdingsRepository.getUserHoldings(userId)
+      // Get all holdings (manual + exchange)
+      const { holdings } = await this.getHoldings(userId, {})
 
       const grouped = {
         crypto: [],
@@ -236,6 +364,7 @@ class HoldingsService {
 
   /**
    * Get holdings with pagination
+   * ONLY includes holdings from connected exchange accounts (Binance)
    * @param {Number} userId - User ID
    * @param {Object} filters - Filter options
    * @param {Number} page - Page number
@@ -244,15 +373,30 @@ class HoldingsService {
    */
   async getHoldingsPaginated(userId, filters = {}, page = 1, pageSize = 20) {
     try {
-      const result = await holdingsRepository.getHoldingsPaginated(userId, filters, page, pageSize)
+      // Get all holdings (manual + exchange) with filters
+      const { holdings: allHoldings } = await this.getHoldings(userId, filters)
+      
+      // Calculate pagination
+      const totalItems = allHoldings.length
+      const totalPages = Math.ceil(totalItems / pageSize)
+      const startIndex = (page - 1) * pageSize
+      const endIndex = startIndex + pageSize
+      
+      // Slice for current page
+      const paginatedHoldings = allHoldings.slice(startIndex, endIndex)
       
       // Calculate summary for current page
-      const summary = this._calculateSummary(result.holdings)
+      const summary = this._calculateSummary(paginatedHoldings)
 
       return {
-        holdings: result.holdings,
+        holdings: paginatedHoldings,
         summary,
-        pagination: result.pagination
+        pagination: {
+          page,
+          pageSize,
+          totalItems,
+          totalPages
+        }
       }
     } catch (error) {
       console.error('[HoldingsService] Error getting paginated holdings:', error)
@@ -341,6 +485,7 @@ class HoldingsService {
         'Name',
         'Type',
         'Account',
+        'Source',
         'Quantity',
         'Avg Buy Price',
         'Current Price',
@@ -355,13 +500,14 @@ class HoldingsService {
         h.name,
         h.assetType,
         h.account || 'default',
+        h.source || 'manual',
         h.quantity,
         h.avgBuyPrice,
         h.currentPrice || h.avgBuyPrice,
         h.totalValue,
         h.profitLoss,
         h.profitLossPercent,
-        new Date(h.updatedAt).toLocaleString()
+        h.updatedAt ? new Date(h.updatedAt).toLocaleString() : 'N/A'
       ])
 
       const csvContent = [

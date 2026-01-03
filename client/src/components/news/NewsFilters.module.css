@@ -33,23 +33,27 @@
 
 .clearButton {
   background: transparent;
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
+  border: 1px solid #dc3545;
+  color: #dc3545;
   padding: 0.5rem 1rem;
   border-radius: 6px;
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s;
+  font-weight: 500;
 }
 
 .clearButton:hover {
-  background: var(--hover-bg);
-  border-color: var(--text-secondary);
+  background: #dc3545;
+  color: white;
+  border-color: #dc3545;
 }
 
 .clearButton:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
+  background: transparent;
+  color: #dc3545;
 }
 
 .filterSection {
@@ -75,26 +79,27 @@
 }
 
 .categoryButton {
-  background: var(--hover-bg);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  color: #212529;
   padding: 0.5rem 1rem;
   border-radius: 6px;
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s;
   font-weight: 500;
+  min-width: fit-content;
 }
 
 .categoryButton:hover {
-  background: var(--card-bg);
-  border-color: var(--primary-color);
+  background: #e9ecef;
+  border-color: #0d6efd;
 }
 
 .categoryButton.active {
-  background: var(--primary-color);
-  border-color: var(--primary-color);
-  color: white;
+  background: #0d6efd !important;
+  border-color: #0d6efd !important;
+  color: white !important;
 }
 
 .selectWrapper {
@@ -128,37 +133,6 @@
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
-.dateInputs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-}
-
-.dateInput {
-  background: var(--hover-bg);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  padding: 0.75rem 1rem;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  transition: all 0.2s;
-}
-
-.dateInput:hover {
-  border-color: var(--primary-color);
-}
-
-.dateInput:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-}
-
-.dateInput::-webkit-calendar-picker-indicator {
-  filter: invert(0.5);
-  cursor: pointer;
-}
-
 @media (max-width: 768px) {
   .filtersContainer {
     padding: 1rem;
@@ -179,7 +153,46 @@
     font-size: 0.8125rem;
   }
 
-  .dateInputs {
-    grid-template-columns: 1fr;
+}
+
+
+/* Dark mode support - keep buttons white */
+@media (prefers-color-scheme: dark) {
+  .categoryButton {
+    background: #ffffff;
+    border-color: #dee2e6;
+    color: #212529;
   }
+
+  .categoryButton:hover {
+    background: #e9ecef;
+    border-color: #0d6efd;
+  }
+
+  .categoryButton.active {
+    background: #0d6efd !important;
+    border-color: #0d6efd !important;
+    color: white !important;
+  }
+}
+
+/* Ensure light theme for category buttons */
+[data-theme="dark"] .categoryButton,
+[data-theme="light"] .categoryButton {
+  background: #ffffff;
+  border-color: #dee2e6;
+  color: #212529;
+}
+
+[data-theme="dark"] .categoryButton:hover,
+[data-theme="light"] .categoryButton:hover {
+  background: #e9ecef;
+  border-color: #0d6efd;
+}
+
+[data-theme="dark"] .categoryButton.active,
+[data-theme="light"] .categoryButton.active {
+  background: #0d6efd !important;
+  border-color: #0d6efd !important;
+  color: white !important;
 }

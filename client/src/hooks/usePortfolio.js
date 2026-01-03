@@ -6,13 +6,18 @@
 import { useState, useEffect, useCallback } from 'react'
 import portfolioService from '../services/portfolioService'
 
-export const usePortfolio = () => {
+export const usePortfolio = (enabled = true) => {
   const [portfolio, setPortfolio] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [refreshing, setRefreshing] = useState(false)
 
   const fetchPortfolio = useCallback(async () => {
+    if (!enabled) {
+      setLoading(false)
+      return
+    }
+
     try {
       setLoading(true)
       setError(null)
@@ -26,17 +31,23 @@ export const usePortfolio = () => {
       }
     } catch (err) {
       console.error('[usePortfolio] Error:', err)
-      setError(err.message)
+      
+      // Check if it's an authentication error
+      if (err.message === 'Not authenticated' || err.message === 'Invalid session' || err.message.includes('Session expired')) {
+        setError('authentication_required')
+      } else {
+        setError(err.message)
+      }
       setPortfolio(null)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [enabled])
 
   const refreshPortfolio = useCallback(async () => {
+    // Simply refetch the portfolio data (no backend refresh endpoint needed)
     try {
       setRefreshing(true)
-      await portfolioService.refreshPortfolio()
       await fetchPortfolio()
     } catch (err) {
       console.error('[usePortfolio] Refresh error:', err)
@@ -47,8 +58,10 @@ export const usePortfolio = () => {
   }, [fetchPortfolio])
 
   useEffect(() => {
-    fetchPortfolio()
-  }, [fetchPortfolio])
+    if (enabled) {
+      fetchPortfolio()
+    }
+  }, [fetchPortfolio, enabled])
 
   return {
     portfolio,

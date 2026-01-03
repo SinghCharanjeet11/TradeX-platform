@@ -17,7 +17,18 @@ export const apiConfig = {
     }
   },
 
-  // Finnhub API Configuration (Stocks)
+  // Twelve Data API Configuration (Stocks, Forex, Commodities)
+  twelveData: {
+    apiKey: process.env.TWELVE_DATA_API_KEY,
+    baseUrl: process.env.TWELVE_DATA_API_URL || 'https://api.twelvedata.com',
+    timeout: 15000,
+    rateLimit: {
+      callsPerMinute: 8,
+      callsPerDay: 800 // Free tier
+    }
+  },
+
+  // Finnhub API Configuration (Stocks) - DEPRECATED, use Twelve Data
   finnhub: {
     apiKey: process.env.FINNHUB_API_KEY,
     baseUrl: process.env.FINNHUB_API_URL || 'https://finnhub.io/api/v1',
@@ -28,7 +39,7 @@ export const apiConfig = {
     }
   },
 
-  // Fixer.io API Configuration (Forex)
+  // Fixer.io API Configuration (Forex) - DEPRECATED, use Twelve Data
   fixer: {
     apiKey: process.env.FIXER_API_KEY,
     baseUrl: process.env.FIXER_API_URL || 'http://data.fixer.io/api',
@@ -38,7 +49,7 @@ export const apiConfig = {
     }
   },
 
-  // Metals-API Configuration (Commodities)
+  // Metals-API Configuration (Commodities) - DEPRECATED, use Twelve Data
   metalsApi: {
     apiKey: process.env.METALS_API_KEY,
     baseUrl: process.env.METALS_API_URL || 'https://metals-api.com/api',
@@ -74,28 +85,16 @@ export function validateConfig() {
   const errors = [];
   const warnings = [];
 
-  // Finnhub API key is required for stocks
-  if (!apiConfig.finnhub.apiKey) {
-    errors.push('FINNHUB_API_KEY is not configured in environment variables');
-  }
-
-  // Fixer.io API key is required for forex
-  if (!apiConfig.fixer.apiKey) {
-    warnings.push('FIXER_API_KEY is not configured - forex data will be unavailable');
-  }
-
-  // Metals-API key is required for commodities
-  if (!apiConfig.metalsApi.apiKey) {
-    warnings.push('METALS_API_KEY is not configured - commodities data will be unavailable');
+  // Twelve Data API key is required for stocks, forex, and commodities
+  if (!apiConfig.twelveData.apiKey) {
+    errors.push('TWELVE_DATA_API_KEY is not configured in environment variables');
   }
 
   if (errors.length > 0) {
     console.error('❌ API Configuration Errors:');
     errors.forEach(error => console.error(`  - ${error}`));
     console.error('\n📝 Please add the required API keys to your .env file:');
-    console.error('   Finnhub (Stocks): https://finnhub.io/register');
-    console.error('   Fixer.io (Forex): https://fixer.io/signup/free');
-    console.error('   Metals-API (Commodities): https://metals-api.com/signup/free\n');
+    console.error('   Twelve Data (Stocks, Forex, Commodities): https://twelvedata.com/pricing\n');
     return false;
   }
 
@@ -106,5 +105,7 @@ export function validateConfig() {
   }
 
   console.log('✅ API Configuration validated successfully');
+  console.log('   - Twelve Data API: Configured');
+  console.log('   - CoinGecko API: Configured (no key required)');
   return true;
 }

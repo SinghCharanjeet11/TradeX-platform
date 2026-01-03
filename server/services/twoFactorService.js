@@ -92,16 +92,17 @@ export const enable2FA = async (userId, verificationToken) => {
 /**
  * Disable 2FA for user
  * @param {string} userId - User ID
- * @param {string} password - User password for verification
- * @param {string} token - TOTP code for verification
+ * @param {string} token - TOTP code for verification (optional)
  * @returns {Promise<boolean>} Success status
  */
 export const disable2FA = async (userId, token) => {
-  // Verify token first
-  const isValid = await verifyToken(userId, token)
-  
-  if (!isValid) {
-    throw new Error('Invalid verification code')
+  // If token provided, verify it first
+  if (token) {
+    const isValid = await verifyToken(userId, token)
+    
+    if (!isValid) {
+      throw new Error('Invalid verification code')
+    }
   }
   
   // Disable 2FA
@@ -199,15 +200,17 @@ export const get2FADetails = async (userId) => {
 /**
  * Regenerate backup codes for user
  * @param {string} userId - User ID
- * @param {string} token - TOTP code for verification
+ * @param {string} token - TOTP code for verification (optional)
  * @returns {Promise<Array<string>>} New backup codes
  */
 export const regenerateBackupCodes = async (userId, token) => {
-  // Verify token first
-  const isValid = await verifyToken(userId, token)
-  
-  if (!isValid) {
-    throw new Error('Invalid verification code')
+  // If token provided, verify it first
+  if (token) {
+    const isValid = await verifyToken(userId, token)
+    
+    if (!isValid) {
+      throw new Error('Invalid verification code')
+    }
   }
   
   // Generate new backup codes (this will invalidate old ones)

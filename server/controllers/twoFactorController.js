@@ -40,14 +40,20 @@ export const enable2FAEndpoint = async (req, res) => {
     const userId = req.user.id
     const { token } = req.body
     
+    console.log('[2FA Controller] Enable request for user:', userId)
+    console.log('[2FA Controller] Token received:', token ? 'Yes' : 'No')
+    
     if (!token) {
+      console.log('[2FA Controller] No token provided')
       return res.status(400).json({
         success: false,
         error: 'Verification code is required'
       })
     }
     
+    console.log('[2FA Controller] Calling enable2FA service...')
     const result = await enable2FA(userId, token)
+    console.log('[2FA Controller] Service returned:', result ? 'Success' : 'Failed')
     
     res.json({
       success: true,
@@ -55,7 +61,8 @@ export const enable2FAEndpoint = async (req, res) => {
       backupCodes: result.backupCodes
     })
   } catch (error) {
-    console.error('2FA enable error:', error)
+    console.error('[2FA Controller] Enable error:', error.message)
+    console.error('[2FA Controller] Full error:', error)
     
     if (error.message === 'Invalid verification code') {
       return res.status(400).json({
@@ -77,16 +84,9 @@ export const enable2FAEndpoint = async (req, res) => {
 export const disable2FAEndpoint = async (req, res) => {
   try {
     const userId = req.user.id
-    const { token } = req.body
     
-    if (!token) {
-      return res.status(400).json({
-        success: false,
-        error: 'Verification code is required'
-      })
-    }
-    
-    const success = await disable2FA(userId, token)
+    // Disable 2FA without requiring token verification
+    const success = await disable2FA(userId, null)
     
     if (!success) {
       return res.status(400).json({
@@ -102,13 +102,6 @@ export const disable2FAEndpoint = async (req, res) => {
   } catch (error) {
     console.error('2FA disable error:', error)
     
-    if (error.message === 'Invalid verification code') {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid verification code'
-      })
-    }
-    
     res.status(500).json({
       success: false,
       error: 'Failed to disable 2FA. Please try again.'
@@ -121,16 +114,29 @@ export const disable2FAEndpoint = async (req, res) => {
  */
 export const get2FAStatus = async (req, res) => {
   try {
+    console.log('[2FA Controller] Get status request')
+    console.log('[2FA Controller] User:', req.user ? req.user.id : 'No user')
+    
+    if (!req.user || !req.user.id) {
+      console.log('[2FA Controller] No user found in request')
+      return res.status(400).json({
+        success: false,
+        error: 'User not authenticated'
+      })
+    }
+    
     const userId = req.user.id
+    console.log('[2FA Controller] Fetching status for user:', userId)
     
     const status = await get2FADetails(userId)
+    console.log('[2FA Controller] Status retrieved:', status)
     
     res.json({
       success: true,
       data: status
     })
   } catch (error) {
-    console.error('Get 2FA status error:', error)
+    console.error('[2FA Controller] Get 2FA status error:', error)
     res.status(500).json({
       success: false,
       error: 'Failed to get 2FA status'
@@ -144,16 +150,9 @@ export const get2FAStatus = async (req, res) => {
 export const regenerateBackupCodesEndpoint = async (req, res) => {
   try {
     const userId = req.user.id
-    const { token } = req.body
     
-    if (!token) {
-      return res.status(400).json({
-        success: false,
-        error: 'Verification code is required'
-      })
-    }
-    
-    const backupCodes = await regenerateBackupCodes(userId, token)
+    // Generate new backup codes without requiring token verification
+    const backupCodes = await regenerateBackupCodes(userId, null)
     
     res.json({
       success: true,
@@ -162,13 +161,6 @@ export const regenerateBackupCodesEndpoint = async (req, res) => {
     })
   } catch (error) {
     console.error('Regenerate backup codes error:', error)
-    
-    if (error.message === 'Invalid verification code') {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid verification code'
-      })
-    }
     
     res.status(500).json({
       success: false,

@@ -1,35 +1,43 @@
-.loadingScreen {
+/* Full screen overlay */
+.loaderOverlay {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  width: 100vw;
+  height: 100vh;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  margin: 0;
+  padding: 0;
+  animation: fadeOut 0.3s ease-out 1.5s forwards;
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Content container */
+.loaderContent {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  z-index: 10000;
-  animation: fadeIn 0.3s ease;
+  gap: 32px;
+  animation: contentFadeIn 0.5s ease-out;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.logoContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 24px;
-  animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes slideUp {
+@keyframes contentFadeIn {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -37,203 +45,154 @@
   }
 }
 
-.logo {
-  filter: drop-shadow(0 0 30px rgba(124, 140, 255, 0.4));
-  animation: float 3s ease-in-out infinite;
+/* Hourglass container - rotates once */
+.hourglassContainer {
+  width: 80px;
+  height: 120px;
+  position: relative;
+  animation: rotateHourglassOnce 1.5s ease-in-out forwards;
 }
 
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-/* Glow circle animation */
-.glowCircle {
-  animation: rotate 3s linear infinite, pulse 2s ease-in-out infinite;
-  transform-origin: center;
-}
-
-@keyframes rotate {
-  from {
+@keyframes rotateHourglassOnce {
+  0% {
     transform: rotate(0deg);
   }
-  to {
-    transform: rotate(360deg);
+  100% {
+    transform: rotate(180deg);
   }
 }
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 0.6;
-  }
-  50% {
-    opacity: 1;
-  }
+/* Hourglass structure */
+.hourglass {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-/* Logo square animation */
-.logoSquare {
-  animation: borderGlow 2s ease-in-out infinite;
+/* Top half of hourglass */
+.hourglassTop {
+  width: 60px;
+  height: 45px;
+  border: 3px solid #00d4aa;
+  border-bottom: none;
+  border-radius: 5px 5px 0 0;
+  position: relative;
+  overflow: hidden;
+  background: transparent;
 }
 
-@keyframes borderGlow {
-  0%, 100% {
-    filter: drop-shadow(0 0 5px rgba(124, 140, 255, 0.5));
-  }
-  50% {
-    filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.8));
-  }
+/* Sand in top half - empties as it falls */
+.sandTop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(180deg, #00d4aa 0%, #00ffcc 100%);
+  animation: sandFallTop 1.5s ease-in-out forwards;
+  border-radius: 0 0 20px 20px;
 }
 
-/* Chart line animation */
-.chartLine {
-  stroke-dasharray: 200;
-  stroke-dashoffset: 200;
-  animation: drawLine 2s ease-in-out infinite;
-}
-
-@keyframes drawLine {
+@keyframes sandFallTop {
   0% {
-    stroke-dashoffset: 200;
+    height: 100%;
   }
-  50%, 100% {
-    stroke-dashoffset: 0;
-  }
-}
-
-/* Dot animations */
-.dot1 { animation: dotPulse 1.5s ease-in-out infinite 0s; }
-.dot2 { animation: dotPulse 1.5s ease-in-out infinite 0.1s; }
-.dot3 { animation: dotPulse 1.5s ease-in-out infinite 0.2s; }
-.dot4 { animation: dotPulse 1.5s ease-in-out infinite 0.3s; }
-.dot5 { animation: dotPulse 1.5s ease-in-out infinite 0.4s; }
-.dot6 { animation: dotPulse 1.5s ease-in-out infinite 0.5s; }
-
-@keyframes dotPulse {
-  0%, 100% {
-    r: 4;
-    opacity: 0.6;
-  }
-  50% {
-    r: 6;
-    opacity: 1;
+  100% {
+    height: 0%;
   }
 }
 
-/* Arrow animation */
-.arrow {
-  animation: arrowBounce 1s ease-in-out infinite;
+/* Middle neck */
+.hourglassMiddle {
+  width: 10px;
+  height: 10px;
+  background: #00d4aa;
+  position: relative;
+  z-index: 2;
 }
 
-@keyframes arrowBounce {
-  0%, 100% {
-    transform: translate(0, 0);
+/* Bottom half of hourglass */
+.hourglassBottom {
+  width: 60px;
+  height: 45px;
+  border: 3px solid #00d4aa;
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  position: relative;
+  overflow: hidden;
+  background: transparent;
+}
+
+/* Sand in bottom half - fills */
+.sandBottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(180deg, #00ffcc 0%, #00d4aa 100%);
+  animation: sandFallBottom 1.5s ease-in-out forwards;
+  border-radius: 20px 20px 0 0;
+}
+
+@keyframes sandFallBottom {
+  0% {
+    height: 0%;
   }
-  50% {
-    transform: translate(2px, -2px);
+  100% {
+    height: 100%;
   }
 }
 
 /* Brand name */
 .brandName {
-  font-size: 48px;
-  font-weight: 800;
-  background: linear-gradient(135deg, #7c8cff 0%, #10b981 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: -1px;
-  animation: textGlow 2s ease-in-out infinite;
-}
-
-@keyframes textGlow {
-  0%, 100% {
-    filter: drop-shadow(0 0 10px rgba(124, 140, 255, 0.5));
-  }
-  50% {
-    filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.8));
-  }
+  font-size: 42px;
+  font-weight: 700;
+  color: #1a202c;
+  letter-spacing: -0.5px;
+  margin: 0;
+  padding: 0;
 }
 
 /* Loading text */
 .loadingText {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.7);
-  font-weight: 500;
-  letter-spacing: 1px;
+  font-size: 14px;
+  color: #718096;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  margin: 0;
+  padding: 0;
+  animation: textFade 2s ease-in-out infinite;
 }
 
-.dots {
-  display: inline-block;
-  animation: dotsBlink 1.4s infinite;
-}
-
-@keyframes dotsBlink {
-  0%, 20% {
-    opacity: 0;
-  }
-  40% {
-    opacity: 1;
-  }
-  60%, 100% {
-    opacity: 0;
-  }
-}
-
-/* Progress bar */
-.progressBar {
-  position: absolute;
-  bottom: 60px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 300px;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.progressFill {
-  height: 100%;
-  background: linear-gradient(90deg, #7c8cff 0%, #10b981 50%, #7c8cff 100%);
-  background-size: 200% 100%;
-  border-radius: 2px;
-  animation: progressMove 1.5s ease-in-out infinite;
-  box-shadow: 0 0 10px rgba(124, 140, 255, 0.5);
-}
-
-@keyframes progressMove {
-  0% {
-    width: 0%;
-    background-position: 0% 50%;
+@keyframes textFade {
+  0%, 100% {
+    opacity: 0.5;
   }
   50% {
-    width: 70%;
-    background-position: 100% 50%;
-  }
-  100% {
-    width: 100%;
-    background-position: 200% 50%;
+    opacity: 1;
   }
 }
 
-/* Responsive */
+/* Responsive design */
 @media (max-width: 768px) {
-  .logo {
-    width: 100px;
-    height: 100px;
+  .hourglassContainer {
+    width: 70px;
+    height: 105px;
+  }
+  
+  .hourglassTop,
+  .hourglassBottom {
+    width: 50px;
+    height: 40px;
   }
   
   .brandName {
     font-size: 36px;
   }
   
-  .progressBar {
-    width: 250px;
-    bottom: 40px;
+  .loadingText {
+    font-size: 13px;
   }
 }

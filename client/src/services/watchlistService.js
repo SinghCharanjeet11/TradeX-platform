@@ -8,7 +8,7 @@ import api from './api'
 class WatchlistService {
   async getWatchlist() {
     try {
-      const response = await api.get('/api/watchlist')
+      const response = await api.get('/watchlist')
       return response.data
     } catch (error) {
       console.error('[WatchlistService] Error fetching watchlist:', error)
@@ -18,17 +18,21 @@ class WatchlistService {
 
   async addToWatchlist(asset) {
     try {
-      const response = await api.post('/api/watchlist', asset)
+      console.log('[WatchlistService] POST /watchlist with:', asset)
+      const response = await api.post('/watchlist', asset)
+      console.log('[WatchlistService] Response:', response.data)
       return response.data
     } catch (error) {
       console.error('[WatchlistService] Error adding to watchlist:', error)
+      console.error('[WatchlistService] Error response:', error.response?.data)
+      console.error('[WatchlistService] Error status:', error.response?.status)
       throw error
     }
   }
 
   async removeFromWatchlist(watchlistId) {
     try {
-      const response = await api.delete(`/api/watchlist/${watchlistId}`)
+      const response = await api.delete(`/watchlist/${watchlistId}`)
       return response.data
     } catch (error) {
       console.error('[WatchlistService] Error removing from watchlist:', error)
@@ -38,7 +42,7 @@ class WatchlistService {
 
   async isInWatchlist(symbol, assetType) {
     try {
-      const response = await api.get(`/api/watchlist/check/${symbol}/${assetType}`)
+      const response = await api.get(`/watchlist/check/${symbol}/${assetType}`)
       return response.data
     } catch (error) {
       console.error('[WatchlistService] Error checking watchlist:', error)
@@ -48,7 +52,7 @@ class WatchlistService {
 
   async getAlerts() {
     try {
-      const response = await api.get('/api/watchlist/alerts')
+      const response = await api.get('/watchlist/alerts')
       return response.data
     } catch (error) {
       console.error('[WatchlistService] Error fetching alerts:', error)
@@ -58,7 +62,7 @@ class WatchlistService {
 
   async createAlert(alertData) {
     try {
-      const response = await api.post('/api/watchlist/alerts', alertData)
+      const response = await api.post('/watchlist/alerts', alertData)
       return response.data
     } catch (error) {
       console.error('[WatchlistService] Error creating alert:', error)
@@ -68,7 +72,7 @@ class WatchlistService {
 
   async deleteAlert(alertId) {
     try {
-      const response = await api.delete(`/api/watchlist/alerts/${alertId}`)
+      const response = await api.delete(`/watchlist/alerts/${alertId}`)
       return response.data
     } catch (error) {
       console.error('[WatchlistService] Error deleting alert:', error)

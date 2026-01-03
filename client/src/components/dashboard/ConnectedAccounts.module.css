@@ -16,6 +16,8 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .header h3 {
@@ -33,6 +35,12 @@
   font-size: 24px;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .badge {
   background: rgba(0, 212, 170, 0.2);
   color: #00d4aa;
@@ -42,26 +50,55 @@
   font-weight: 600;
 }
 
+.connectBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #00d4aa 0%, #00a88e 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.connectBtn:hover {
+  background: linear-gradient(135deg, #00ffcc 0%, #00d4aa 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 212, 170, 0.3);
+}
+
+.connectBtn svg {
+  font-size: 18px;
+}
+
 .accountsList {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0;
 }
 
 .accountCard {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 16px;
-  background: rgba(0, 0, 0, 0.02);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 12px;
+  padding: 16px 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 0;
   transition: all 0.3s;
 }
 
+.accountCard:last-child {
+  border-bottom: none;
+}
+
 .accountCard:hover {
-  background: rgba(0, 0, 0, 0.04);
-  border-color: rgba(0, 212, 170, 0.3);
+  background: transparent;
 }
 
 .accountIcon {
@@ -187,4 +224,57 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Dark Mode Support */
+[data-theme="dark"] .connectedAccounts {
+  background: #1e293b;
+  border-color: #00d4aa;
+}
+
+[data-theme="dark"] .connectedAccounts:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .header {
+  border-bottom-color: #334155;
+}
+
+[data-theme="dark"] .header h3 {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .accountCard {
+  border-bottom-color: #334155;
+}
+
+[data-theme="dark"] .accountHeader h4 {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .accountDetails {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .portfolioPreview span:first-child {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .refreshBtn,
+[data-theme="dark"] .deleteBtn {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: #475569;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .refreshBtn:hover:not(:disabled) {
+  background: rgba(0, 212, 170, 0.15);
+  border-color: #00d4aa;
+  color: #00d4aa;
+}
+
+[data-theme="dark"] .deleteBtn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  color: #ef4444;
 }

@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import { MdStar, MdDelete, MdTrendingUp, MdTrendingDown, MdRemoveRedEye } from 'react-icons/md'
+import { MdStar, MdDelete, MdTrendingUp, MdTrendingDown } from 'react-icons/md'
 import { useNavigate } from 'react-router-dom'
-import { useWatchlist } from '../../hooks/useWatchlist'
+import useDashboardData from '../../hooks/useDashboardData'
+import watchlistService from '../../services/watchlistService'
 import portfolioService from '../../services/portfolioService'
 import styles from './WatchlistCard.module.css'
 
 function WatchlistCard() {
   const navigate = useNavigate()
-  const { watchlist, loading, removeFromWatchlist } = useWatchlist()
+  const { watchlist, removeWatchlistItem, refreshWatchlist } = useDashboardData()
   const [removing, setRemoving] = useState(null)
 
   const handleRemove = async (e, watchlistId) => {
@@ -17,19 +18,25 @@ function WatchlistCard() {
 
     try {
       setRemoving(watchlistId)
-      await removeFromWatchlist(watchlistId)
+      
+      // Optimistic update: remove item from UI immediately
+      removeWatchlistItem(watchlistId)
+      
+      // Call API to delete (in background)
+      await watchlistService.removeFromWatchlist(watchlistId)
+      
+      // No need to refresh - optimistic update already handled it
+      // Background refresh will sync on next poll cycle
     } catch (error) {
       console.error('Error removing from watchlist:', error)
+      // On error, refresh to restore correct state from server
+      await refreshWatchlist()
     } finally {
       setRemoving(null)
     }
   }
 
-  const handleViewAll = () => {
-    navigate('/markets')
-  }
-
-  if (loading) {
+  if (watchlist.loading) {
     return (
       <div className={styles.card}>
         <div className={styles.header}>
@@ -46,7 +53,10 @@ function WatchlistCard() {
     )
   }
 
-  if (watchlist.length === 0) {
+  // Safely access watchlist data
+  const watchlistData = watchlist.data || [];
+
+  if (watchlistData.length === 0) {
     return (
       <div className={styles.card}>
         <div className={styles.header}>
@@ -58,7 +68,7 @@ function WatchlistCard() {
         <div className={styles.empty}>
           <MdStar className={styles.emptyIcon} />
           <p>No assets in your watchlist</p>
-          <button className={styles.browseBtn} onClick={handleViewAll}>
+          <button className={styles.browseBtn} onClick={() => navigate('/markets')}>
             Browse Markets
           </button>
         </div>
@@ -66,8 +76,8 @@ function WatchlistCard() {
     )
   }
 
-  // Show only first 5 items
-  const displayedItems = watchlist.slice(0, 5)
+  // Show all items (scrollable list)
+  const displayedItems = watchlistData
 
   return (
     <div className={styles.card}>
@@ -75,12 +85,8 @@ function WatchlistCard() {
         <div className={styles.headerLeft}>
           <MdStar className={styles.headerIcon} />
           <h3>My Watchlist</h3>
-          <span className={styles.count}>{watchlist.length}</span>
+          <span className={styles.count}>{watchlistData.length}</span>
         </div>
-        <button className={styles.viewAllBtn} onClick={handleViewAll}>
-          <MdRemoveRedEye />
-          View All
-        </button>
       </div>
 
       <div className={styles.list}>
@@ -119,14 +125,6 @@ function WatchlistCard() {
           </div>
         ))}
       </div>
-
-      {watchlist.length > 5 && (
-        <div className={styles.footer}>
-          <button className={styles.showMoreBtn} onClick={handleViewAll}>
-            Show {watchlist.length - 5} more assets
-          </button>
-        </div>
-      )}
     </div>
   )
 }

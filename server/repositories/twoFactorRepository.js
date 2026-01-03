@@ -78,17 +78,13 @@ export const createBackupCodes = async (userId, codeHashes) => {
     // Delete existing backup codes
     await client.query('DELETE FROM backup_codes WHERE user_id = $1', [userId])
     
-    // Insert new backup codes
-    const values = codeHashes.map((hash, index) => 
-      `($1, $${index + 2}, FALSE)`
-    ).join(', ')
-    
-    const insertSql = `
-      INSERT INTO backup_codes (user_id, code_hash, used)
-      VALUES ${values}
-    `
-    
-    await client.query(insertSql, [userId, ...codeHashes])
+    // Insert new backup codes one by one
+    for (const codeHash of codeHashes) {
+      await client.query(`
+        INSERT INTO backup_codes (user_id, code_hash, used)
+        VALUES ($1, $2, FALSE)
+      `, [userId, codeHash])
+    }
     
     // Update backup_codes_generated_at timestamp
     await client.query(`

@@ -4,6 +4,7 @@
  */
 
 import watchlistRepository from '../repositories/watchlistRepository.js'
+import marketService from './marketService.js'
 
 class WatchlistService {
   /**
@@ -15,14 +16,60 @@ class WatchlistService {
     try {
       const watchlist = await watchlistRepository.getUserWatchlist(userId)
       
-      // In production, fetch current prices from market data service
-      // For now, add mock current prices
-      const watchlistWithPrices = watchlist.map(item => ({
-        ...item,
-        currentPrice: this._getMockPrice(item.symbol),
-        change24h: this._getMockChange(),
-        volume24h: this._getMockVolume()
-      }))
+      if (watchlist.length === 0) {
+        return []
+      }
+
+      // Group by asset type for efficient API calls
+      const byType = {}
+      watchlist.forEach(item => {
+        const type = item.assetType || 'crypto'
+        if (!byType[type]) byType[type] = []
+        byType[type].push(item)
+      })
+
+      // Fetch real market data for each type
+      const watchlistWithPrices = []
+      for (const [assetType, items] of Object.entries(byType)) {
+        let marketData = []
+        
+        try {
+          switch (assetType.toLowerCase()) {
+            case 'crypto':
+            case 'cryptocurrency':
+              const cryptoResult = await marketService.getCryptoMarketData()
+              marketData = cryptoResult.success ? cryptoResult.data : []
+              break
+            case 'stock':
+            case 'stocks':
+              const stocksResult = await marketService.getStocksMarketData()
+              marketData = stocksResult.success ? stocksResult.data : []
+              break
+            case 'forex':
+              const forexResult = await marketService.getForexMarketData()
+              marketData = forexResult.success ? forexResult.data : []
+              break
+            case 'commodity':
+            case 'commodities':
+              const commoditiesResult = await marketService.getCommoditiesMarketData()
+              marketData = commoditiesResult.success ? commoditiesResult.data : []
+              break
+          }
+        } catch (error) {
+          console.error(`[WatchlistService] Error fetching ${assetType} data:`, error)
+        }
+
+        // Map prices to watchlist items
+        items.forEach(item => {
+          const asset = marketData.find(a => a.symbol === item.symbol || a.id === item.symbol)
+          watchlistWithPrices.push({
+            ...item,
+            currentPrice: asset?.current_price || asset?.price || this._getMockPrice(item.symbol),
+            priceChange24h: asset?.price_change_percentage_24h || asset?.change24h || this._getMockChange(),
+            volume24h: asset?.total_volume || asset?.volume24h || this._getMockVolume()
+          })
+        })
+      }
 
       return watchlistWithPrices
     } catch (error) {
@@ -90,23 +137,75 @@ class WatchlistService {
   }
 
   /**
-   * Get user's price alerts
+   * Get user's price alerts with real-time market prices
    * @param {Number} userId - User ID
-   * @returns {Promise<Array>} Price alerts
+   * @returns {Promise<Array>} Price alerts with current prices
    */
   async getAlerts(userId) {
     try {
       const alerts = await watchlistRepository.getUserAlerts(userId)
       
-      // Add current prices
-      const alertsWithPrices = alerts.map(alert => ({
-        ...alert,
-        currentPrice: this._getMockPrice(alert.symbol),
-        percentageToTarget: this._calculatePercentageToTarget(
-          this._getMockPrice(alert.symbol),
-          alert.targetPrice
-        )
-      }))
+      if (alerts.length === 0) {
+        return []
+      }
+
+      // Group alerts by asset type for efficient API calls
+      const byType = {}
+      alerts.forEach(alert => {
+        const type = alert.assetType || 'crypto'
+        if (!byType[type]) byType[type] = []
+        byType[type].push(alert)
+      })
+
+      // Fetch real market data for each type
+      const alertsWithPrices = []
+      for (const [assetType, typeAlerts] of Object.entries(byType)) {
+        let marketData = []
+        
+        try {
+          switch (assetType.toLowerCase()) {
+            case 'crypto':
+            case 'cryptocurrency':
+              const cryptoResult = await marketService.getCryptoMarketData()
+              marketData = cryptoResult.success ? cryptoResult.data : []
+              break
+            case 'stock':
+            case 'stocks':
+              const stocksResult = await marketService.getStocksMarketData()
+              marketData = stocksResult.success ? stocksResult.data : []
+              break
+            case 'forex':
+              const forexResult = await marketService.getForexMarketData()
+              marketData = forexResult.success ? forexResult.data : []
+              break
+            case 'commodity':
+            case 'commodities':
+              const commoditiesResult = await marketService.getCommoditiesMarketData()
+              marketData = commoditiesResult.success ? commoditiesResult.data : []
+              break
+          }
+        } catch (error) {
+          console.error(`[WatchlistService] Error fetching ${assetType} data for alerts:`, error)
+        }
+
+        // Map real prices to alerts
+        typeAlerts.forEach(alert => {
+          const asset = marketData.find(a => 
+            a.symbol === alert.symbol || 
+            a.id === alert.symbol ||
+            a.symbol?.toUpperCase() === alert.symbol?.toUpperCase()
+          )
+          
+          // Use real market price if available, otherwise fall back to stored price
+          const currentPrice = asset?.current_price || asset?.price || alert.currentPrice || this._getMockPrice(alert.symbol)
+          
+          alertsWithPrices.push({
+            ...alert,
+            currentPrice,
+            percentageToTarget: this._calculatePercentageToTarget(currentPrice, alert.targetPrice)
+          })
+        })
+      }
 
       return alertsWithPrices
     } catch (error) {

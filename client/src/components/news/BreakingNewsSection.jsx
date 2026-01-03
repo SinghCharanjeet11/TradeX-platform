@@ -62,7 +62,17 @@ export default function BreakingNewsSection({ onArticleClick }) {
     return `${diffHours}h ago`;
   };
 
-  if (!loading && articles.length === 0) {
+  const handleArticleClick = (article) => {
+    // If article has a URL, open it directly in a new tab
+    if (article.url || article.sourceUrl) {
+      window.open(article.url || article.sourceUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      // Fallback to modal if no URL available
+      onArticleClick(article);
+    }
+  };
+
+  if (articles.length === 0) {
     return null;
   }
 
@@ -75,17 +85,13 @@ export default function BreakingNewsSection({ onArticleClick }) {
         </div>
       </div>
 
-      {loading ? (
-        <div className={styles.loading}>
-          <div className={styles.spinner}></div>
-        </div>
-      ) : articles.length > 0 ? (
+      {articles.length > 0 ? (
         <div className={styles.articlesList}>
           {articles.slice(0, 3).map(article => (
             <div
               key={article.id}
               className={styles.articleCard}
-              onClick={() => onArticleClick(article)}
+              onClick={() => handleArticleClick(article)}
             >
               <div className={styles.articleHeader}>
                 <h3 className={styles.articleTitle}>{article.title}</h3>

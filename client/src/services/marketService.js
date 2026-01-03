@@ -12,7 +12,7 @@ const marketService = {
    */
   getCryptoData: async () => {
     try {
-      const response = await api.get('/api/markets/crypto');
+      const response = await api.get('/markets/crypto');
       return response.data;
     } catch (error) {
       console.error('[MarketService] Error fetching crypto data:', error);
@@ -26,7 +26,7 @@ const marketService = {
    */
   getStocksData: async () => {
     try {
-      const response = await api.get('/api/markets/stocks');
+      const response = await api.get('/markets/stocks');
       return response.data;
     } catch (error) {
       console.error('[MarketService] Error fetching stocks data:', error);
@@ -40,7 +40,7 @@ const marketService = {
    */
   getForexData: async () => {
     try {
-      const response = await api.get('/api/markets/forex');
+      const response = await api.get('/markets/forex');
       return response.data;
     } catch (error) {
       console.error('[MarketService] Error fetching forex data:', error);
@@ -54,7 +54,7 @@ const marketService = {
    */
   getCommoditiesData: async () => {
     try {
-      const response = await api.get('/api/markets/commodities');
+      const response = await api.get('/markets/commodities');
       return response.data;
     } catch (error) {
       console.error('[MarketService] Error fetching commodities data:', error);
@@ -70,7 +70,7 @@ const marketService = {
    */
   getAssetDetails: async (type, symbol) => {
     try {
-      const response = await api.get(`/api/markets/${type}/${symbol}/details`);
+      const response = await api.get(`/markets/${type}/${symbol}/details`);
       return response.data;
     } catch (error) {
       console.error(`[MarketService] Error fetching asset details for ${symbol}:`, error);
@@ -87,7 +87,7 @@ const marketService = {
    */
   getChartData: async (type, symbol, days = 7) => {
     try {
-      const response = await api.get(`/api/markets/${type}/${symbol}/chart`, {
+      const response = await api.get(`/markets/${type}/${symbol}/chart`, {
         params: { days }
       });
       return response.data;
@@ -103,7 +103,7 @@ const marketService = {
    */
   getHealth: async () => {
     try {
-      const response = await api.get('/api/markets/health');
+      const response = await api.get('/markets/health');
       return response.data;
     } catch (error) {
       console.error('[MarketService] Error fetching health status:', error);

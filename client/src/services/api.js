@@ -1,6 +1,10 @@
 import axios from 'axios'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+// In development, use the Vite proxy (empty string means relative URLs)
+// In production, use the environment variable
+const API_URL = import.meta.env.MODE === 'development' 
+  ? '' 
+  : (import.meta.env.VITE_API_URL || 'http://localhost:5000')
 
 // Create axios instance
 const api = axios.create({
@@ -36,6 +40,10 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
+      // Suppress 401 errors for /auth/me endpoint (expected when not logged in)
+      if (error.response.status === 401 && error.config.url === '/auth/me') {
+        return Promise.reject(new Error('Not authenticated'))
+      }
       // Server responded with error
       const message = error.response.data?.error || 'An error occurred'
       return Promise.reject(new Error(message))
@@ -97,6 +105,19 @@ export const authAPI = {
 
   refreshAccountData: async (accountId) => {
     const response = await api.post(`/auth/connected-accounts/${accountId}/refresh`)
+    return response.data
+  },
+
+  updateProfile: async (profileData) => {
+    const response = await api.put('/auth/profile', profileData)
+    return response.data
+  },
+
+  updateSecurity: async (securityData) => {
+    const response = await api.post('/auth/change-password', {
+      currentPassword: securityData.currentPassword,
+      newPassword: securityData.newPassword
+    })
     return response.data
   },
 }

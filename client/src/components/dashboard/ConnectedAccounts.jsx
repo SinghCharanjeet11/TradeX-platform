@@ -1,16 +1,13 @@
 import { useState } from 'react'
-import { MdLink, MdDelete, MdRefresh, MdCheckCircle } from 'react-icons/md'
-import { SiBinance, SiCoinbase } from 'react-icons/si'
-import { FaRobot } from 'react-icons/fa'
+import { MdLink, MdDelete, MdRefresh, MdCheckCircle, MdAdd } from 'react-icons/md'
+import { SiBinance } from 'react-icons/si'
 import styles from './ConnectedAccounts.module.css'
 
 const PLATFORM_ICONS = {
-  binance: SiBinance,
-  coinbase: SiCoinbase,
-  robinhood: FaRobot
+  binance: SiBinance
 }
 
-function ConnectedAccounts({ accounts, onDisconnect, onRefresh }) {
+function ConnectedAccounts({ accounts, onDisconnect, onRefresh, onConnectNew }) {
   const [refreshing, setRefreshing] = useState({})
 
   const handleRefresh = async (accountId) => {
@@ -31,7 +28,12 @@ function ConnectedAccounts({ accounts, onDisconnect, onRefresh }) {
         <h3>
           <MdLink /> Connected Accounts
         </h3>
-        <span className={styles.badge}>{accounts.length}</span>
+        <div className={styles.headerActions}>
+          <span className={styles.badge}>{accounts.length}</span>
+          <button className={styles.connectBtn} onClick={onConnectNew}>
+            <MdAdd /> Connect
+          </button>
+        </div>
       </div>
 
       <div className={styles.accountsList}>

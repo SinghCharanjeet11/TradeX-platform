@@ -1,8 +1,13 @@
 import { MdTrendingUp, MdTrendingDown } from 'react-icons/md'
 import portfolioService from '../../services/portfolioService'
+import useDashboardData from '../../hooks/useDashboardData'
 import styles from './TopPerformersCard.module.css'
 
-function TopPerformersCard({ topPerformers }) {
+function TopPerformersCard() {
+  const { portfolio } = useDashboardData()
+  
+  const topPerformers = portfolio.data?.topPerformers
+
   if (!topPerformers || (!topPerformers.best?.length && !topPerformers.worst?.length)) {
     return (
       <div className={styles.card}>

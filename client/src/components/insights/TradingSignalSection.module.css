@@ -1,0 +1,516 @@
+.section {
+  background: #f7fafc;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.headerIcon {
+  font-size: 24px;
+  color: #7c8cff;
+}
+
+.header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+/* Loading State */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 16px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(124, 140, 255, 0.2);
+  border-top-color: #7c8cff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading p {
+  margin: 0;
+  color: #718096;
+  font-size: 14px;
+}
+
+/* Error State */
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 12px;
+}
+
+.errorIcon {
+  font-size: 48px;
+  color: #ef4444;
+  opacity: 0.5;
+}
+
+.error p {
+  margin: 0;
+  color: #1a202c;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.error span {
+  color: #718096;
+  font-size: 14px;
+}
+
+/* No Data State */
+.noData {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 12px;
+}
+
+.noDataIcon {
+  font-size: 48px;
+  color: #10b981;
+  opacity: 0.5;
+}
+
+.noData p {
+  margin: 0;
+  color: #1a202c;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.noData span {
+  color: #718096;
+  font-size: 14px;
+}
+
+/* Signals List */
+.signalsList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Signal Card */
+.signalCard {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.signalCard:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+}
+
+.signalCard.buy {
+  border-left: 3px solid #10b981;
+}
+
+.signalCard.sell {
+  border-left: 3px solid #ef4444;
+}
+
+.signalCard.hold {
+  border-left: 3px solid #f59e0b;
+}
+
+/* Signal Header */
+.signalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.signalType {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.signalBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  width: fit-content;
+}
+
+.signalBadge.buy {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.signalBadge.sell {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.signalBadge.hold {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.signalBadge svg {
+  font-size: 18px;
+}
+
+.timestamp {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.dismissBtn {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 6px;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dismissBtn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.dismissBtn svg {
+  font-size: 18px;
+}
+
+/* Confidence */
+.confidence {
+  margin-bottom: 20px;
+}
+
+.confidenceLabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.confidenceLabel span:first-child {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.confidenceValue {
+  color: #1a202c;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.confidenceBar {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.confidenceFill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* Price Targets */
+.priceTargets {
+  margin-bottom: 20px;
+}
+
+.priceTargets h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.targetsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.targetItem {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.targetLabel {
+  color: #64748b;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.targetValue {
+  color: #1a202c;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.targetValue.target {
+  color: #10b981;
+}
+
+.targetValue.stopLoss {
+  color: #ef4444;
+}
+
+/* Potential Move */
+.potentialMove {
+  display: flex;
+  gap: 16px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.moveItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.moveItem span:first-child {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.moveItem .gain {
+  color: #10b981;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.moveItem .loss {
+  color: #ef4444;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* Reasoning */
+.reasoning {
+  margin-bottom: 16px;
+}
+
+.reasoning h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.reasoning p {
+  margin: 0;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Risk Score */
+.riskScore {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.riskLabel {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.riskBadge {
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.riskBadge.lowRisk {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.riskBadge.mediumRisk {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.riskBadge.highRisk {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+/* Dark Mode Support */
+[data-theme="dark"] .section {
+  background: var(--bg-secondary, rgba(255, 255, 255, 0.03));
+  border-color: var(--border-color, rgba(255, 255, 255, 0.05));
+}
+
+[data-theme="dark"] .header h3 {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+[data-theme="dark"] .signalCard {
+  background: var(--bg-tertiary, rgba(255, 255, 255, 0.02));
+  border-color: var(--border-color, rgba(255, 255, 255, 0.05));
+}
+
+[data-theme="dark"] .signalCard:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .timestamp {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+[data-theme="dark"] .confidenceLabel span:first-child {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+[data-theme="dark"] .confidenceValue {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="dark"] .confidenceBar {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .priceTargets h4 {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+[data-theme="dark"] .targetItem {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .targetLabel {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="dark"] .targetValue {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+[data-theme="dark"] .potentialMove {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: var(--border-color, rgba(255, 255, 255, 0.05));
+}
+
+[data-theme="dark"] .moveItem span:first-child {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="dark"] .reasoning h4 {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+[data-theme="dark"] .reasoning p {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] .riskScore {
+  border-top-color: var(--border-color, rgba(255, 255, 255, 0.05));
+}
+
+[data-theme="dark"] .riskLabel {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+[data-theme="dark"] .dismissBtn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="dark"] .loading p {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+[data-theme="dark"] .error p,
+[data-theme="dark"] .noData p {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+[data-theme="dark"] .error span,
+[data-theme="dark"] .noData span {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .section {
+    padding: 16px;
+  }
+
+  .targetsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .potentialMove {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .signalHeader {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .dismissBtn {
+    align-self: flex-end;
+  }
+}

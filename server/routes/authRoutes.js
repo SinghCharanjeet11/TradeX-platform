@@ -5,7 +5,8 @@ import {
   logout,
   forgotPassword,
   resetPassword,
-  getCurrentUser
+  getCurrentUser,
+  changePassword
 } from '../controllers/authController.js'
 import {
   setup2FA,
@@ -14,6 +15,12 @@ import {
   get2FAStatus,
   regenerateBackupCodesEndpoint
 } from '../controllers/twoFactorController.js'
+import {
+  initiateGoogleAuth,
+  handleGoogleCallback,
+  initiateTwitterAuth,
+  handleTwitterCallback
+} from '../controllers/oauthController.js'
 import {
   validateRegistration,
   validateLogin,
@@ -70,6 +77,11 @@ router.post(
 
 // Protected routes
 router.get('/me', requireAuth, getCurrentUser)
+router.put('/profile', requireAuth, async (req, res, next) => {
+  const { updateProfile } = await import('../controllers/authController.js')
+  updateProfile(req, res, next)
+})
+router.post('/change-password', requireAuth, changePassword)
 
 // 2FA routes
 router.post('/2fa/setup', requireAuth, setup2FA)
@@ -77,6 +89,12 @@ router.post('/2fa/enable', requireAuth, enable2FAEndpoint)
 router.post('/2fa/disable', requireAuth, disable2FAEndpoint)
 router.get('/2fa/status', requireAuth, get2FAStatus)
 router.post('/2fa/backup-codes/regenerate', requireAuth, regenerateBackupCodesEndpoint)
+
+// OAuth routes
+router.get('/oauth/google', initiateGoogleAuth)
+router.get('/oauth/google/callback', handleGoogleCallback)
+router.get('/oauth/twitter', initiateTwitterAuth)
+router.get('/oauth/twitter/callback', handleTwitterCallback)
 
 // External account connection routes
 router.post('/connect-account', requireAuth, async (req, res) => {
@@ -96,7 +114,7 @@ router.post('/connect-account', requireAuth, async (req, res) => {
       })
     }
 
-    // Test connection first for Binance
+    // Test connection based on platform
     if (platform === 'binance') {
       console.log('[Auth] Testing Binance connection...')
       const { default: binanceService } = await import('../services/binanceService.js')
@@ -120,6 +138,13 @@ router.post('/connect-account', requireAuth, async (req, res) => {
         })
       }
       console.log('[Auth] Binance connection test passed')
+    } else {
+      // Only Binance is supported
+      console.log('[Auth] Unsupported platform:', platform)
+      return res.status(400).json({
+        success: false,
+        error: 'Only Binance is currently supported for account connections'
+      })
     }
 
     // Import repository

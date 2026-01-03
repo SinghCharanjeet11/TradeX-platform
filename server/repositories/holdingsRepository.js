@@ -18,15 +18,93 @@ class HoldingsRepository {
       [userId]
     );
     
-    // Calculate derived fields
-    return result.rows.map(holding => ({
-      ...holding,
-      totalValue: holding.quantity * (holding.currentPrice || holding.avgBuyPrice),
-      profitLoss: holding.quantity * ((holding.currentPrice || holding.avgBuyPrice) - holding.avgBuyPrice),
-      profitLossPercent: holding.avgBuyPrice > 0 
-        ? (((holding.currentPrice || holding.avgBuyPrice) - holding.avgBuyPrice) / holding.avgBuyPrice) * 100 
-        : 0
-    }));
+    // CRITICAL: Convert all numeric values to JavaScript numbers to prevent string concatenation
+    // PostgreSQL numeric type can be returned as strings by the pg driver
+    return result.rows.map(holding => {
+      const quantity = Number(holding.quantity) || 0;
+      const avgBuyPrice = Number(holding.avgBuyPrice) || 0;
+      const currentPrice = Number(holding.currentPrice) || avgBuyPrice;
+      
+      return {
+        ...holding,
+        quantity,
+        avgBuyPrice,
+        currentPrice,
+        totalValue: quantity * currentPrice,
+        profitLoss: quantity * (currentPrice - avgBuyPrice),
+        profitLossPercent: avgBuyPrice > 0 
+          ? ((currentPrice - avgBuyPrice) / avgBuyPrice) * 100 
+          : 0
+      };
+    });
+  }
+
+  /**
+   * Get ONLY paper trading holdings for a user
+   * This is used by the paper trading service to ensure complete isolation
+   */
+  async getPaperTradingHoldings(userId) {
+    const result = await query(
+      `SELECT id, user_id as "userId", symbol, name, asset_type as "assetType", 
+              quantity, average_buy_price as "avgBuyPrice", current_price as "currentPrice",
+              account, notes, created_at as "createdAt", updated_at as "updatedAt"
+       FROM holdings WHERE user_id = $1 AND account = 'paper' ORDER BY created_at DESC`,
+      [userId]
+    );
+    
+    // CRITICAL: Convert all numeric values to JavaScript numbers to prevent string concatenation
+    // PostgreSQL numeric type can be returned as strings by the pg driver
+    return result.rows.map(holding => {
+      const quantity = Number(holding.quantity) || 0;
+      const avgBuyPrice = Number(holding.avgBuyPrice) || 0;
+      const currentPrice = Number(holding.currentPrice) || avgBuyPrice;
+      
+      return {
+        ...holding,
+        quantity,
+        avgBuyPrice,
+        currentPrice,
+        totalValue: quantity * currentPrice,
+        profitLoss: quantity * (currentPrice - avgBuyPrice),
+        profitLossPercent: avgBuyPrice > 0 
+          ? ((currentPrice - avgBuyPrice) / avgBuyPrice) * 100 
+          : 0
+      };
+    });
+  }
+
+  /**
+   * Get ONLY non-paper trading holdings for a user (for real portfolio)
+   * This excludes paper trading holdings
+   */
+  async getRealHoldings(userId) {
+    const result = await query(
+      `SELECT id, user_id as "userId", symbol, name, asset_type as "assetType", 
+              quantity, average_buy_price as "avgBuyPrice", current_price as "currentPrice",
+              account, notes, created_at as "createdAt", updated_at as "updatedAt"
+       FROM holdings WHERE user_id = $1 AND (account IS NULL OR account != 'paper') ORDER BY created_at DESC`,
+      [userId]
+    );
+    
+    // CRITICAL: Convert all numeric values to JavaScript numbers to prevent string concatenation
+    // PostgreSQL numeric type can be returned as strings by the pg driver
+    return result.rows.map(holding => {
+      const quantity = Number(holding.quantity) || 0;
+      const avgBuyPrice = Number(holding.avgBuyPrice) || 0;
+      const currentPrice = Number(holding.currentPrice) || avgBuyPrice;
+      
+      return {
+        ...holding,
+        quantity,
+        avgBuyPrice,
+        currentPrice,
+        totalValue: quantity * currentPrice,
+        profitLoss: quantity * (currentPrice - avgBuyPrice),
+        profitLossPercent: avgBuyPrice > 0 
+          ? ((currentPrice - avgBuyPrice) / avgBuyPrice) * 100 
+          : 0
+      };
+    });
   }
 
   /**
@@ -45,14 +123,24 @@ class HoldingsRepository {
       [userId, assetType]
     );
 
-    return result.rows.map(holding => ({
-      ...holding,
-      totalValue: holding.quantity * (holding.currentPrice || holding.avgBuyPrice),
-      profitLoss: holding.quantity * ((holding.currentPrice || holding.avgBuyPrice) - holding.avgBuyPrice),
-      profitLossPercent: holding.avgBuyPrice > 0
-        ? (((holding.currentPrice || holding.avgBuyPrice) - holding.avgBuyPrice) / holding.avgBuyPrice) * 100
-        : 0
-    }));
+    // CRITICAL: Convert all numeric values to JavaScript numbers
+    return result.rows.map(holding => {
+      const quantity = Number(holding.quantity) || 0;
+      const avgBuyPrice = Number(holding.avgBuyPrice) || 0;
+      const currentPrice = Number(holding.currentPrice) || avgBuyPrice;
+      
+      return {
+        ...holding,
+        quantity,
+        avgBuyPrice,
+        currentPrice,
+        totalValue: quantity * currentPrice,
+        profitLoss: quantity * (currentPrice - avgBuyPrice),
+        profitLossPercent: avgBuyPrice > 0
+          ? ((currentPrice - avgBuyPrice) / avgBuyPrice) * 100
+          : 0
+      };
+    });
   }
 
   /**
@@ -87,14 +175,24 @@ class HoldingsRepository {
       [userId, `%${searchQuery.toLowerCase()}%`]
     );
 
-    return result.rows.map(holding => ({
-      ...holding,
-      totalValue: holding.quantity * (holding.currentPrice || holding.avgBuyPrice),
-      profitLoss: holding.quantity * ((holding.currentPrice || holding.avgBuyPrice) - holding.avgBuyPrice),
-      profitLossPercent: holding.avgBuyPrice > 0
-        ? (((holding.currentPrice || holding.avgBuyPrice) - holding.avgBuyPrice) / holding.avgBuyPrice) * 100
-        : 0
-    }));
+    // CRITICAL: Convert all numeric values to JavaScript numbers
+    return result.rows.map(holding => {
+      const quantity = Number(holding.quantity) || 0;
+      const avgBuyPrice = Number(holding.avgBuyPrice) || 0;
+      const currentPrice = Number(holding.currentPrice) || avgBuyPrice;
+      
+      return {
+        ...holding,
+        quantity,
+        avgBuyPrice,
+        currentPrice,
+        totalValue: quantity * currentPrice,
+        profitLoss: quantity * (currentPrice - avgBuyPrice),
+        profitLossPercent: avgBuyPrice > 0
+          ? ((currentPrice - avgBuyPrice) / avgBuyPrice) * 100
+          : 0
+      };
+    });
   }
 
   /**
@@ -116,6 +214,31 @@ class HoldingsRepository {
    * Create new holding
    */
   async createHolding(userId, holdingData) {
+    // Ensure all numeric values are properly parsed - use Number() for strict parsing
+    const quantity = Number(holdingData.quantity);
+    const avgBuyPrice = Number(holdingData.avgBuyPrice);
+    const currentPrice = Number(holdingData.currentPrice || holdingData.avgBuyPrice);
+    
+    // Validate numbers with isFinite check
+    if (isNaN(quantity) || quantity <= 0 || !isFinite(quantity)) {
+      throw new Error(`Invalid quantity: ${holdingData.quantity}`);
+    }
+    if (isNaN(avgBuyPrice) || avgBuyPrice <= 0 || !isFinite(avgBuyPrice)) {
+      throw new Error(`Invalid avgBuyPrice: ${holdingData.avgBuyPrice}`);
+    }
+    if (isNaN(currentPrice) || currentPrice <= 0 || !isFinite(currentPrice)) {
+      throw new Error(`Invalid currentPrice: ${holdingData.currentPrice}`);
+    }
+    
+    console.log('[HoldingsRepository] Creating holding:', {
+      userId,
+      symbol: holdingData.symbol,
+      quantity,
+      avgBuyPrice,
+      currentPrice,
+      account: holdingData.account || 'default'
+    });
+    
     const result = await query(
       `INSERT INTO holdings (user_id, symbol, name, asset_type, quantity, average_buy_price, current_price, account, notes)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -127,13 +250,15 @@ class HoldingsRepository {
         holdingData.symbol,
         holdingData.name,
         holdingData.assetType,
-        holdingData.quantity,
-        holdingData.avgBuyPrice,
-        holdingData.currentPrice || holdingData.avgBuyPrice,
+        quantity,  // Use parsed number
+        avgBuyPrice,  // Use parsed number
+        currentPrice,  // Use parsed number
         holdingData.account || 'default',
         holdingData.notes || null
       ]
     );
+    
+    console.log('[HoldingsRepository] Created holding:', result.rows[0]);
     return result.rows[0];
   }
 
@@ -141,6 +266,31 @@ class HoldingsRepository {
    * Update existing holding
    */
   async updateHolding(holdingId, userId, holdingData) {
+    // Ensure all numeric values are properly parsed - use Number() for strict parsing
+    const quantity = Number(holdingData.quantity);
+    const avgBuyPrice = Number(holdingData.avgBuyPrice);
+    const currentPrice = Number(holdingData.currentPrice || holdingData.avgBuyPrice);
+    
+    // Validate numbers with isFinite check
+    if (isNaN(quantity) || quantity < 0 || !isFinite(quantity)) {
+      throw new Error(`Invalid quantity: ${holdingData.quantity}`);
+    }
+    if (isNaN(avgBuyPrice) || avgBuyPrice <= 0 || !isFinite(avgBuyPrice)) {
+      throw new Error(`Invalid avgBuyPrice: ${holdingData.avgBuyPrice}`);
+    }
+    if (isNaN(currentPrice) || currentPrice <= 0 || !isFinite(currentPrice)) {
+      throw new Error(`Invalid currentPrice: ${holdingData.currentPrice}`);
+    }
+    
+    console.log('[HoldingsRepository] Updating holding:', {
+      holdingId,
+      userId,
+      symbol: holdingData.symbol,
+      quantity,
+      avgBuyPrice,
+      currentPrice
+    });
+    
     const result = await query(
       `UPDATE holdings 
        SET symbol = $3,
@@ -162,13 +312,15 @@ class HoldingsRepository {
         holdingData.symbol,
         holdingData.name,
         holdingData.assetType,
-        holdingData.quantity,
-        holdingData.avgBuyPrice,
-        holdingData.currentPrice || holdingData.avgBuyPrice,
+        quantity,  // Use parsed number
+        avgBuyPrice,  // Use parsed number
+        currentPrice,  // Use parsed number
         holdingData.account || 'default',
         holdingData.notes || null
       ]
     );
+    
+    console.log('[HoldingsRepository] Updated holding:', result.rows[0]);
     return result.rows[0];
   }
 
@@ -176,9 +328,16 @@ class HoldingsRepository {
    * Merge duplicate holding (for when user adds same symbol/type)
    */
   async mergeHolding(existingHolding, newQuantity, newAvgPrice) {
-    const totalQuantity = existingHolding.quantity + newQuantity;
-    const mergedAvgPrice = 
-      ((existingHolding.quantity * existingHolding.avgBuyPrice) + (newQuantity * newAvgPrice)) / totalQuantity;
+    // CRITICAL: Ensure all values are numbers to prevent string concatenation
+    const existingQty = Number(existingHolding.quantity) || 0;
+    const existingAvg = Number(existingHolding.avgBuyPrice) || 0;
+    const addQty = Number(newQuantity) || 0;
+    const addAvg = Number(newAvgPrice) || 0;
+    
+    const totalQuantity = existingQty + addQty;
+    const mergedAvgPrice = totalQuantity > 0
+      ? ((existingQty * existingAvg) + (addQty * addAvg)) / totalQuantity
+      : 0;
 
     const result = await query(
       `UPDATE holdings 
@@ -296,14 +455,24 @@ class HoldingsRepository {
       [...params, pageSize, offset]
     );
 
-    const holdings = result.rows.map(holding => ({
-      ...holding,
-      totalValue: holding.quantity * (holding.currentPrice || holding.avgBuyPrice),
-      profitLoss: holding.quantity * ((holding.currentPrice || holding.avgBuyPrice) - holding.avgBuyPrice),
-      profitLossPercent: holding.avgBuyPrice > 0
-        ? (((holding.currentPrice || holding.avgBuyPrice) - holding.avgBuyPrice) / holding.avgBuyPrice) * 100
-        : 0
-    }));
+    const holdings = result.rows.map(holding => {
+      // CRITICAL: Convert all numeric values to JavaScript numbers
+      const quantity = Number(holding.quantity) || 0;
+      const avgBuyPrice = Number(holding.avgBuyPrice) || 0;
+      const currentPrice = Number(holding.currentPrice) || avgBuyPrice;
+      
+      return {
+        ...holding,
+        quantity,
+        avgBuyPrice,
+        currentPrice,
+        totalValue: quantity * currentPrice,
+        profitLoss: quantity * (currentPrice - avgBuyPrice),
+        profitLossPercent: avgBuyPrice > 0
+          ? ((currentPrice - avgBuyPrice) / avgBuyPrice) * 100
+          : 0
+      };
+    });
 
     return {
       holdings,

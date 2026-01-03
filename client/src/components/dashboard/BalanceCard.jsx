@@ -1,62 +1,40 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AreaChart, Area, ResponsiveContainer, Tooltip, YAxis, XAxis, CartesianGrid } from 'recharts'
-import { MdAccountBalanceWallet, MdTrendingUp } from 'react-icons/md'
+import { MdAccountBalanceWallet, MdTrendingUp, MdTrendingDown, MdAdd } from 'react-icons/md'
+import { usePortfolio } from '../../hooks/usePortfolio'
 import styles from './BalanceCard.module.css'
 
-// Market-specific portfolio data
-const marketPortfolios = {
-  Crypto: {
-    balance: 24580,
-    invested: 20000,
-    profit: 4580,
-    profitPercent: 22.9,
-    color: '#10b981',
-    data: [20000, 21500, 20800, 23000, 24580, 23200, 24580]
-  },
-  Stocks: {
-    balance: 45230,
-    invested: 40000,
-    profit: 5230,
-    profitPercent: 13.1,
-    color: '#3b82f6',
-    data: [40000, 41200, 42500, 43800, 45230, 44100, 45230]
-  },
-  Forex: {
-    balance: 8450,
-    invested: 8000,
-    profit: 450,
-    profitPercent: 5.6,
-    color: '#f59e0b',
-    data: [8000, 8100, 8050, 8200, 8450, 8300, 8450]
-  },
-  Commodities: {
-    balance: 15680,
-    invested: 15000,
-    profit: 680,
-    profitPercent: 4.5,
-    color: '#8b5cf6',
-    data: [15000, 15200, 15100, 15400, 15680, 15500, 15680]
-  }
+// Market colors for styling
+const marketColors = {
+  Crypto: '#10b981',
+  Stocks: '#3b82f6',
+  Forex: '#f59e0b',
+  Commodities: '#8b5cf6'
 }
 
-function BalanceCard({ marketType = 'Crypto' }) {
+function BalanceCard({ marketType = 'Crypto', onAddHolding }) {
+  const { portfolio, loading, error } = usePortfolio()
   const [timePeriod, setTimePeriod] = useState('24h')
   
-  const periods = [
-    { label: '1D', value: '24h' },
-    { label: '7D', value: '7d' },
-    { label: '1M', value: '30d' },
-    { label: 'YTD', value: 'ytd' }
-  ]
+  const color = marketColors[marketType] || marketColors.Crypto
 
-  const portfolio = marketPortfolios[marketType] || marketPortfolios.Crypto
-  const isProfit = portfolio.profit >= 0
-  
-  // Generate chart data
-  const chartData = portfolio.data.map((value, index) => ({
-    value,
-    time: index
-  }))
+  // Check if user has any holdings/investments
+  const hasInvestments = portfolio && portfolio.totalValue > 0
+
+  // Calculate portfolio stats from real data
+  const balance = portfolio?.totalValue || 0
+  const invested = portfolio?.totalInvested || 0
+  const profit = balance - invested
+  const profitPercent = invested > 0 ? ((profit / invested) * 100) : 0
+  const isProfit = profit >= 0
+
+  // Generate chart data from performance history or use empty data
+  const chartData = portfolio?.performanceHistory?.length > 0 
+    ? portfolio.performanceHistory.map((point, index) => ({
+        value: point.value,
+        time: index
+      }))
+    : []
 
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
@@ -69,11 +47,60 @@ function BalanceCard({ marketType = 'Crypto' }) {
     return null
   }
 
+  // Empty state when no investments
+  if (!loading && !hasInvestments) {
+    return (
+      <div className={styles.card} data-market={marketType}>
+        <div className={styles.header}>
+          <div className={styles.titleRow}>
+            <div className={styles.iconWrapper} style={{ background: `${color}20`, color: color }}>
+              <MdAccountBalanceWallet />
+            </div>
+            <h3>{marketType} Portfolio</h3>
+          </div>
+        </div>
+
+        <div className={styles.emptyState}>
+          <div className={styles.emptyIcon} style={{ background: `${color}15`, color: color }}>
+            <MdAccountBalanceWallet />
+          </div>
+          <h4>No Investments Yet</h4>
+          <p>Start building your portfolio by adding holdings or connecting an exchange account.</p>
+          {onAddHolding && (
+            <button className={styles.addButton} style={{ background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)` }} onClick={onAddHolding}>
+              <MdAdd /> Add Holding
+            </button>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className={styles.card} data-market={marketType}>
+        <div className={styles.header}>
+          <div className={styles.titleRow}>
+            <div className={styles.iconWrapper} style={{ background: `${color}20`, color: color }}>
+              <MdAccountBalanceWallet />
+            </div>
+            <h3>{marketType} Portfolio</h3>
+          </div>
+        </div>
+        <div className={styles.loadingState}>
+          <div className={styles.loadingSpinner} style={{ borderColor: `${color}30`, borderTopColor: color }}></div>
+          <p>Loading portfolio...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={styles.card} data-market={marketType}>
       <div className={styles.header}>
         <div className={styles.titleRow}>
-          <div className={styles.iconWrapper} style={{ background: `${portfolio.color}20`, color: portfolio.color }}>
+          <div className={styles.iconWrapper} style={{ background: `${color}20`, color: color }}>
             <MdAccountBalanceWallet />
           </div>
           <h3>{marketType} Portfolio</h3>
@@ -85,64 +112,66 @@ function BalanceCard({ marketType = 'Crypto' }) {
           <div className={styles.mainBalance}>
             <div className={styles.balanceLabel}>Total Balance</div>
             <div className={styles.balanceAmount}>
-              ${portfolio.balance.toLocaleString()}
+              ${balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <div className={`${styles.balanceChange} ${isProfit ? styles.profit : styles.loss}`}>
-              <MdTrendingUp />
-              {isProfit ? '+' : ''}{portfolio.profitPercent}% ({isProfit ? '+' : ''}${Math.abs(portfolio.profit).toLocaleString()})
+              {isProfit ? <MdTrendingUp /> : <MdTrendingDown />}
+              {isProfit ? '+' : ''}{profitPercent.toFixed(1)}% ({isProfit ? '+' : ''}${Math.abs(profit).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
             </div>
           </div>
         </div>
 
-        <div className={styles.chart}>
-          <ResponsiveContainer width="100%" height={100}>
-            <AreaChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-              <defs>
-                <linearGradient id={`portfolio-gradient-${marketType}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={portfolio.color} stopOpacity={0.4}/>
-                  <stop offset="95%" stopColor={portfolio.color} stopOpacity={0.05}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
-              <XAxis 
-                dataKey="time" 
-                hide={true}
-              />
-              <YAxis 
-                stroke="#9ca3af"
-                tick={{ fill: '#9ca3af', fontSize: 11 }}
-                tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
-                width={45}
-                domain={['auto', 'auto']}
-              />
-              <Tooltip 
-                content={<CustomTooltip />}
-                cursor={{ stroke: portfolio.color, strokeWidth: 1, strokeDasharray: '3 3' }}
-              />
-              <Area 
-                type="monotone" 
-                dataKey="value" 
-                stroke={portfolio.color}
-                strokeWidth={2.5}
-                fill={`url(#portfolio-gradient-${marketType})`}
-                dot={false}
-                activeDot={{ r: 4, fill: portfolio.color, stroke: '#fff', strokeWidth: 2 }}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
+        {chartData.length > 0 && (
+          <div className={styles.chart}>
+            <ResponsiveContainer width="100%" height={100}>
+              <AreaChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                <defs>
+                  <linearGradient id={`portfolio-gradient-${marketType}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={color} stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor={color} stopOpacity={0.05}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
+                <XAxis 
+                  dataKey="time" 
+                  hide={true}
+                />
+                <YAxis 
+                  stroke="#9ca3af"
+                  tick={{ fill: '#9ca3af', fontSize: 11 }}
+                  tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                  width={45}
+                  domain={['auto', 'auto']}
+                />
+                <Tooltip 
+                  content={<CustomTooltip />}
+                  cursor={{ stroke: color, strokeWidth: 1, strokeDasharray: '3 3' }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke={color}
+                  strokeWidth={2.5}
+                  fill={`url(#portfolio-gradient-${marketType})`}
+                  dot={false}
+                  activeDot={{ r: 4, fill: color, stroke: '#fff', strokeWidth: 2 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        )}
 
         <div className={styles.stats}>
           <div className={styles.stat}>
             <div className={styles.statLabel}>Invested</div>
             <div className={styles.statValue}>
-              ${portfolio.invested.toLocaleString()}
+              ${invested.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
           </div>
           <div className={styles.stat}>
             <div className={styles.statLabel}>Return</div>
-            <div className={`${styles.statValue} ${isProfit ? styles.profit : styles.loss}`} style={{ color: portfolio.color }}>
-              {isProfit ? '+' : ''}{portfolio.profitPercent}%
+            <div className={`${styles.statValue} ${isProfit ? styles.profit : styles.loss}`} style={{ color: color }}>
+              {isProfit ? '+' : ''}{profitPercent.toFixed(1)}%
             </div>
           </div>
         </div>

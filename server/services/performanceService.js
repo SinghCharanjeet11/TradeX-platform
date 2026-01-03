@@ -4,7 +4,7 @@
  */
 
 import performanceRepository from '../repositories/performanceRepository.js';
-import holdingsRepository from '../repositories/holdingsRepository.js';
+import holdingsService from './holdingsService.js';
 
 class PerformanceService {
   /**
@@ -51,13 +51,14 @@ class PerformanceService {
 
   /**
    * Create daily snapshot for user
+   * Uses holdings from connected exchange accounts only
    * @param {Number} userId - User ID
    * @returns {Promise<Object>} Created snapshot
    */
   async createDailySnapshot(userId) {
     try {
-      // Get current holdings
-      const holdings = await holdingsRepository.getUserHoldings(userId);
+      // Get current holdings from connected exchange accounts only
+      const { holdings } = await holdingsService.getHoldings(userId);
 
       if (holdings.length === 0) {
         console.log(`[PerformanceService] No holdings for user ${userId}, skipping snapshot`);
@@ -91,12 +92,14 @@ class PerformanceService {
 
   /**
    * Calculate asset allocation
+   * Uses holdings from connected exchange accounts only
    * @param {Number} userId - User ID
    * @returns {Promise<Array>} Allocation data by asset type
    */
   async calculateAllocation(userId) {
     try {
-      const holdings = await holdingsRepository.getUserHoldings(userId);
+      // Get holdings from connected exchange accounts only
+      const { holdings } = await holdingsService.getHoldings(userId);
 
       if (holdings.length === 0) {
         return [];
@@ -167,18 +170,20 @@ class PerformanceService {
 
   /**
    * Get portfolio summary statistics
+   * Uses holdings from connected exchange accounts only
    * @param {Number} userId - User ID
    * @returns {Promise<Object>} Summary statistics
    */
   async getPortfolioSummary(userId) {
     try {
-      const holdings = await holdingsRepository.getUserHoldings(userId);
+      // Get holdings from connected exchange accounts only
+      const { holdings, summary } = await holdingsService.getHoldings(userId);
       const latestSnapshot = await performanceRepository.getLatestSnapshot(userId);
 
-      const totalValue = holdings.reduce((sum, h) => sum + h.totalValue, 0);
-      const totalInvested = holdings.reduce((sum, h) => sum + (h.quantity * h.avgBuyPrice), 0);
-      const profitLoss = totalValue - totalInvested;
-      const profitLossPercent = totalInvested > 0 ? (profitLoss / totalInvested) * 100 : 0;
+      const totalValue = summary.totalValue;
+      const totalInvested = summary.totalInvested;
+      const profitLoss = summary.totalProfitLoss;
+      const profitLossPercent = summary.totalProfitLossPercent;
 
       // Calculate 24h change if we have yesterday's snapshot
       let change24h = 0;

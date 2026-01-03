@@ -12,7 +12,7 @@ class PortfolioService {
    */
   async getPortfolioSummary() {
     try {
-      const response = await api.get('/api/portfolio/summary')
+      const response = await api.get('/portfolio/summary')
       return response.data
     } catch (error) {
       console.error('[PortfolioService] Error fetching summary:', error)
@@ -27,7 +27,7 @@ class PortfolioService {
    */
   async getPortfolioPerformance(timeframe = '1M') {
     try {
-      const response = await api.get('/api/portfolio/performance', {
+      const response = await api.get('/portfolio/performance', {
         params: { timeframe }
       })
       return response.data
@@ -43,7 +43,7 @@ class PortfolioService {
    */
   async getAssetAllocation() {
     try {
-      const response = await api.get('/api/portfolio/allocation')
+      const response = await api.get('/portfolio/allocation')
       return response.data
     } catch (error) {
       console.error('[PortfolioService] Error fetching allocation:', error)
@@ -52,18 +52,10 @@ class PortfolioService {
   }
 
   /**
-   * Refresh portfolio data from all connected accounts
-   * @returns {Promise<Object>} Refresh result
+   * Refresh portfolio data (removed - use refetch instead)
+   * The refresh button now simply refetches data from the server
+   * Users can use F5 or Ctrl+R to refresh the entire page
    */
-  async refreshPortfolio() {
-    try {
-      const response = await api.post('/api/portfolio/refresh')
-      return response.data
-    } catch (error) {
-      console.error('[PortfolioService] Error refreshing portfolio:', error)
-      throw error
-    }
-  }
 
   /**
    * Format currency value

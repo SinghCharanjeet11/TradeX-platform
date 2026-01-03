@@ -2,7 +2,7 @@
   background: #ffffff;
   border-radius: 20px;
   padding: 20px;
-  border: 2px solid #00d4aa;
+  border: 2px solid #10b981;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
@@ -334,4 +334,44 @@
 
 [data-theme="dark"] .description {
   color: #94a3b8;
+}
+
+
+[data-theme="dark"] .compositionItem {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="dark"] .compositionItem:hover,
+[data-theme="dark"] .compositionItem.active {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: #475569;
+}
+
+[data-theme="dark"] .compositionName {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .compositionMarketCap {
+  color: #64748b;
+}
+
+[data-theme="dark"] .compositionPercent {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .indexSubLabel {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .scaleMarkers {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: #334155;
+}
+
+[data-theme="dark"] .scaleValue {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .scaleLabel {
+  color: #64748b;
 }

@@ -2,15 +2,19 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MdPerson, MdSecurity, MdNotifications, MdPalette, MdPrivacyTip, MdSave, MdLink, MdArrowBack, MdCameraAlt, MdCheckCircle, MdInfo, MdVerified } from 'react-icons/md'
 import { useThemeContext } from '../contexts/ThemeContext'
+import { useAuth } from '../contexts/AuthContext'
 import ConnectedAccounts from '../components/dashboard/ConnectedAccounts'
 import ConnectAccountModal from '../components/dashboard/ConnectAccountModal'
-import { CURRENCIES, setUserCurrency } from '../utils/currency'
+import TwoFactorSetup from '../components/security/TwoFactorSetup'
+import SessionList from '../components/security/SessionList'
+import FormInput from '../components/FormInput'
+// Currency is fixed to USD only
 import styles from './SettingsPage.module.css'
 
 function SettingsPage() {
   const navigate = useNavigate()
   const { theme, setTheme } = useThemeContext()
-  const [user, setUser] = useState(null)
+  const { user, loading: authLoading, isAuthenticated } = useAuth()
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('profile')
   const [saveMessage, setSaveMessage] = useState('')
@@ -52,12 +56,8 @@ function SettingsPage() {
     tradingAlerts: true
   })
 
-  // Appearance Settings (non-theme settings)
-  const [appearanceData, setAppearanceData] = useState({
-    currency: 'USD',
-    language: 'en',
-    dateFormat: 'MM/DD/YYYY'
-  })
+  // Appearance Settings (only theme is configurable, currency/language are fixed)
+  const [appearanceData, setAppearanceData] = useState({})
 
   // Privacy Settings
   const [privacyData, setPrivacyData] = useState({
@@ -101,25 +101,33 @@ function SettingsPage() {
     }
   }, [securityData.newPassword])
 
+  // Redirect if not authenticated
   useEffect(() => {
-    const fetchUser = async () => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/signin', { replace: true })
+    }
+  }, [authLoading, isAuthenticated, navigate])
+
+  // Load user data when authenticated
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (!user) return
+      
       try {
-        const { authAPI } = await import('../services/api')
-        const response = await authAPI.getCurrentUser()
-        setUser(response.user)
         const userData = {
-          username: response.user.username || '',
-          email: response.user.email || '',
-          fullName: response.user.fullName || '',
-          phone: response.user.phone || '',
-          bio: response.user.bio || ''
+          username: user.username || '',
+          email: user.email || '',
+          fullName: user.fullName || '',
+          phone: user.phone || '',
+          bio: user.bio || ''
         }
         setProfileData(userData)
         setInitialProfileData(userData)
-        setEmailVerified(response.user.emailVerified || false)
-        setProfilePicturePreview(response.user.profilePicture || null)
+        setEmailVerified(user.emailVerified || false)
+        setProfilePicturePreview(user.profilePicture || null)
         
         // Fetch connected accounts
+        const { authAPI } = await import('../services/api')
         const accountsResponse = await authAPI.getConnectedAccounts()
         if (accountsResponse.success) {
           setConnectedAccounts(accountsResponse.accounts || [])
@@ -127,13 +135,13 @@ function SettingsPage() {
         
         setLoading(false)
       } catch (error) {
-        console.error('[Settings] Error fetching user:', error)
-        navigate('/signin')
+        console.error('[Settings] Error loading user data:', error)
+        setLoading(false)
       }
     }
 
-    fetchUser()
-  }, [navigate])
+    loadUserData()
+  }, [user])
   
   // Track unsaved changes
   useEffect(() => {
@@ -168,12 +176,13 @@ function SettingsPage() {
       }
       
       // Arrow keys to navigate tabs
-      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault() // Prevent page scrolling
         const tabs = ['profile', 'security', 'connections', 'notifications', 'appearance', 'privacy']
         const currentIndex = tabs.indexOf(activeTab)
-        if (e.key === 'ArrowRight' && currentIndex < tabs.length - 1) {
+        if (e.key === 'ArrowDown' && currentIndex < tabs.length - 1) {
           setActiveTab(tabs[currentIndex + 1])
-        } else if (e.key === 'ArrowLeft' && currentIndex > 0) {
+        } else if (e.key === 'ArrowUp' && currentIndex > 0) {
           setActiveTab(tabs[currentIndex - 1])
         }
       }
@@ -388,7 +397,7 @@ function SettingsPage() {
     }
   }
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className={styles.settingsPage}>
         <div className={styles.main}>
@@ -440,6 +449,15 @@ function SettingsPage() {
       <div className={styles.main}>
         <div className={styles.content}>
           <div className={styles.topBar}>
+            <div className={styles.header}>
+              <h1 className={styles.pageTitle}>Settings</h1>
+              <p className={styles.subtitle}>
+                Manage your account settings and preferences
+                <span className={styles.keyboardHint}>
+                  <kbd>Ctrl</kbd> + <kbd>S</kbd> to save • <kbd>↑</kbd> <kbd>↓</kbd> to navigate tabs
+                </span>
+              </p>
+            </div>
             <button 
               className={styles.backButton} 
               onClick={() => {
@@ -456,16 +474,6 @@ function SettingsPage() {
               <MdArrowBack aria-hidden="true" />
               <span>Back to Dashboard</span>
             </button>
-          </div>
-          
-          <div className={styles.header}>
-            <h1 className={styles.pageTitle}>Settings</h1>
-            <p className={styles.subtitle}>
-              Manage your account settings and preferences
-              <span className={styles.keyboardHint}>
-                <kbd>Ctrl</kbd> + <kbd>S</kbd> to save • <kbd>←</kbd> <kbd>→</kbd> to navigate tabs
-              </span>
-            </p>
           </div>
 
           {saveMessage && (
@@ -669,7 +677,7 @@ function SettingsPage() {
                   <div className={styles.sectionHeader}>
                     <div>
                       <h2 className={styles.sectionTitle}>Connected Accounts</h2>
-                      <p className={styles.sectionDesc}>Link your Binance, Coinbase, or Robinhood accounts to view your portfolio and track real-time changes all in one place.</p>
+                      <p className={styles.sectionDesc}>Link your Binance account to view your portfolio and track real-time changes all in one place.</p>
                     </div>
                     <button 
                       className={styles.connectBtn}
@@ -704,102 +712,59 @@ function SettingsPage() {
                   <h2 className={styles.sectionTitle}>Security Settings</h2>
                   <p className={styles.sectionDesc}>Manage your password and security preferences</p>
 
-                  <div className={styles.formGroup}>
-                    <label>Current Password</label>
-                    <input
-                      type="password"
-                      value={securityData.currentPassword}
-                      onChange={(e) => {
-                        setSecurityData({...securityData, currentPassword: e.target.value})
-                        if (errors.currentPassword) setErrors({...errors, currentPassword: null})
-                      }}
-                      placeholder="Enter current password"
-                      className={errors.currentPassword ? styles.inputError : ''}
-                    />
-                    {errors.currentPassword && <span className={styles.errorText}>{errors.currentPassword}</span>}
-                  </div>
+                  <FormInput
+                    type="password"
+                    name="currentPassword"
+                    value={securityData.currentPassword}
+                    placeholder="Current Password"
+                    error={errors.currentPassword}
+                    onChange={(value) => {
+                      setSecurityData({...securityData, currentPassword: value})
+                      if (errors.currentPassword) setErrors({...errors, currentPassword: null})
+                    }}
+                  />
 
-                  <div className={styles.formGroup}>
-                    <label>New Password</label>
-                    <input
-                      type="password"
-                      value={securityData.newPassword}
-                      onChange={(e) => {
-                        setSecurityData({...securityData, newPassword: e.target.value})
-                        if (errors.newPassword) setErrors({...errors, newPassword: null})
-                      }}
-                      placeholder="Enter new password"
-                      className={errors.newPassword ? styles.inputError : ''}
-                    />
-                    {securityData.newPassword && (
-                      <div className={styles.passwordStrength}>
-                        <div className={styles.strengthBar}>
-                          <div 
-                            className={`${styles.strengthFill} ${styles[`strength${passwordStrength}`]}`}
-                            style={{width: `${(passwordStrength / 5) * 100}%`}}
-                          ></div>
-                        </div>
-                        <span className={styles.strengthText}>
-                          {passwordStrength === 0 && 'Very Weak'}
-                          {passwordStrength === 1 && 'Weak'}
-                          {passwordStrength === 2 && 'Fair'}
-                          {passwordStrength === 3 && 'Good'}
-                          {passwordStrength === 4 && 'Strong'}
-                          {passwordStrength === 5 && 'Very Strong'}
-                        </span>
+                  <FormInput
+                    type="password"
+                    name="newPassword"
+                    value={securityData.newPassword}
+                    placeholder="New Password"
+                    error={errors.newPassword}
+                    onChange={(value) => {
+                      setSecurityData({...securityData, newPassword: value})
+                      if (errors.newPassword) setErrors({...errors, newPassword: null})
+                    }}
+                  />
+                  {securityData.newPassword && (
+                    <div className={styles.passwordStrength}>
+                      <div className={styles.strengthBar}>
+                        <div 
+                          className={`${styles.strengthFill} ${styles[`strength${passwordStrength}`]}`}
+                          style={{width: `${(passwordStrength / 5) * 100}%`}}
+                        ></div>
                       </div>
-                    )}
-                    {errors.newPassword && <span className={styles.errorText}>{errors.newPassword}</span>}
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    <label>Confirm New Password</label>
-                    <input
-                      type="password"
-                      value={securityData.confirmPassword}
-                      onChange={(e) => {
-                        setSecurityData({...securityData, confirmPassword: e.target.value})
-                        if (errors.confirmPassword) setErrors({...errors, confirmPassword: null})
-                      }}
-                      placeholder="Confirm new password"
-                      className={errors.confirmPassword ? styles.inputError : ''}
-                    />
-                    {errors.confirmPassword && <span className={styles.errorText}>{errors.confirmPassword}</span>}
-                  </div>
-
-                  <div className={styles.toggleGroup}>
-                    <div className={styles.toggleInfo}>
-                      <h3>
-                        Two-Factor Authentication
-                        <button
-                          type="button"
-                          className={styles.inlineTooltipTrigger}
-                          onMouseEnter={() => setActiveTooltip('2fa')}
-                          onMouseLeave={() => setActiveTooltip(null)}
-                          onFocus={() => setActiveTooltip('2fa')}
-                          onBlur={() => setActiveTooltip(null)}
-                          aria-label="Two-factor authentication information"
-                        >
-                          <MdInfo />
-                        </button>
-                        {activeTooltip === '2fa' && (
-                          <div className={styles.tooltip}>
-                            2FA adds an extra security layer by requiring a code from your phone in addition to your password
-                          </div>
-                        )}
-                      </h3>
-                      <p>Add an extra layer of security to your account</p>
+                      <span className={styles.strengthText}>
+                        {passwordStrength === 0 && 'Very Weak'}
+                        {passwordStrength === 1 && 'Weak'}
+                        {passwordStrength === 2 && 'Fair'}
+                        {passwordStrength === 3 && 'Good'}
+                        {passwordStrength === 4 && 'Strong'}
+                        {passwordStrength === 5 && 'Very Strong'}
+                      </span>
                     </div>
-                    <label className={styles.toggle}>
-                      <input
-                        type="checkbox"
-                        checked={securityData.twoFactorEnabled}
-                        onChange={(e) => setSecurityData({...securityData, twoFactorEnabled: e.target.checked})}
-                        aria-label="Enable two-factor authentication"
-                      />
-                      <span className={styles.toggleSlider}></span>
-                    </label>
-                  </div>
+                  )}
+
+                  <FormInput
+                    type="password"
+                    name="confirmPassword"
+                    value={securityData.confirmPassword}
+                    placeholder="Confirm New Password"
+                    error={errors.confirmPassword}
+                    onChange={(value) => {
+                      setSecurityData({...securityData, confirmPassword: value})
+                      if (errors.confirmPassword) setErrors({...errors, confirmPassword: null})
+                    }}
+                  />
 
                   <button 
                     className={styles.saveBtn} 
@@ -814,10 +779,20 @@ function SettingsPage() {
                       </>
                     ) : (
                       <>
-                        <MdSave aria-hidden="true" /> Update Security
+                        <MdSave aria-hidden="true" /> Update Password
                       </>
                     )}
                   </button>
+
+                  {/* Two-Factor Authentication Section */}
+                  <div style={{ marginTop: '32px' }}>
+                    <TwoFactorSetup />
+                  </div>
+
+                  {/* Session Management Section */}
+                  <div style={{ marginTop: '32px' }}>
+                    <SessionList />
+                  </div>
                 </div>
               )}
 
@@ -991,20 +966,11 @@ function SettingsPage() {
                   <div className={styles.formGroup}>
                     <label>Currency Preference</label>
                     <select
-                      value={appearanceData.currency}
-                      onChange={(e) => {
-                        const newCurrency = e.target.value
-                        setAppearanceData({...appearanceData, currency: newCurrency})
-                        setUserCurrency(newCurrency)
-                        setHasUnsavedChanges(true)
-                      }}
+                      value="USD"
+                      disabled
                       className={styles.currencySelect}
                     >
-                      {CURRENCIES.map(currency => (
-                        <option key={currency.code} value={currency.code}>
-                          {currency.code} ({currency.symbol}) - {currency.name}
-                        </option>
-                      ))}
+                      <option value="USD">USD ($) - US Dollar</option>
                     </select>
                     <small className={styles.helpText}>All prices and values will be displayed in your selected currency</small>
                   </div>
@@ -1012,26 +978,10 @@ function SettingsPage() {
                   <div className={styles.formGroup}>
                     <label>Language</label>
                     <select
-                      value={appearanceData.language}
-                      onChange={(e) => setAppearanceData({...appearanceData, language: e.target.value})}
+                      value="en"
+                      disabled
                     >
                       <option value="en">English</option>
-                      <option value="es">Spanish</option>
-                      <option value="fr">French</option>
-                      <option value="de">German</option>
-                      <option value="zh">Chinese</option>
-                    </select>
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    <label>Date Format</label>
-                    <select
-                      value={appearanceData.dateFormat}
-                      onChange={(e) => setAppearanceData({...appearanceData, dateFormat: e.target.value})}
-                    >
-                      <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-                      <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-                      <option value="YYYY-MM-DD">YYYY-MM-DD</option>
                     </select>
                   </div>
 

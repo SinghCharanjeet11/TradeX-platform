@@ -17,7 +17,7 @@ function PaperTransactionHistory() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/orders?account=paper', {
+      const response = await fetch('/api/paper-trading/orders', {
         credentials: 'include'
       });
       
@@ -50,12 +50,7 @@ function PaperTransactionHistory() {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount);
+    return `$${Number(amount || 0).toFixed(2)}`;
   };
 
   const calculateProfitLoss = (order) => {

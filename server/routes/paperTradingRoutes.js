@@ -59,6 +59,14 @@ router.put('/leaderboard/visibility', paperTradingController.updateLeaderboardVi
 router.post('/orders', paperTradingController.executePaperOrder);
 
 /**
+ * @route   GET /api/paper-trading/orders
+ * @desc    Get paper trading order history
+ * @access  Private
+ * @query   account - Filter by account type (paper)
+ */
+router.get('/orders', paperTradingController.getOrders);
+
+/**
  * @route   GET /api/paper-trading/performance
  * @desc    Get performance history for charts
  * @access  Private

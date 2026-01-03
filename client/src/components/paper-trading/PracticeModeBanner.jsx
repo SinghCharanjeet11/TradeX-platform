@@ -16,7 +16,7 @@ function PracticeModeBanner({ balance }) {
           <div className={styles.balance}>
             <span className={styles.label}>VIRTUAL Balance:</span>
             <span className={styles.amount}>
-              ${balance?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
+              ${Number(balance || 0).toFixed(2)}
             </span>
           </div>
           <Link to="/dashboard" className={styles.switchLink}>

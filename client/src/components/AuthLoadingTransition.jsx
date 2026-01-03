@@ -5,41 +5,35 @@ function AuthLoadingTransition({ onComplete }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onComplete()
-    }, 1500) // 1.5 seconds for smooth transition
+    }, 1500)
 
     return () => clearTimeout(timer)
   }, [onComplete])
 
   return (
-    <div className={styles.overlay}>
-      <div className={styles.content}>
-        <div className={styles.logoContainer}>
-          <svg className={styles.logo} viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="100" cy="100" r="90" stroke="#00d4aa" strokeWidth="4" opacity="0.2"/>
-            <path
-              d="M100 20 L100 50 M100 150 L100 180 M20 100 L50 100 M150 100 L180 100"
-              stroke="#00d4aa"
-              strokeWidth="4"
-              strokeLinecap="round"
-            />
-            <circle cx="100" cy="100" r="30" fill="#00d4aa"/>
-            <text
-              x="100"
-              y="110"
-              textAnchor="middle"
-              fill="#ffffff"
-              fontSize="32"
-              fontWeight="bold"
-              fontFamily="Arial, sans-serif"
-            >
-              TX
-            </text>
-          </svg>
+    <div className={styles.loaderOverlay}>
+      <div className={styles.loaderContent}>
+        {/* Hourglass container */}
+        <div className={styles.hourglassContainer}>
+          <div className={styles.hourglass}>
+            {/* Top half */}
+            <div className={styles.hourglassTop}>
+              <div className={styles.sandTop}></div>
+            </div>
+            {/* Middle neck */}
+            <div className={styles.hourglassMiddle}></div>
+            {/* Bottom half */}
+            <div className={styles.hourglassBottom}>
+              <div className={styles.sandBottom}></div>
+            </div>
+          </div>
         </div>
-        <h2 className={styles.title}>TradeX</h2>
-        <div className={styles.loadingBar}>
-          <div className={styles.loadingProgress}></div>
-        </div>
+        
+        {/* Brand name */}
+        <h1 className={styles.brandName}>TradeX</h1>
+        
+        {/* Loading text */}
+        <p className={styles.loadingText}>Loading your dashboard...</p>
       </div>
     </div>
   )

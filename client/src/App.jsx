@@ -2,9 +2,11 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ThemeProvider } from './contexts/ThemeContext'
+import { AuthProvider } from './contexts/AuthContext'
 import LoadingScreen from './components/LoadingScreen'
+import AuthenticatedLayout from './components/layouts/AuthenticatedLayout'
 
-// Lazy load pages for better code splitting
+// Lazy load pages
 const RegisterPage = lazy(() => import('./pages/RegisterPage'))
 const SignInPage = lazy(() => import('./pages/SignInPage'))
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
@@ -20,19 +22,18 @@ const TestPage = lazy(() => import('./pages/TestPage'))
 function AnimatedRoutes() {
   const location = useLocation()
 
-  const pageVariants = {
-    initial: {
-      opacity: 0,
-      x: 100
-    },
-    animate: {
-      opacity: 1,
-      x: 0
-    },
-    exit: {
-      opacity: 0,
-      x: -100
-    }
+  // Auth pages use slide animation
+  const authPageVariants = {
+    initial: { opacity: 0, x: 100 },
+    animate: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: -100 }
+  }
+
+  // Dashboard pages use opacity-only animation (no transform to preserve fixed positioning)
+  const dashboardPageVariants = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 }
   }
 
   const pageTransition = {
@@ -41,11 +42,17 @@ function AnimatedRoutes() {
     duration: 0.4
   }
 
+  const fastTransition = {
+    type: 'tween',
+    ease: 'easeOut',
+    duration: 0.2
+  }
+
   return (
     <AnimatePresence mode="wait">
       <Suspense fallback={<LoadingScreen />}>
         <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<Navigate to="/register" replace />} />
+        <Route path="/" element={<Navigate to="/signin" replace />} />
         <Route path="/test" element={<TestPage />} />
         <Route 
           path="/register" 
@@ -54,7 +61,7 @@ function AnimatedRoutes() {
               initial="initial"
               animate="animate"
               exit="exit"
-              variants={pageVariants}
+              variants={authPageVariants}
               transition={pageTransition}
             >
               <RegisterPage />
@@ -68,7 +75,7 @@ function AnimatedRoutes() {
               initial="initial"
               animate="animate"
               exit="exit"
-              variants={pageVariants}
+              variants={authPageVariants}
               transition={pageTransition}
             >
               <SignInPage />
@@ -82,7 +89,7 @@ function AnimatedRoutes() {
               initial="initial"
               animate="animate"
               exit="exit"
-              variants={pageVariants}
+              variants={authPageVariants}
               transition={pageTransition}
             >
               <ForgotPasswordPage />
@@ -96,7 +103,7 @@ function AnimatedRoutes() {
               initial="initial"
               animate="animate"
               exit="exit"
-              variants={pageVariants}
+              variants={authPageVariants}
               transition={pageTransition}
             >
               <ResetPasswordPage />
@@ -106,58 +113,66 @@ function AnimatedRoutes() {
         <Route 
           path="/dashboard" 
           element={
-            <motion.div
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              variants={pageVariants}
-              transition={pageTransition}
-            >
-              <DashboardPage />
-            </motion.div>
+            <AuthenticatedLayout>
+              <motion.div
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                variants={dashboardPageVariants}
+                transition={fastTransition}
+              >
+                <DashboardPage />
+              </motion.div>
+            </AuthenticatedLayout>
           } 
         />
         <Route 
           path="/portfolio" 
           element={
-            <motion.div
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              variants={pageVariants}
-              transition={pageTransition}
-            >
-              <PortfolioPage />
-            </motion.div>
+            <AuthenticatedLayout>
+              <motion.div
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                variants={dashboardPageVariants}
+                transition={fastTransition}
+              >
+                <PortfolioPage />
+              </motion.div>
+            </AuthenticatedLayout>
           } 
         />
         <Route 
           path="/markets" 
           element={
-            <motion.div
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              variants={pageVariants}
-              transition={pageTransition}
-            >
-              <MarketsPage />
-            </motion.div>
+            <AuthenticatedLayout>
+              <motion.div
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                variants={dashboardPageVariants}
+                transition={fastTransition}
+              >
+                <MarketsPage />
+              </motion.div>
+            </AuthenticatedLayout>
           } 
         />
         <Route path="/orders" element={<Navigate to="/dashboard" replace />} />
         <Route 
           path="/news" 
           element={
-            <motion.div
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              variants={pageVariants}
-              transition={pageTransition}
-            >
-              <NewsPage />
-            </motion.div>
+            <AuthenticatedLayout>
+              <motion.div
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                variants={dashboardPageVariants}
+                transition={fastTransition}
+              >
+                <NewsPage />
+              </motion.div>
+            </AuthenticatedLayout>
           } 
         />
         <Route 
@@ -167,8 +182,8 @@ function AnimatedRoutes() {
               initial="initial"
               animate="animate"
               exit="exit"
-              variants={pageVariants}
-              transition={pageTransition}
+              variants={dashboardPageVariants}
+              transition={fastTransition}
             >
               <PaperTradingPage />
             </motion.div>
@@ -181,8 +196,8 @@ function AnimatedRoutes() {
               initial="initial"
               animate="animate"
               exit="exit"
-              variants={pageVariants}
-              transition={pageTransition}
+              variants={dashboardPageVariants}
+              transition={fastTransition}
             >
               <SettingsPage />
             </motion.div>
@@ -197,9 +212,11 @@ function AnimatedRoutes() {
 function App() {
   return (
     <ThemeProvider>
-      <Router>
-        <AnimatedRoutes />
-      </Router>
+      <AuthProvider>
+        <Router>
+          <AnimatedRoutes />
+        </Router>
+      </AuthProvider>
     </ThemeProvider>
   )
 }

@@ -1,17 +1,27 @@
-import { MdTrendingUp, MdTrendingDown, MdRefresh } from 'react-icons/md'
+import { MdTrendingUp, MdTrendingDown } from 'react-icons/md'
 import portfolioService from '../../services/portfolioService'
+import useDashboardData from '../../hooks/useDashboardData'
+import TopPerformersCard from './TopPerformersCard'
 import styles from './PortfolioSummaryCard.module.css'
 
-function PortfolioSummaryCard({ portfolio, onRefresh, refreshing }) {
-  if (!portfolio) {
+function PortfolioSummaryCard() {
+  const { portfolio } = useDashboardData()
+  
+  // Show loading state
+  if (portfolio.loading) {
     return (
       <div className={styles.card}>
-        <div className={styles.emptyState}>
-          <p>No portfolio data available</p>
-          <p className={styles.hint}>Connect an account to see your portfolio</p>
+        <div className={styles.loading}>
+          <div className={styles.spinner}></div>
+          <p>Loading portfolio...</p>
         </div>
       </div>
     )
+  }
+
+  // Show TopPerformersCard if error, no portfolio, or if total value is 0
+  if (portfolio.error || !portfolio.data || portfolio.data.totalValue === 0) {
+    return <TopPerformersCard />
   }
 
   const {
@@ -20,7 +30,7 @@ function PortfolioSummaryCard({ portfolio, onRefresh, refreshing }) {
     change24hPercent = 0,
     profitLoss = {},
     accountCount = 0
-  } = portfolio
+  } = portfolio.data
 
   const isPositive = change24hPercent >= 0
 
@@ -30,17 +40,9 @@ function PortfolioSummaryCard({ portfolio, onRefresh, refreshing }) {
         <div>
           <h3 className={styles.title}>Total Portfolio Value</h3>
           <p className={styles.subtitle}>
-            Across {accountCount} {accountCount === 1 ? 'account' : 'accounts'}
+            {accountCount > 0 ? `Across ${accountCount} ${accountCount === 1 ? 'account' : 'accounts'}` : 'Your portfolio'}
           </p>
         </div>
-        <button
-          className={styles.refreshBtn}
-          onClick={onRefresh}
-          disabled={refreshing}
-          title="Refresh portfolio data"
-        >
-          <MdRefresh className={refreshing ? styles.spinning : ''} />
-        </button>
       </div>
 
       <div className={styles.valueSection}>

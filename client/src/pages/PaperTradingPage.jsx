@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import PracticeModeBanner from '../components/paper-trading/PracticeModeBanner';
 import PaperTradingInterface from '../components/paper-trading/PaperTradingInterface';
 import PaperPortfolio from '../components/paper-trading/PaperPortfolio';
@@ -9,33 +11,63 @@ import paperTradingService from '../services/paperTradingService';
 import styles from './PaperTradingPage.module.css';
 
 function PaperTradingPage() {
+  const navigate = useNavigate();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [account, setAccount] = useState(null);
   const [holdings, setHoldings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/signin', { replace: true });
+    }
+  }, [authLoading, isAuthenticated, navigate]);
 
   useEffect(() => {
     loadAccountData();
   }, [refreshTrigger]);
 
-  const loadAccountData = async () => {
+  const loadAccountData = async (isRefresh = false) => {
     try {
-      setLoading(true);
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+      console.log('[PaperTradingPage] Loading account data...');
       const response = await paperTradingService.getAccount();
+      console.log('[PaperTradingPage] Account response:', response);
+      
       if (response.success) {
         setAccount(response.data);
-        setHoldings(response.data.holdings || []);
+        const holdingsData = response.data.holdings || [];
+        console.log('[PaperTradingPage] Holdings data:', holdingsData);
+        console.log('[PaperTradingPage] Current Balance:', response.data.currentBalance);
+        console.log('[PaperTradingPage] Total Value:', response.data.totalValue);
+        setHoldings(holdingsData);
+      } else {
+        console.error('[PaperTradingPage] Failed to load account:', response);
       }
     } catch (error) {
-      console.error('Error loading account data:', error);
+      console.error('[PaperTradingPage] Error loading account data:', error);
     } finally {
-      setLoading(false);
+      if (isRefresh) {
+        setRefreshing(false);
+      } else {
+        setLoading(false);
+      }
     }
   };
 
-  const handleOrderExecuted = () => {
-    // Refresh account data after order execution
+  const handleOrderExecuted = async () => {
+    // Immediately refresh account data after order execution
+    console.log('[PaperTradingPage] Order executed, refreshing account data...');
+    await loadAccountData(true);
+    // Also trigger refresh for child components
     setRefreshTrigger(prev => prev + 1);
   };
 
@@ -52,7 +84,7 @@ function PaperTradingPage() {
     }
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className={styles.loading}>
         <div className={styles.spinner}></div>
@@ -68,36 +100,54 @@ function PaperTradingPage() {
       <div className={styles.container}>
         <div className={styles.header}>
           <div>
-            <h1 className={styles.title}>Paper Trading</h1>
+            <h1 className={styles.title}>
+              Paper Trading
+              {refreshing && <span className={styles.refreshIndicator}> 🔄 Updating...</span>}
+            </h1>
             <p className={styles.subtitle}>
               Practice trading with virtual money. Perfect your strategy risk-free!
             </p>
           </div>
-          <button 
-            className={styles.resetButton}
-            onClick={() => setShowResetModal(true)}
-          >
-            🔄 Reset Account
-          </button>
+          <div className={styles.headerButtons}>
+            <button 
+              className={styles.refreshButton}
+              onClick={() => loadAccountData(true)}
+              disabled={refreshing}
+              title="Refresh account data"
+            >
+              🔄 Refresh
+            </button>
+            <button 
+              className={styles.resetButton}
+              onClick={() => setShowResetModal(true)}
+            >
+              🔄 Reset Account
+            </button>
+          </div>
         </div>
 
         <div className={styles.stats}>
           <div className={styles.statCard}>
             <span className={styles.statLabel}>Total Value</span>
             <span className={styles.statValue}>
-              ${(account?.totalValue || 100000).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              ${Number(account?.totalValue || 100000).toFixed(2)}
             </span>
             <span className={styles.statChange}>
               Balance + Holdings
             </span>
           </div>
           <div className={styles.statCard}>
-            <span className={styles.statLabel}>Profit/Loss</span>
-            <span className={`${styles.statValue} ${account?.totalProfitLoss >= 0 ? styles.positive : styles.negative}`}>
-              ${account?.totalProfitLoss?.toLocaleString('en-US', { minimumFractionDigits: 2 }) || '0.00'}
+            <span className={styles.statLabel}>Total P/L</span>
+            <span className={`${styles.statValue} ${(account?.totalProfitLoss || 0) >= 0 ? styles.positive : styles.negative}`}>
+              ${Number(account?.totalProfitLoss || 0).toFixed(2)}
             </span>
-            <span className={`${styles.statChange} ${account?.profitLossPercent >= 0 ? styles.positive : styles.negative}`}>
-              {account?.profitLossPercent >= 0 ? '+' : ''}{account?.profitLossPercent?.toFixed(2) || '0.00'}%
+            <span className={`${styles.statChange} ${(account?.profitLossPercent || 0) >= 0 ? styles.positive : styles.negative}`}>
+              {(account?.profitLossPercent || 0) >= 0 ? '+' : ''}{Number(account?.profitLossPercent || 0).toFixed(2)}%
+              {account?.realizedProfitLoss !== undefined && account?.unrealizedProfitLoss !== undefined && (
+                <span style={{ fontSize: '0.75em', display: 'block', marginTop: '2px', opacity: 0.8 }}>
+                  Realized: ${Number(account.realizedProfitLoss).toFixed(2)} | Unrealized: ${Number(account.unrealizedProfitLoss).toFixed(2)}
+                </span>
+              )}
             </span>
           </div>
           <div className={styles.statCard}>

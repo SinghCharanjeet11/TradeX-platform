@@ -22,6 +22,13 @@ export class OrdersRepository {
   }
 
   /**
+   * Alias for getOrdersByUserId for compatibility
+   */
+  async getUserOrders(userId) {
+    return this.getOrdersByUserId(userId);
+  }
+
+  /**
    * Get orders with filters
    */
   async getOrdersWithFilters(userId, filters = {}) {
@@ -157,6 +164,23 @@ export class OrdersRepository {
    * Create a new order
    */
   async createOrder(userId, orderData) {
+    // CRITICAL: Convert all numeric values to proper numbers to prevent string concatenation
+    // PostgreSQL numeric type can cause issues if strings are passed
+    const quantity = Number(orderData.quantity);
+    const price = Number(orderData.price);
+    const totalValue = Number(orderData.totalValue || orderData.total);
+    
+    // Validate all numeric values
+    if (isNaN(quantity) || !isFinite(quantity) || quantity <= 0) {
+      throw new Error(`Invalid quantity: ${orderData.quantity}. Must be a positive number.`);
+    }
+    if (isNaN(price) || !isFinite(price) || price <= 0) {
+      throw new Error(`Invalid price: ${orderData.price}. Must be a positive number.`);
+    }
+    if (isNaN(totalValue) || !isFinite(totalValue) || totalValue <= 0) {
+      throw new Error(`Invalid total_value: ${orderData.totalValue || orderData.total}. Must be a positive number.`);
+    }
+    
     const result = await query(
       `INSERT INTO orders (user_id, symbol, name, asset_type, order_type, quantity, price, total_value, status, account, notes)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
@@ -170,9 +194,9 @@ export class OrdersRepository {
         orderData.name,
         orderData.assetType,
         orderData.orderType || orderData.type,
-        orderData.quantity,
-        orderData.price,
-        orderData.total,
+        quantity,
+        price,
+        totalValue,
         orderData.status || 'completed',
         orderData.account || orderData.accountName || 'default',
         orderData.notes || null

@@ -52,7 +52,7 @@ export const findUserByUsername = async (username) => {
  */
 export const findUserById = async (userId) => {
   const sql = `
-    SELECT id, username, email, created_at, last_login
+    SELECT id, username, email, full_name, phone, bio, profile_picture, created_at, last_login, password_hash
     FROM users
     WHERE id = $1
   `
@@ -88,5 +88,27 @@ export const updateLastLogin = async (userId) => {
     WHERE id = $1
   `
   const result = await query(sql, [userId])
+  return result.rowCount > 0
+}
+
+/**
+ * Update user profile
+ * @param {string} userId - User ID
+ * @param {object} profileData - Profile data to update
+ * @returns {Promise<boolean>} Success status
+ */
+export const updateUserProfile = async (userId, { username, email, fullName, phone, bio }) => {
+  const sql = `
+    UPDATE users
+    SET 
+      username = COALESCE($1, username),
+      email = COALESCE($2, email),
+      full_name = COALESCE($3, full_name),
+      phone = $4,
+      bio = $5,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = $6
+  `
+  const result = await query(sql, [username, email, fullName, phone, bio, userId])
   return result.rowCount > 0
 }

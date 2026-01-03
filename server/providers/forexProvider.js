@@ -1,6 +1,6 @@
 /**
- * ForexProvider - Fixer.io API Integration for Forex
- * Fetches foreign exchange market data from Fixer.io API
+ * ForexProvider - Twelve Data API Integration for Forex
+ * Fetches foreign exchange market data from Twelve Data API
  */
 
 import axios from 'axios';
@@ -8,9 +8,9 @@ import { apiConfig } from '../config/apiConfig.js';
 
 class ForexProvider {
   constructor() {
-    this.baseUrl = apiConfig.fixer.baseUrl;
-    this.apiKey = apiConfig.fixer.apiKey;
-    this.timeout = apiConfig.fixer.timeout;
+    this.baseUrl = apiConfig.twelveData.baseUrl;
+    this.apiKey = apiConfig.twelveData.apiKey;
+    this.timeout = apiConfig.twelveData.timeout;
     this.retryConfig = apiConfig.retry;
     
     // Popular forex pairs to display
@@ -35,81 +35,56 @@ class ForexProvider {
    * @returns {Promise<Object>} Exchange rate data
    */
   async getExchangeRate(fromCurrency, toCurrency) {
-    const endpoint = `${this.baseUrl}/latest`;
+    const symbol = `${fromCurrency}/${toCurrency}`;
+    const endpoint = `${this.baseUrl}/quote`;
     const params = {
-      access_key: this.apiKey,
-      base: fromCurrency,
-      symbols: toCurrency
+      symbol: symbol,
+      apikey: this.apiKey
     };
 
     const data = await this._makeRequest(endpoint, params, `getExchangeRate(${fromCurrency}/${toCurrency})`);
     
-    // Transform to include the pair name
+    // Transform to standard format
     return {
-      ...data,
+      success: true,
+      base: fromCurrency,
+      date: new Date().toISOString().split('T')[0],
+      rates: { [toCurrency]: parseFloat(data.close) },
       pair: `${fromCurrency}/${toCurrency}`,
       fromCurrency,
-      toCurrency
+      toCurrency,
+      rate: parseFloat(data.close)
     };
   }
 
   /**
-   * Get multiple exchange rates in a single batched request
-   * Fixer.io allows fetching multiple symbols in one call
+   * Get multiple exchange rates
+   * Twelve Data allows concurrent requests
    * @param {Array<Object>} pairs - Array of {from, to, name} objects
    * @returns {Promise<Object>} Object with pair names as keys
    */
   async getMultipleExchangeRates(pairs = this.defaultPairs) {
-    // Group pairs by base currency for efficient batching
-    const pairsByBase = {};
-    pairs.forEach(pair => {
-      if (!pairsByBase[pair.from]) {
-        pairsByBase[pair.from] = [];
-      }
-      pairsByBase[pair.from].push(pair);
-    });
-
     const results = {};
     
-    console.log(`[ForexProvider] Fetching ${pairs.length} forex pairs in ${Object.keys(pairsByBase).length} batched requests`);
+    console.log(`[ForexProvider] Fetching ${pairs.length} forex pairs concurrently`);
     
-    // Fetch each base currency group
-    for (const [baseCurrency, currencyPairs] of Object.entries(pairsByBase)) {
+    // Fetch all concurrently
+    const promises = pairs.map(async pair => {
       try {
-        const symbols = currencyPairs.map(p => p.to).join(',');
-        const endpoint = `${this.baseUrl}/latest`;
-        const params = {
-          access_key: this.apiKey,
-          base: baseCurrency,
-          symbols: symbols
-        };
-
-        const data = await this._makeRequest(endpoint, params, `getMultipleExchangeRates(${baseCurrency})`);
-        
-        // Map results to pair names
-        currencyPairs.forEach(pair => {
-          const rate = data.rates?.[pair.to];
-          if (rate) {
-            results[pair.name] = {
-              success: true,
-              base: baseCurrency,
-              date: data.date,
-              rates: { [pair.to]: rate },
-              pair: pair.name,
-              fromCurrency: pair.from,
-              toCurrency: pair.to,
-              rate: rate
-            };
-          }
-        });
+        const data = await this.getExchangeRate(pair.from, pair.to);
+        return { pair: pair.name, data };
       } catch (error) {
-        console.error(`[ForexProvider] Error fetching ${baseCurrency} pairs:`, error.message);
-        // Mark all pairs with this base as errored
-        currencyPairs.forEach(pair => {
-          results[pair.name] = { error: error.message };
-        });
+        console.error(`[ForexProvider] Error fetching ${pair.name}:`, error.message);
+        return { pair: pair.name, data: null, error: error.message };
       }
-    }
+    });
+
+    const allResults = await Promise.all(promises);
+    
+    // Store results
+    allResults.forEach(({ pair, data, error }) => {
+      results[pair] = error ? { error } : data;
+    });
 
     return results;
   }
@@ -122,11 +97,13 @@ class ForexProvider {
    * @returns {Promise<Object>} Historical rate data
    */
   async getForexTimeSeries(fromCurrency, toCurrency, date = null) {
-    const endpoint = date ? `${this.baseUrl}/${date}` : `${this.baseUrl}/latest`;
+    const symbol = `${fromCurrency}/${toCurrency}`;
+    const endpoint = `${this.baseUrl}/time_series`;
     const params = {
-      access_key: this.apiKey,
-      base: fromCurrency,
-      symbols: toCurrency
+      symbol: symbol,
+      interval: '1day',
+      apikey: this.apiKey,
+      outputsize: 30
     };
 
     return this._makeRequest(endpoint, params, `getForexTimeSeries(${fromCurrency}/${toCurrency}, ${date || 'latest'})`);
@@ -149,9 +126,8 @@ class ForexProvider {
       });
 
       // Check for API error messages
-      if (!response.data.success) {
-        const errorInfo = response.data.error || {};
-        throw new Error(`Fixer.io API Error: ${errorInfo.type || 'Unknown error'} - ${errorInfo.info || 'No details'}`);
+      if (response.data.status === 'error') {
+        throw new Error(`Twelve Data API Error: ${response.data.message || 'Unknown error'}`);
       }
 
       console.log(`[ForexProvider] ${methodName} - Success`);
@@ -226,20 +202,20 @@ class ForexProvider {
    */
   _formatError(error, methodName) {
     const formattedError = new Error();
-    formattedError.provider = 'Fixer.io';
+    formattedError.provider = 'Twelve Data';
     formattedError.method = methodName;
     formattedError.originalError = error.message;
     formattedError.retryable = this._shouldRetry(error);
 
     if (error.response) {
-      formattedError.message = `Fixer.io API error: ${error.response.status} - ${error.response.statusText}`;
+      formattedError.message = `Twelve Data API error: ${error.response.status} - ${error.response.statusText}`;
       formattedError.statusCode = error.response.status;
       formattedError.data = error.response.data;
     } else if (error.request) {
-      formattedError.message = 'Fixer.io API request timeout or network error';
+      formattedError.message = 'Twelve Data API request timeout or network error';
       formattedError.statusCode = 0;
     } else {
-      formattedError.message = `Fixer.io API request error: ${error.message}`;
+      formattedError.message = `Twelve Data API request error: ${error.message}`;
       formattedError.statusCode = 0;
     }
 

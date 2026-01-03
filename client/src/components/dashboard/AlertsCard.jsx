@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { MdNotifications, MdDelete, MdTrendingUp, MdTrendingDown, MdCheckCircle, MdAccessTime } from 'react-icons/md'
-import { useAlerts } from '../../hooks/useWatchlist'
+import useDashboardData from '../../hooks/useDashboardData'
+import watchlistService from '../../services/watchlistService'
 import portfolioService from '../../services/portfolioService'
 import styles from './AlertsCard.module.css'
 
 function AlertsCard() {
-  const { alerts, loading, deleteAlert } = useAlerts()
+  const { alerts, removeAlertItem, refreshAlerts } = useDashboardData()
   const [deleting, setDeleting] = useState(null)
 
   const handleDelete = async (e, alertId) => {
@@ -15,9 +16,19 @@ function AlertsCard() {
 
     try {
       setDeleting(alertId)
-      await deleteAlert(alertId)
+      
+      // Optimistic update: remove item from UI immediately
+      removeAlertItem(alertId)
+      
+      // Call API to delete (in background)
+      await watchlistService.deleteAlert(alertId)
+      
+      // No need to refresh - optimistic update already handled it
+      // Background refresh will sync on next poll cycle
     } catch (error) {
       console.error('Error deleting alert:', error)
+      // On error, refresh to restore correct state from server
+      await refreshAlerts()
     } finally {
       setDeleting(null)
     }
@@ -26,13 +37,34 @@ function AlertsCard() {
   const calculateProgress = (alert) => {
     if (!alert.currentPrice || !alert.targetPrice) return 0
     
-    const diff = alert.targetPrice - alert.currentPrice
-    const totalDiff = alert.targetPrice - (alert.initialPrice || alert.currentPrice)
+    const current = parseFloat(alert.currentPrice)
+    const target = parseFloat(alert.targetPrice)
+    const initial = parseFloat(alert.initialPrice || current)
     
-    if (totalDiff === 0) return 100
-    
-    const progress = ((totalDiff - diff) / totalDiff) * 100
-    return Math.max(0, Math.min(100, progress))
+    // For "above" alerts: progress increases as price goes up toward target
+    // For "below" alerts: progress increases as price goes down toward target
+    if (alert.condition === 'above') {
+      if (current >= target) return 100 // Target reached
+      if (initial >= target) return 100 // Already above target when created
+      
+      // Calculate how far we've moved from initial to target
+      const totalDistance = target - initial
+      const currentDistance = current - initial
+      const progress = (currentDistance / totalDistance) * 100
+      
+      return Math.max(0, Math.min(100, progress))
+    } else {
+      // condition === 'below'
+      if (current <= target) return 100 // Target reached
+      if (initial <= target) return 100 // Already below target when created
+      
+      // Calculate how far we've moved from initial to target
+      const totalDistance = initial - target
+      const currentDistance = initial - current
+      const progress = (currentDistance / totalDistance) * 100
+      
+      return Math.max(0, Math.min(100, progress))
+    }
   }
 
   const getAlertStatus = (alert) => {
@@ -43,7 +75,7 @@ function AlertsCard() {
     return 'active'
   }
 
-  if (loading) {
+  if (alerts.loading) {
     return (
       <div className={styles.card}>
         <div className={styles.header}>
@@ -60,7 +92,10 @@ function AlertsCard() {
     )
   }
 
-  if (alerts.length === 0) {
+  // Safely access alerts data
+  const alertsData = alerts.data || [];
+
+  if (alertsData.length === 0) {
     return (
       <div className={styles.card}>
         <div className={styles.header}>
@@ -78,8 +113,8 @@ function AlertsCard() {
     )
   }
 
-  // Show only first 5 items
-  const displayedAlerts = alerts.slice(0, 5)
+  // Show all items (scrollable list)
+  const displayedAlerts = alertsData
 
   return (
     <div className={styles.card}>
@@ -87,7 +122,7 @@ function AlertsCard() {
         <div className={styles.headerLeft}>
           <MdNotifications className={styles.headerIcon} />
           <h3>Price Alerts</h3>
-          <span className={styles.count}>{alerts.length}</span>
+          <span className={styles.count}>{alertsData.length}</span>
         </div>
       </div>
 
@@ -168,14 +203,6 @@ function AlertsCard() {
           )
         })}
       </div>
-
-      {alerts.length > 5 && (
-        <div className={styles.footer}>
-          <span className={styles.footerText}>
-            +{alerts.length - 5} more alerts
-          </span>
-        </div>
-      )}
     </div>
   )
 }

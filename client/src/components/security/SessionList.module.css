@@ -1,0 +1,391 @@
+/* Container */
+.container {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  gap: 16px;
+}
+
+.header h3 {
+  color: #1a202c;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+}
+
+.header p {
+  color: #718096;
+  font-size: 14px;
+  margin: 0;
+}
+
+.terminateAllBtn {
+  background: #fed7d7;
+  color: #c53030;
+  border: 1px solid #feb2b2;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.terminateAllBtn:hover:not(:disabled) {
+  background: #feb2b2;
+}
+
+.terminateAllBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Message */
+.message {
+  background: #c6f6d5;
+  color: #22543d;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  border: 1px solid #9ae6b4;
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: 48px 24px;
+  color: #718096;
+}
+
+.emptyState svg {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.emptyState p {
+  margin: 0;
+  font-size: 16px;
+}
+
+/* Sessions List */
+.sessionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Session Card */
+.sessionCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: #f7fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.sessionCard:hover {
+  border-color: #cbd5e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.currentSession {
+  background: #c6f6d5;
+  border-color: #9ae6b4;
+}
+
+.currentSession:hover {
+  border-color: #68d391;
+}
+
+/* Session Icon */
+.sessionIcon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border-radius: 12px;
+  color: #00d4aa;
+  font-size: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.currentSession .sessionIcon {
+  color: #22543d;
+}
+
+/* Session Info */
+.sessionInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.sessionHeader h4 {
+  color: #1a202c;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.currentBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #22543d;
+  color: #c6f6d5;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.currentBadge svg {
+  font-size: 14px;
+}
+
+.deviceDetails {
+  color: #718096;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Session Meta */
+.sessionMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #4a5568;
+  font-size: 13px;
+}
+
+.metaItem svg {
+  font-size: 16px;
+  color: #718096;
+}
+
+.ipAddress {
+  font-family: 'Courier New', monospace;
+  background: #ffffff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+}
+
+/* Terminate Button */
+.terminateBtn {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fed7d7;
+  color: #c53030;
+  border: none;
+  border-radius: 8px;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.terminateBtn:hover:not(:disabled) {
+  background: #feb2b2;
+  transform: scale(1.05);
+}
+
+.terminateBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Spinner */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid #fed7d7;
+  border-top-color: #c53030;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .terminateAllBtn {
+    width: 100%;
+  }
+  
+  .sessionCard {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .sessionIcon {
+    align-self: center;
+  }
+  
+  .sessionMeta {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .terminateBtn {
+    align-self: flex-end;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 16px;
+  }
+  
+  .sessionCard {
+    padding: 16px;
+  }
+  
+  .sessionHeader h4 {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+/* Dark Mode Support */
+[data-theme="dark"] .container {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .header h3 {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .header p {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .terminateAllBtn {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+
+[data-theme="dark"] .terminateAllBtn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+[data-theme="dark"] .message {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #4ade80;
+}
+
+[data-theme="dark"] .emptyState {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .sessionCard {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .sessionCard:hover {
+  border-color: #475569;
+}
+
+[data-theme="dark"] .currentSession {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+[data-theme="dark"] .currentSession:hover {
+  border-color: rgba(34, 197, 94, 0.5);
+}
+
+[data-theme="dark"] .sessionIcon {
+  background: #1e293b;
+}
+
+[data-theme="dark"] .currentSession .sessionIcon {
+  color: #4ade80;
+}
+
+[data-theme="dark"] .sessionHeader h4 {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .currentBadge {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}
+
+[data-theme="dark"] .deviceDetails {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .metaItem {
+  color: #cbd5e0;
+}
+
+[data-theme="dark"] .metaItem svg {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .ipAddress {
+  background: #1e293b;
+  border-color: #475569;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .terminateBtn {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+[data-theme="dark"] .terminateBtn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+[data-theme="dark"] .spinner {
+  border-color: rgba(239, 68, 68, 0.2);
+  border-top-color: #f87171;
+}

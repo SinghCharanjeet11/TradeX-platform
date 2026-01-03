@@ -64,6 +64,89 @@
   font-weight: 600;
 }
 
+.loadingIndicator {
+  font-size: 0.75rem;
+  color: #00d4aa;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.autoFilled {
+  font-size: 0.75rem;
+  color: #10b981;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+.priceInfo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.priceUp {
+  font-size: 0.75rem;
+  color: #10b981;
+  font-weight: 600;
+}
+
+.priceDown {
+  font-size: 0.75rem;
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.lastUpdate {
+  font-size: 0.7rem;
+  color: #718096;
+  font-weight: 400;
+}
+
+.priceError {
+  font-size: 0.75rem;
+  color: #ef4444;
+  margin-top: 4px;
+}
+
+.inputWithButton {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.inputWithButton .input {
+  flex: 1;
+}
+
+.refreshButton {
+  padding: 0.75rem 1rem;
+  background: #ff9800;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+}
+
+.refreshButton:hover:not(:disabled) {
+  background: #f57c00;
+  transform: scale(1.05);
+}
+
+.refreshButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.refreshButton:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
 .input,
 .select {
   padding: 0.75rem;
@@ -88,8 +171,8 @@
 
 .totalValue {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.5rem;
   padding: 1rem;
   background: rgba(255, 152, 0, 0.1);
   border: 2px solid rgba(255, 152, 0, 0.3);
@@ -104,9 +187,24 @@
 }
 
 .totalAmount {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #ff9800;
+}
+
+.buyAmount {
+  color: #10b981;
+}
+
+.sellAmount {
+  color: #ef4444;
+}
+
+.breakdown {
+  font-size: 0.75rem;
+  color: #718096;
+  font-weight: 500;
+  margin-top: 4px;
 }
 
 .error {

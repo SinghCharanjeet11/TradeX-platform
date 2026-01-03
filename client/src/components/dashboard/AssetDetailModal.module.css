@@ -142,7 +142,7 @@
   justify-content: center;
   color: #4a5568;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   font-size: 28px;
   position: relative;
   z-index: 20;
@@ -150,11 +150,9 @@
 }
 
 .closeBtn:hover {
-  background: #fee;
+  background: #fee2e2;
   border-color: #ef4444;
   color: #ef4444;
-  transform: rotate(90deg) scale(1.05);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
 }
 
 /* Price Section */
@@ -214,6 +212,73 @@
   color: #718096;
   text-transform: uppercase;
   letter-spacing: 1px;
+}
+
+/* Tab Navigation */
+.tabNavigation {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0;
+}
+
+.tabBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #718096;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  bottom: -2px;
+}
+
+.tabBtn:hover {
+  color: #1a202c;
+  background: rgba(124, 140, 255, 0.05);
+}
+
+.tabBtn.active {
+  color: var(--primary-blue);
+  border-bottom-color: var(--primary-blue);
+}
+
+.tabIcon {
+  font-size: 18px;
+}
+
+/* Tab Content */
+.aiTab {
+  min-height: 400px;
+  animation: fadeIn 0.3s ease;
+}
+
+.aiInsightsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Warning Banner */
+.warningBanner {
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #f59e0b;
+  animation: slideDown 0.3s ease;
 }
 
 /* Chart Controls */
@@ -293,6 +358,12 @@
   padding: 12px;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.tooltipDate {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 4px 0;
 }
 
 .tooltipPrice {
@@ -514,4 +585,151 @@
   .statsGrid {
     grid-template-columns: 1fr;
   }
+}
+
+
+/* Dark Mode Support */
+[data-theme="dark"] .modal {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .modal::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .modal::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-color: #0f172a;
+}
+
+[data-theme="dark"] .modal::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+[data-theme="dark"] .header {
+  border-bottom-color: #334155;
+}
+
+[data-theme="dark"] .assetImage {
+  border-color: #475569;
+}
+
+[data-theme="dark"] .assetName {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .assetSymbol {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .closeBtn {
+  background: #0f172a;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .closeBtn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+[data-theme="dark"] .priceSection {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .priceLabel {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .price {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .changeLabel {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .tabNavigation {
+  border-bottom-color: #334155;
+}
+
+[data-theme="dark"] .tabBtn {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .tabBtn:hover {
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .periodSelector {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .periodBtn {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .periodBtn:hover {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .chartContainer {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .legendItem {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .statsGrid .statCard {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .statsGrid .statCard:hover {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+[data-theme="dark"] .statLabel {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .statValue {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .aiPanel {
+  background: linear-gradient(135deg, rgba(124, 140, 255, 0.15) 0%, rgba(159, 122, 234, 0.15) 100%);
+  border-color: rgba(124, 140, 255, 0.3);
+}
+
+[data-theme="dark"] .aiHeader h3 {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .predictionLabel {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .confidenceBar {
+  background: #334155;
+}
+
+[data-theme="dark"] .signal {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .signalType {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .signalStrength {
+  color: #94a3b8;
 }

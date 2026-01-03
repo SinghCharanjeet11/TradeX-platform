@@ -1,6 +1,6 @@
 /**
- * CommoditiesProvider - Metals-API Integration for Commodities
- * Fetches commodity market data from Metals-API
+ * CommoditiesProvider - Twelve Data API Integration for Commodities
+ * Fetches commodity market data from Twelve Data API
  */
 
 import axios from 'axios';
@@ -8,36 +8,35 @@ import { apiConfig } from '../config/apiConfig.js';
 
 class CommoditiesProvider {
   constructor() {
-    this.baseUrl = apiConfig.metalsApi.baseUrl;
-    this.apiKey = apiConfig.metalsApi.apiKey;
-    this.timeout = apiConfig.metalsApi.timeout;
+    this.baseUrl = apiConfig.twelveData.baseUrl;
+    this.apiKey = apiConfig.twelveData.apiKey;
+    this.timeout = apiConfig.twelveData.timeout;
     this.retryConfig = apiConfig.retry;
     
     // Popular commodities to display with metadata
-    // Metals-API uses symbols like XAU (Gold), XAG (Silver), etc.
+    // Twelve Data uses symbols like GC (Gold), SI (Silver), CL (Crude Oil), etc.
     this.defaultCommodities = [
-      { symbol: 'XAU', name: 'Gold', unit: 'USD per troy ounce' },
-      { symbol: 'XAG', name: 'Silver', unit: 'USD per troy ounce' },
-      { symbol: 'XPT', name: 'Platinum', unit: 'USD per troy ounce' },
-      { symbol: 'XPD', name: 'Palladium', unit: 'USD per troy ounce' },
-      { symbol: 'CRUDE_OIL_WTI', name: 'Crude Oil (WTI)', unit: 'USD per barrel' },
-      { symbol: 'CRUDE_OIL_BRENT', name: 'Brent Crude Oil', unit: 'USD per barrel' },
-      { symbol: 'NATURAL_GAS', name: 'Natural Gas', unit: 'USD per MMBtu' },
-      { symbol: 'COPPER', name: 'Copper', unit: 'USD per pound' }
+      { symbol: 'GC', name: 'Gold', unit: 'USD per troy ounce' },
+      { symbol: 'SI', name: 'Silver', unit: 'USD per troy ounce' },
+      { symbol: 'PL', name: 'Platinum', unit: 'USD per troy ounce' },
+      { symbol: 'PA', name: 'Palladium', unit: 'USD per troy ounce' },
+      { symbol: 'CL', name: 'Crude Oil (WTI)', unit: 'USD per barrel' },
+      { symbol: 'BZ', name: 'Brent Crude Oil', unit: 'USD per barrel' },
+      { symbol: 'NG', name: 'Natural Gas', unit: 'USD per MMBtu' },
+      { symbol: 'HG', name: 'Copper', unit: 'USD per pound' }
     ];
   }
 
   /**
    * Get commodity price for a single symbol
-   * @param {string} symbol - Commodity symbol (e.g., 'XAU' for Gold)
+   * @param {string} symbol - Commodity symbol (e.g., 'GC' for Gold)
    * @returns {Promise<Object>} Commodity price data
    */
   async getCommodityPrice(symbol) {
-    const endpoint = `${this.baseUrl}/latest`;
+    const endpoint = `${this.baseUrl}/quote`;
     const params = {
-      access_key: this.apiKey,
-      base: 'USD',
-      symbols: symbol
+      symbol: symbol,
+      apikey: this.apiKey
     };
 
     const data = await this._makeRequest(endpoint, params, `getCommodityPrice(${symbol})`);
@@ -45,76 +44,55 @@ class CommoditiesProvider {
     // Add symbol metadata
     const commodity = this.defaultCommodities.find(c => c.symbol === symbol);
     return {
-      ...data,
+      success: true,
+      base: 'USD',
+      date: new Date().toISOString().split('T')[0],
+      rates: { [symbol]: parseFloat(data.close) },
       symbol,
       name: commodity?.name || symbol,
-      unit: commodity?.unit || 'USD'
+      unit: commodity?.unit || 'USD',
+      rate: parseFloat(data.close)
     };
   }
 
   /**
-   * Get multiple commodity prices in a single batched request
-   * Metals-API allows fetching multiple symbols in one call
+   * Get multiple commodity prices
+   * Twelve Data allows concurrent requests
    * @param {Array<Object>} commodities - Array of {symbol, name, unit} objects
    * @returns {Promise<Object>} Object with symbols as keys
    */
   async getMultipleCommodityPrices(commodities = this.defaultCommodities) {
-    const symbols = commodities.map(c => c.symbol).join(',');
+    console.log(`[CommoditiesProvider] Fetching ${commodities.length} commodities concurrently`);
     
-    console.log(`[CommoditiesProvider] Fetching ${commodities.length} commodities in a single batched request`);
+    const results = {};
     
-    try {
-      const endpoint = `${this.baseUrl}/latest`;
-      const params = {
-        access_key: this.apiKey,
-        base: 'USD',
-        symbols: symbols
-      };
-
-      const data = await this._makeRequest(endpoint, params, 'getMultipleCommodityPrices');
-      
-      const results = {};
-      
-      // Map results to commodity symbols
-      commodities.forEach(commodity => {
-        const rate = data.rates?.[commodity.symbol];
-        if (rate) {
-          results[commodity.symbol] = {
-            success: true,
-            base: 'USD',
-            date: data.date,
-            rates: { [commodity.symbol]: rate },
-            symbol: commodity.symbol,
-            name: commodity.name,
-            unit: commodity.unit,
-            rate: rate
-          };
-        } else {
-          results[commodity.symbol] = {
-            error: 'Symbol not found in response',
+    // Fetch all concurrently
+    const promises = commodities.map(async commodity => {
+      try {
+        const data = await this.getCommodityPrice(commodity.symbol);
+        return { symbol: commodity.symbol, data };
+      } catch (error) {
+        console.error(`[CommoditiesProvider] Error fetching ${commodity.symbol}:`, error.message);
+        return { 
+          symbol: commodity.symbol, 
+          data: {
+            error: error.message,
             symbol: commodity.symbol,
             name: commodity.name,
             unit: commodity.unit
-          };
-        }
-      });
-
-      return results;
-    } catch (error) {
-      console.error(`[CommoditiesProvider] Error fetching commodities:`, error.message);
-      
-      // Return error for all commodities
-      const results = {};
-      commodities.forEach(commodity => {
-        results[commodity.symbol] = {
-          error: error.message,
-          symbol: commodity.symbol,
-          name: commodity.name,
-          unit: commodity.unit
+          }
         };
-      });
-      return results;
-    }
+      }
+    });
+
+    const allResults = await Promise.all(promises);
+    
+    // Store results
+    allResults.forEach(({ symbol, data }) => {
+      results[symbol] = data;
+    });
+
+    return results;
   }
 
   /**

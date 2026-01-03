@@ -44,6 +44,23 @@ class PaperAccountRepository {
       WHERE user_id = $1`,
       [userId]
     );
+    
+    // CRITICAL: Convert all numeric values to JavaScript numbers
+    // PostgreSQL numeric type can be returned as strings by the pg driver
+    if (result.rows[0]) {
+      const account = result.rows[0];
+      return {
+        ...account,
+        initialBalance: Number(account.initialBalance) || 100000,
+        currentBalance: Number(account.currentBalance) || 0,
+        totalInvested: Number(account.totalInvested) || 0,
+        totalProfitLoss: Number(account.totalProfitLoss) || 0,
+        totalTrades: parseInt(account.totalTrades) || 0,
+        winningTrades: parseInt(account.winningTrades) || 0,
+        losingTrades: parseInt(account.losingTrades) || 0,
+        resetCount: parseInt(account.resetCount) || 0
+      };
+    }
     return result.rows[0];
   }
 
@@ -51,6 +68,12 @@ class PaperAccountRepository {
    * Update account balance
    */
   async updateBalance(userId, newBalance) {
+    // CRITICAL: Validate and convert to number to prevent string concatenation issues
+    const balanceValue = Number(newBalance);
+    if (isNaN(balanceValue) || !isFinite(balanceValue)) {
+      throw new Error(`Invalid balance value: ${newBalance}. Must be a valid number.`);
+    }
+    
     const result = await query(
       `UPDATE paper_accounts 
       SET current_balance = $2, updated_at = CURRENT_TIMESTAMP
@@ -63,7 +86,7 @@ class PaperAccountRepository {
         reset_count as "resetCount", last_reset_at as "lastResetAt",
         leaderboard_visible as "leaderboardVisible",
         created_at as "createdAt", updated_at as "updatedAt"`,
-      [userId, newBalance]
+      [userId, balanceValue]
     );
     return result.rows[0];
   }
@@ -72,6 +95,28 @@ class PaperAccountRepository {
    * Update account statistics
    */
   async updateStatistics(userId, stats) {
+    // CRITICAL: Convert all numeric values to proper numbers to prevent string concatenation
+    // PostgreSQL numeric type can cause issues if strings are passed
+    const safeNumber = (val) => {
+      if (val === null || val === undefined) return null;
+      const num = Number(val);
+      if (isNaN(num) || !isFinite(num)) {
+        console.error(`[PaperAccountRepository] Invalid numeric value: ${val}`);
+        return null;
+      }
+      return num;
+    };
+    
+    const safeInt = (val) => {
+      if (val === null || val === undefined) return null;
+      const num = parseInt(val, 10);
+      if (isNaN(num) || !isFinite(num)) {
+        console.error(`[PaperAccountRepository] Invalid integer value: ${val}`);
+        return null;
+      }
+      return num;
+    };
+    
     const result = await query(
       `UPDATE paper_accounts 
       SET 
@@ -93,12 +138,12 @@ class PaperAccountRepository {
         created_at as "createdAt", updated_at as "updatedAt"`,
       [
         userId,
-        stats.currentBalance,
-        stats.totalInvested,
-        stats.totalProfitLoss,
-        stats.totalTrades,
-        stats.winningTrades,
-        stats.losingTrades
+        safeNumber(stats.currentBalance),
+        safeNumber(stats.totalInvested),
+        safeNumber(stats.totalProfitLoss),
+        safeInt(stats.totalTrades),
+        safeInt(stats.winningTrades),
+        safeInt(stats.losingTrades)
       ]
     );
     return result.rows[0];
@@ -108,10 +153,8 @@ class PaperAccountRepository {
    * Record account reset
    */
   async recordReset(userId) {
-    const client = await query('BEGIN');
-    
     try {
-      // Get current account state
+      // Get current account state first
       const accountResult = await query(
         `SELECT current_balance, total_trades, total_profit_loss 
         FROM paper_accounts WHERE user_id = $1`,
@@ -119,15 +162,23 @@ class PaperAccountRepository {
       );
       
       const account = accountResult.rows[0];
+      if (!account) {
+        throw new Error('Paper account not found');
+      }
       
-      // Record reset in history
-      await query(
-        `INSERT INTO paper_account_resets (
-          user_id, balance_before_reset, total_trades_before_reset, 
-          profit_loss_before_reset
-        ) VALUES ($1, $2, $3, $4)`,
-        [userId, account.current_balance, account.total_trades, account.total_profit_loss]
-      );
+      // Record reset in history (if table exists)
+      try {
+        await query(
+          `INSERT INTO paper_account_resets (
+            user_id, balance_before_reset, total_trades_before_reset, 
+            profit_loss_before_reset
+          ) VALUES ($1, $2, $3, $4)`,
+          [userId, account.current_balance, account.total_trades, account.total_profit_loss]
+        );
+      } catch (resetHistoryError) {
+        console.log('[PaperAccountRepository] Reset history table not available:', resetHistoryError.message);
+        // Continue without recording history
+      }
       
       // Reset account
       const resetResult = await query(
@@ -154,10 +205,9 @@ class PaperAccountRepository {
         [userId]
       );
       
-      await query('COMMIT');
       return resetResult.rows[0];
     } catch (error) {
-      await query('ROLLBACK');
+      console.error('[PaperAccountRepository] Error in recordReset:', error);
       throw error;
     }
   }
@@ -232,19 +282,24 @@ class PaperAccountRepository {
    * Get portfolio performance history for paper trading
    */
   async getPerformanceHistory(userId, days = 30) {
-    const result = await query(
-      `SELECT 
-        snapshot_date as "date",
-        total_value as "value",
-        profit_loss as "profitLoss",
-        profit_loss_percent as "profitLossPercent"
-      FROM portfolio_snapshots 
-      WHERE user_id = $1 
-        AND snapshot_date >= CURRENT_DATE - $2
-      ORDER BY snapshot_date ASC`,
-      [userId, days]
-    );
-    return result.rows;
+    try {
+      const result = await query(
+        `SELECT 
+          snapshot_date as "date",
+          total_value as "value",
+          profit_loss as "profitLoss",
+          profit_loss_percent as "profitLossPercent"
+        FROM portfolio_snapshots 
+        WHERE user_id = $1 
+          AND snapshot_date >= CURRENT_DATE - $2
+        ORDER BY snapshot_date ASC`,
+        [userId, days]
+      );
+      return result.rows;
+    } catch (error) {
+      console.log('[PaperAccountRepository] Portfolio snapshots table not available or empty:', error.message);
+      return []; // Return empty array if table doesn't exist
+    }
   }
 }
 

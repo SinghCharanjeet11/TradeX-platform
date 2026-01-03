@@ -107,13 +107,22 @@ export class NewsService {
 
     // Filter by category
     if (filters.category && filters.category !== 'all') {
-      filtered = filtered.filter(article => 
-        article.category.toLowerCase() === filters.category.toLowerCase()
-      )
+      filtered = filtered.filter(article => {
+        // Check both singular category and categories array
+        if (article.categories && Array.isArray(article.categories)) {
+          return article.categories.some(cat => 
+            cat.toLowerCase() === filters.category.toLowerCase()
+          )
+        }
+        if (article.category) {
+          return article.category.toLowerCase() === filters.category.toLowerCase()
+        }
+        return false
+      })
     }
 
     // Filter by sentiment
-    if (filters.sentiment) {
+    if (filters.sentiment && filters.sentiment !== 'all') {
       filtered = filtered.filter(article => {
         const sentiment = article.sentiment
         if (filters.sentiment === 'positive') return sentiment > 0.3
@@ -222,7 +231,7 @@ export class NewsService {
     try {
       // Get user's holdings and watchlist
       const [holdings, watchlist] = await Promise.all([
-        holdingsRepository.getHoldings(userId).catch(() => []),
+        holdingsRepository.getUserHoldings(userId).catch(() => []),
         watchlistRepository.getUserWatchlist(userId).catch(() => [])
       ])
 

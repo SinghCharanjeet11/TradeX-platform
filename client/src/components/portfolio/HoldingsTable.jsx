@@ -1,4 +1,4 @@
-import { MdArrowUpward, MdArrowDownward, MdTrendingUp, MdTrendingDown } from 'react-icons/md'
+import { MdArrowUpward, MdArrowDownward, MdTrendingUp, MdTrendingDown, MdLink } from 'react-icons/md'
 import portfolioService from '../../services/portfolioService'
 import styles from './HoldingsTable.module.css'
 
@@ -9,14 +9,54 @@ const ASSET_TYPE_BADGES = {
   commodities: { label: 'Commodity', color: '#10b981' }
 }
 
-function HoldingsTable({ holdings, onSort, sortBy, sortOrder }) {
+const SOURCE_BADGES = {
+  binance: { label: 'Binance', color: '#f0b90b' }
+}
+
+function HoldingsTable({ 
+  holdings, 
+  onSort, 
+  sortBy, 
+  sortOrder,
+  loading = false
+}) {
   const handleSort = (column) => {
-    onSort(column)
+    if (onSort) onSort(column)
   }
 
   const getSortIcon = (column) => {
     if (sortBy !== column) return null
     return sortOrder === 'asc' ? <MdArrowUpward /> : <MdArrowDownward />
+  }
+
+  if (loading) {
+    return (
+      <div className={styles.tableContainer}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>Asset</th>
+              <th>Type</th>
+              <th>Source</th>
+              <th>Quantity</th>
+              <th>Current Price</th>
+              <th>Total Value</th>
+              <th>24h Change</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[...Array(5)].map((_, i) => (
+              <tr key={i} className={styles.skeletonRow}>
+                <td colSpan="8">
+                  <div className={styles.skeleton}></div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
   }
 
   return (
@@ -34,19 +74,14 @@ function HoldingsTable({ holdings, onSort, sortBy, sortOrder }) {
                 Type {getSortIcon('assetType')}
               </div>
             </th>
-            <th onClick={() => handleSort('accountName')} className={styles.sortable}>
+            <th onClick={() => handleSort('source')} className={styles.sortable}>
               <div className={styles.headerCell}>
-                Account {getSortIcon('accountName')}
+                Source {getSortIcon('source')}
               </div>
             </th>
             <th onClick={() => handleSort('quantity')} className={styles.sortable}>
               <div className={styles.headerCell}>
                 Quantity {getSortIcon('quantity')}
-              </div>
-            </th>
-            <th onClick={() => handleSort('avgBuyPrice')} className={styles.sortable}>
-              <div className={styles.headerCell}>
-                Avg Price {getSortIcon('avgBuyPrice')}
               </div>
             </th>
             <th onClick={() => handleSort('currentPrice')} className={styles.sortable}>
@@ -59,21 +94,20 @@ function HoldingsTable({ holdings, onSort, sortBy, sortOrder }) {
                 Total Value {getSortIcon('totalValue')}
               </div>
             </th>
-            <th onClick={() => handleSort('profitLoss')} className={styles.sortable}>
+            <th onClick={() => handleSort('priceChange24h')} className={styles.sortable}>
               <div className={styles.headerCell}>
-                Profit/Loss {getSortIcon('profitLoss')}
+                24h Change {getSortIcon('priceChange24h')}
               </div>
             </th>
-            <th onClick={() => handleSort('change24h')} className={styles.sortable}>
-              <div className={styles.headerCell}>
-                24h Change {getSortIcon('change24h')}
-              </div>
-            </th>
+            <th>Status</th>
           </tr>
         </thead>
         <tbody>
           {holdings.map((holding) => (
-            <HoldingRow key={holding.id} holding={holding} />
+            <HoldingRow 
+              key={holding.id} 
+              holding={holding}
+            />
           ))}
         </tbody>
       </table>
@@ -83,11 +117,12 @@ function HoldingsTable({ holdings, onSort, sortBy, sortOrder }) {
 
 function HoldingRow({ holding }) {
   const badge = ASSET_TYPE_BADGES[holding.assetType]
-  const isProfitable = holding.profitLoss >= 0
-  const isPositiveChange = holding.change24h >= 0
+  const sourceBadge = SOURCE_BADGES[holding.source] || { label: holding.source, color: '#6b7280' }
+  const priceChange = holding.priceChange24h || holding.change24h || 0
+  const isPositiveChange = priceChange >= 0
 
   return (
-    <tr className={styles.row}>
+    <tr className={`${styles.row} ${styles.exchangeRow}`}>
       <td>
         <div className={styles.assetCell}>
           <div className={styles.assetInfo}>
@@ -99,20 +134,25 @@ function HoldingRow({ holding }) {
       <td>
         <span
           className={styles.badge}
-          style={{ backgroundColor: `${badge.color}20`, color: badge.color }}
+          style={{ backgroundColor: `${badge?.color || '#6b7280'}20`, color: badge?.color || '#6b7280' }}
         >
-          {badge.label}
+          {badge?.label || holding.assetType}
         </span>
       </td>
       <td>
-        <span className={styles.account}>{holding.accountName}</span>
+        <span
+          className={styles.sourceBadge}
+          style={{ backgroundColor: `${sourceBadge.color}20`, color: sourceBadge.color }}
+        >
+          <MdLink className={styles.linkIcon} />
+          {holding.account || sourceBadge.label}
+        </span>
       </td>
       <td>
-        <span className={styles.quantity}>{holding.quantity.toLocaleString()}</span>
-      </td>
-      <td>
-        <span className={styles.price}>
-          {portfolioService.formatCurrency(holding.avgBuyPrice)}
+        <span className={styles.quantity}>
+          {typeof holding.quantity === 'number' 
+            ? holding.quantity.toLocaleString(undefined, { maximumFractionDigits: 8 }) 
+            : holding.quantity}
         </span>
       </td>
       <td>
@@ -126,20 +166,15 @@ function HoldingRow({ holding }) {
         </span>
       </td>
       <td>
-        <div className={`${styles.profitLoss} ${isProfitable ? styles.positive : styles.negative}`}>
-          <div className={styles.plAmount}>
-            {portfolioService.formatCurrency(Math.abs(holding.profitLoss))}
-          </div>
-          <div className={styles.plPercent}>
-            {portfolioService.formatPercentage(holding.profitLossPercent)}
-          </div>
+        <div className={`${styles.change} ${isPositiveChange ? styles.positive : styles.negative}`}>
+          {isPositiveChange ? <MdTrendingUp /> : <MdTrendingDown />}
+          <span>{portfolioService.formatPercentage(Math.abs(priceChange))}</span>
         </div>
       </td>
       <td>
-        <div className={`${styles.change} ${isPositiveChange ? styles.positive : styles.negative}`}>
-          {isPositiveChange ? <MdTrendingUp /> : <MdTrendingDown />}
-          <span>{portfolioService.formatPercentage(Math.abs(holding.change24h))}</span>
-        </div>
+        <span className={styles.syncedLabel} title="Synced from exchange">
+          Synced
+        </span>
       </td>
     </tr>
   )

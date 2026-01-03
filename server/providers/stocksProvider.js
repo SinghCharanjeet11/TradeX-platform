@@ -1,6 +1,6 @@
 /**
- * StocksProvider - Finnhub API Integration for Stocks
- * Fetches stock market data from Finnhub API
+ * StocksProvider - Twelve Data API Integration for Stocks
+ * Fetches stock market data from Twelve Data API
  */
 
 import axios from 'axios';
@@ -8,9 +8,9 @@ import { apiConfig } from '../config/apiConfig.js';
 
 class StocksProvider {
   constructor() {
-    this.baseUrl = apiConfig.finnhub.baseUrl;
-    this.apiKey = apiConfig.finnhub.apiKey;
-    this.timeout = apiConfig.finnhub.timeout;
+    this.baseUrl = apiConfig.twelveData.baseUrl;
+    this.apiKey = apiConfig.twelveData.apiKey;
+    this.timeout = apiConfig.twelveData.timeout;
     this.retryConfig = apiConfig.retry;
     
     // Popular stock symbols to display
@@ -37,10 +37,22 @@ class StocksProvider {
     const endpoint = `${this.baseUrl}/quote`;
     const params = {
       symbol: symbol,
-      token: this.apiKey
+      apikey: this.apiKey
     };
 
-    return this._makeRequest(endpoint, params, `getStockQuote(${symbol})`);
+    const data = await this._makeRequest(endpoint, params, `getStockQuote(${symbol})`);
+    
+    // Transform Twelve Data response to standard format
+    return {
+      c: parseFloat(data.close),
+      h: parseFloat(data.high),
+      l: parseFloat(data.low),
+      o: parseFloat(data.open),
+      pc: parseFloat(data.previous_close),
+      d: parseFloat(data.close) - parseFloat(data.previous_close),
+      dp: ((parseFloat(data.close) - parseFloat(data.previous_close)) / parseFloat(data.previous_close)) * 100,
+      t: Date.now() / 1000
+    };
   }
 
   /**
@@ -78,30 +90,47 @@ class StocksProvider {
   /**
    * Get stock time series data (candles)
    * @param {string} symbol - Stock symbol
-   * @param {string} interval - Time interval ('1', '5', '15', '30', '60', 'D', 'W', 'M')
+   * @param {string} interval - Time interval ('1min', '5min', '15min', '30min', '1h', '1day', '1week', '1month')
    * @param {number} from - Unix timestamp for start date
    * @param {number} to - Unix timestamp for end date
    * @returns {Promise<Object>} Time series data
    */
-  async getStockTimeSeries(symbol, interval = 'D', from = null, to = null) {
-    // Default to last 30 days if not specified
-    if (!to) {
-      to = Math.floor(Date.now() / 1000);
-    }
-    if (!from) {
-      from = to - (30 * 24 * 60 * 60); // 30 days ago
-    }
-
-    const endpoint = `${this.baseUrl}/stock/candle`;
+  async getStockTimeSeries(symbol, interval = '1day', from = null, to = null) {
+    const endpoint = `${this.baseUrl}/time_series`;
     const params = {
       symbol: symbol,
-      resolution: interval,
-      from: from,
-      to: to,
-      token: this.apiKey
+      interval: interval,
+      apikey: this.apiKey,
+      outputsize: 30 // Last 30 data points
     };
 
-    return this._makeRequest(endpoint, params, `getStockTimeSeries(${symbol}, ${interval})`);
+    const data = await this._makeRequest(endpoint, params, `getStockTimeSeries(${symbol}, ${interval})`);
+    
+    // Transform to Finnhub-compatible format
+    if (!data.values || data.values.length === 0) {
+      return { s: 'no_data' };
+    }
+    
+    const transformed = {
+      c: [],
+      h: [],
+      l: [],
+      o: [],
+      t: [],
+      v: [],
+      s: 'ok'
+    };
+    
+    data.values.forEach(candle => {
+      transformed.c.push(parseFloat(candle.close));
+      transformed.h.push(parseFloat(candle.high));
+      transformed.l.push(parseFloat(candle.low));
+      transformed.o.push(parseFloat(candle.open));
+      transformed.t.push(new Date(candle.datetime).getTime() / 1000);
+      transformed.v.push(parseFloat(candle.volume || 0));
+    });
+    
+    return transformed;
   }
 
   /**
@@ -110,13 +139,23 @@ class StocksProvider {
    * @returns {Promise<Object>} Company overview data
    */
   async getCompanyOverview(symbol) {
-    const endpoint = `${this.baseUrl}/stock/profile2`;
+    const endpoint = `${this.baseUrl}/quote`;
     const params = {
       symbol: symbol,
-      token: this.apiKey
+      apikey: this.apiKey
     };
 
-    return this._makeRequest(endpoint, params, `getCompanyOverview(${symbol})`);
+    const data = await this._makeRequest(endpoint, params, `getCompanyOverview(${symbol})`);
+    
+    // Transform to Finnhub-compatible format
+    return {
+      name: data.name || symbol,
+      ticker: symbol,
+      exchange: data.exchange || 'N/A',
+      currency: data.currency || 'USD',
+      country: 'US',
+      type: data.type || 'Common Stock'
+    };
   }
 
   /**
@@ -136,13 +175,13 @@ class StocksProvider {
       });
 
       // Check for API error messages
-      if (response.data.error) {
-        throw new Error(`Finnhub API Error: ${response.data.error}`);
+      if (response.data.status === 'error') {
+        throw new Error(`Twelve Data API Error: ${response.data.message || 'Unknown error'}`);
       }
 
       // Check if response is empty (invalid symbol or no data)
-      if (response.data.c === 0 && response.data.d === null) {
-        throw new Error(`Invalid stock symbol or no data available for this symbol`);
+      if (!response.data || (response.data.code && response.data.code >= 400)) {
+        throw new Error(`Invalid stock symbol or no data available: ${response.data.message || 'Unknown error'}`);
       }
 
       console.log(`[StocksProvider] ${methodName} - Success`);
@@ -217,20 +256,20 @@ class StocksProvider {
    */
   _formatError(error, methodName) {
     const formattedError = new Error();
-    formattedError.provider = 'Finnhub';
+    formattedError.provider = 'Twelve Data';
     formattedError.method = methodName;
     formattedError.originalError = error.message;
     formattedError.retryable = this._shouldRetry(error);
 
     if (error.response) {
-      formattedError.message = `Finnhub API error: ${error.response.status} - ${error.response.statusText}`;
+      formattedError.message = `Twelve Data API error: ${error.response.status} - ${error.response.statusText}`;
       formattedError.statusCode = error.response.status;
       formattedError.data = error.response.data;
     } else if (error.request) {
-      formattedError.message = 'Finnhub API request timeout or network error';
+      formattedError.message = 'Twelve Data API request timeout or network error';
       formattedError.statusCode = 0;
     } else {
-      formattedError.message = `Finnhub API request error: ${error.message}`;
+      formattedError.message = `Twelve Data API request error: ${error.message}`;
       formattedError.statusCode = 0;
     }
 

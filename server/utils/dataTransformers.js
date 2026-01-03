@@ -13,18 +13,29 @@ function transformCryptoData(rawData) {
     return [];
   }
 
-  return rawData.map(coin => ({
-    id: coin.id || '',
-    symbol: (coin.symbol || '').toUpperCase(),
-    name: coin.name || 'Unknown',
-    price: formatNumber(coin.current_price, 2),
-    change24h: formatNumber(coin.price_change_percentage_24h, 2),
-    volume24h: formatNumber(coin.total_volume, 0),
-    marketCap: formatNumber(coin.market_cap, 0),
-    image: coin.image || null,
-    lastUpdate: new Date().toISOString(),
-    source: 'coingecko'
-  }));
+  return rawData
+    .map(coin => {
+      // Validate price before transformation
+      const currentPrice = coin.current_price;
+      if (currentPrice === null || currentPrice === undefined || currentPrice <= 0) {
+        console.warn(`[DataTransformers] Skipping ${coin.symbol?.toUpperCase() || 'UNKNOWN'} - invalid price:`, currentPrice);
+        return null;
+      }
+
+      return {
+        id: coin.id || '',
+        symbol: (coin.symbol || '').toUpperCase(),
+        name: coin.name || 'Unknown',
+        price: formatNumber(currentPrice, 8), // Use 8 decimals for crypto to handle small values
+        change24h: formatNumber(coin.price_change_percentage_24h, 2),
+        volume24h: formatNumber(coin.total_volume, 0),
+        marketCap: formatNumber(coin.market_cap, 0),
+        image: coin.image || null,
+        lastUpdate: new Date().toISOString(),
+        source: 'coingecko'
+      };
+    })
+    .filter(coin => coin !== null); // Remove invalid entries
 }
 
 /**
@@ -275,16 +286,19 @@ function transformCommodityTimeSeries(rawData, symbol) {
 /**
  * Transform CoinGecko chart data to standardized format
  * @param {Object} rawData - Raw chart data from CoinGecko
- * @param {string} symbol - Cryptocurrency symbol
+ * @param {string} id - Cryptocurrency ID (e.g., 'bitcoin', 'ethereum')
  * @returns {Object} Standardized chart data
  */
-function transformCryptoChartData(rawData, symbol) {
+function transformCryptoChartData(rawData, id) {
   if (!rawData || !rawData.prices) {
-    return { symbol, prices: [] };
+    console.warn(`[DataTransformers] No chart data for ${id}`);
+    return { symbol: id, prices: [] };
   }
 
+  console.log(`[DataTransformers] Transforming chart data for ${id}, ${rawData.prices.length} data points`);
+
   const prices = rawData.prices.map(([timestamp, price]) => ({
-    timestamp: new Date(timestamp).toISOString(),
+    timestamp,
     price: formatNumber(price, 2),
     volume: 0 // Will be populated if volume data is available
   }));
@@ -297,7 +311,7 @@ function transformCryptoChartData(rawData, symbol) {
   }
 
   return {
-    symbol,
+    symbol: id,
     prices,
     source: 'coingecko'
   };
@@ -405,7 +419,17 @@ function formatNumber(value, decimals = 2) {
     return 0;
   }
 
-  return parseFloat(parseFloat(value).toFixed(decimals));
+  const num = parseFloat(value);
+  if (isNaN(num)) {
+    return 0;
+  }
+
+  // For very small numbers, use more precision
+  if (Math.abs(num) < 0.000001 && num !== 0) {
+    return parseFloat(num.toFixed(Math.min(decimals, 10)));
+  }
+
+  return parseFloat(num.toFixed(decimals));
 }
 
 /**
