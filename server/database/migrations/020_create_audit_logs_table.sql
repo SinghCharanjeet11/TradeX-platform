@@ -45,10 +45,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS prevent_audit_log_update ON audit_logs;
 CREATE TRIGGER prevent_audit_log_update
   BEFORE UPDATE ON audit_logs
   FOR EACH ROW EXECUTE FUNCTION prevent_audit_log_modification();
 
+DROP TRIGGER IF EXISTS prevent_audit_log_delete ON audit_logs;
 CREATE TRIGGER prevent_audit_log_delete
   BEFORE DELETE ON audit_logs
   FOR EACH ROW EXECUTE FUNCTION prevent_audit_log_modification();

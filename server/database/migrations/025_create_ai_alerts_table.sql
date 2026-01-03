@@ -40,6 +40,7 @@ CREATE INDEX IF NOT EXISTS idx_ai_alerts_user_created ON ai_alerts(user_id, crea
 CREATE INDEX IF NOT EXISTS idx_alert_config_user_id ON alert_config(user_id);
 
 -- Create trigger to automatically update updated_at for alert config
+DROP TRIGGER IF EXISTS update_alert_config_updated_at ON alert_config;
 CREATE TRIGGER update_alert_config_updated_at BEFORE UPDATE ON alert_config
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
