@@ -25,7 +25,7 @@ router.post('/cleanup-database', async (req, res) => {
 
     for (const query of dropQueries) {
       console.log(`Executing: ${query}`);
-      await pool.query(query);
+      await db.query(query);
     }
 
     console.log('Database cleanup completed successfully');
