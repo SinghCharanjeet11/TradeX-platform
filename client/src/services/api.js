@@ -1,10 +1,15 @@
 import axios from 'axios'
 
-// In development, use the Vite proxy (empty string means relative URLs)
-// In production, use the environment variable
-const API_URL = import.meta.env.MODE === 'development' 
-  ? '' 
-  : (import.meta.env.VITE_API_URL || 'http://localhost:5000')
+// Get API URL from environment variable
+// VITE_API_URL must be set at build time for production
+const API_URL = import.meta.env.VITE_API_URL || ''
+
+// Debug logging for production troubleshooting
+if (import.meta.env.MODE !== 'development') {
+  console.log('[API] Mode:', import.meta.env.MODE)
+  console.log('[API] VITE_API_URL:', import.meta.env.VITE_API_URL)
+  console.log('[API] Using API_URL:', API_URL)
+}
 
 // Create axios instance
 const api = axios.create({
