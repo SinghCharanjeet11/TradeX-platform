@@ -10,6 +10,38 @@ const __dirname = path.dirname(__filename);
 const router = express.Router();
 
 // One-time setup endpoint - should be disabled after first use
+// Cleanup endpoint to drop tables with schema issues
+router.post('/cleanup-database', async (req, res) => {
+  try {
+    console.log('Starting database cleanup...');
+    
+    // Drop tables in reverse dependency order
+    const dropQueries = [
+      'DROP TABLE IF EXISTS watchlist CASCADE;',
+      'DROP TABLE IF EXISTS price_alerts CASCADE;',
+      'DROP TABLE IF EXISTS notifications CASCADE;',
+      'DROP TABLE IF EXISTS schema_migrations CASCADE;'
+    ];
+
+    for (const query of dropQueries) {
+      console.log(`Executing: ${query}`);
+      await pool.query(query);
+    }
+
+    console.log('Database cleanup completed successfully');
+    res.json({ 
+      success: true, 
+      message: 'Database cleanup completed. You can now run initialize-database again.' 
+    });
+  } catch (error) {
+    console.error('Database cleanup error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
 router.post('/initialize-database', async (req, res) => {
   const client = await db.connect();
   
