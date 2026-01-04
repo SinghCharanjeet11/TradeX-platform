@@ -5,6 +5,7 @@
  */
 
 import { createContext, useState, useEffect, useCallback, useRef } from 'react'
+import { useAuth } from './AuthContext'
 import api from '../services/api'
 import requestManager from '../services/requestManager'
 import cacheLayer from '../services/cacheLayer'
@@ -18,6 +19,7 @@ const INTERVALS = {
 }
 
 export function DashboardDataProvider({ children }) {
+  const { isAuthenticated } = useAuth()
   const [state, setState] = useState({
     portfolio: { data: null, loading: true, error: null, lastUpdated: null },
     watchlist: { data: [], loading: true, error: null, lastUpdated: null },
@@ -248,14 +250,18 @@ export function DashboardDataProvider({ children }) {
     }
   }, [startPolling, stopPolling])
 
-  // Start polling on mount
+  // Start polling on mount - only when authenticated
   useEffect(() => {
-    startPolling()
+    if (isAuthenticated) {
+      startPolling()
+    } else {
+      stopPolling()
+    }
 
     return () => {
       stopPolling()
     }
-  }, [startPolling, stopPolling])
+  }, [isAuthenticated, startPolling, stopPolling])
 
   // Log stats periodically
   useEffect(() => {

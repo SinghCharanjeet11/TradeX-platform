@@ -13,7 +13,7 @@ import styles from './TopBar.module.css'
 
 function TopBar({ user, activeMarket, onMarketChange, additionalActions }) {
   const navigate = useNavigate()
-  const { logout } = useAuth()
+  const { logout, isAuthenticated } = useAuth()
   const [showDropdown, setShowDropdown] = useState(false)
   const [alerts, setAlerts] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
@@ -24,13 +24,18 @@ function TopBar({ user, activeMarket, onMarketChange, additionalActions }) {
   const [showSearchResults, setShowSearchResults] = useState(false)
   const [selectedAsset, setSelectedAsset] = useState(null)
   const [showAssetModal, setShowAssetModal] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const dropdownRef = useRef(null)
   const searchRef = useRef(null)
   const { toasts, removeToast, showInfo } = useToast()
 
-  // Fetch alerts on mount and set up polling
+  // Fetch alerts on mount and set up polling - only when authenticated and not logging out
   useEffect(() => {
+    if (!isAuthenticated || isLoggingOut) return;
+    
     const fetchAlerts = async () => {
+      if (!isAuthenticated || isLoggingOut) return;
+      
       try {
         const response = await insightsService.getAlerts(10);
         if (response.success && response.data) {
@@ -56,14 +61,17 @@ function TopBar({ user, activeMarket, onMarketChange, additionalActions }) {
           setPreviousAlertIds(currentAlertIds);
         }
       } catch (error) {
-        console.error('Error fetching alerts:', error);
+        // Silently ignore errors when not authenticated
+        if (isAuthenticated && !isLoggingOut) {
+          console.error('Error fetching alerts:', error);
+        }
       }
     };
 
     fetchAlerts();
     const interval = setInterval(fetchAlerts, 60000);
     return () => clearInterval(interval);
-  }, [previousAlertIds, showInfo]);
+  }, [isAuthenticated, isLoggingOut, previousAlertIds, showInfo]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -131,15 +139,17 @@ function TopBar({ user, activeMarket, onMarketChange, additionalActions }) {
   }, [searchQuery, activeMarket])
 
   const handleLogout = async () => {
+    setIsLoggingOut(true)
+    setShowDropdown(false)
+    
     try {
       await logout()
-      navigate('/signin', { replace: true })
     } catch (error) {
       console.error('Logout error:', error)
-      // Still navigate to signin even if logout API fails
-      navigate('/signin', { replace: true })
     }
-    setShowDropdown(false)
+    
+    // Navigate to signin
+    navigate('/signin', { replace: true })
   }
 
   const handleSettings = () => {
