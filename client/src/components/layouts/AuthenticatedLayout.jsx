@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Navigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
@@ -8,82 +8,76 @@ import styles from './AuthenticatedLayout.module.css'
 
 function AuthenticatedLayout({ children }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [oauthProcessing, setOauthProcessing] = useState(false)
+  const [sessionReady, setSessionReady] = useState(false)
   const { isAuthenticated, loading, checkAuth } = useAuth()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
 
-  // Check OAuth param synchronously to avoid race condition
-  const isOAuthRedirect = useMemo(() => {
-    return searchParams.get('oauth') === 'true'
-  }, [searchParams])
-
-  // Check session flags synchronously
-  const hasActiveSession = useMemo(() => {
-    return sessionStorage.getItem('sessionActive') === 'true' || 
-           sessionStorage.getItem('justSignedIn') === 'true'
-  }, [])
-
   useEffect(() => {
-    // Clean up justSignedIn flag after use
-    const justSignedIn = sessionStorage.getItem('justSignedIn')
-    if (justSignedIn === 'true') {
+    const oauthParam = searchParams.get('oauth')
+    const hasActiveSession = sessionStorage.getItem('sessionActive') === 'true'
+    const justSignedIn = sessionStorage.getItem('justSignedIn') === 'true'
+    
+    // Clean up justSignedIn flag
+    if (justSignedIn) {
       sessionStorage.removeItem('justSignedIn')
     }
     
-    // Handle OAuth redirect - set session flags and clean URL
-    if (isOAuthRedirect) {
-      console.log('[AuthenticatedLayout] OAuth redirect detected, setting session flags')
+    // Handle OAuth redirect
+    if (oauthParam === 'true') {
+      console.log('[AuthenticatedLayout] OAuth redirect detected')
       sessionStorage.setItem('sessionActive', 'true')
-      setOauthProcessing(true)
       
-      // Remove the oauth param from URL
+      // Remove oauth param from URL
       searchParams.delete('oauth')
       setSearchParams(searchParams, { replace: true })
       
-      // Re-check auth after OAuth redirect (cookie should be set now)
+      // Re-check auth and mark session ready
       checkAuth().finally(() => {
-        setOauthProcessing(false)
+        setSessionReady(true)
       })
+      return
     }
-  }, [isOAuthRedirect, searchParams, setSearchParams, checkAuth])
+    
+    // If we have an active session or just signed in, mark ready
+    if (hasActiveSession || justSignedIn) {
+      setSessionReady(true)
+      return
+    }
+    
+    // No session - will redirect to signin
+    setSessionReady(true)
+  }, [searchParams, setSearchParams, checkAuth])
 
-  // Show loading screen while checking authentication or processing OAuth
-  if (loading || oauthProcessing) {
+  // Show loading while auth is checking or session not ready
+  if (loading || !sessionReady) {
     return <LoadingScreen />
   }
 
-  // Allow access if:
-  // 1. User came from OAuth redirect (isOAuthRedirect)
-  // 2. User has active session flag (hasActiveSession)
-  // 3. User just signed in (justSignedIn flag - checked in hasActiveSession)
-  const sessionAllowed = isOAuthRedirect || hasActiveSession
-
-  // Always require fresh sign-in when accessing protected routes directly
-  // Unless user just signed in during this browser session or came from OAuth
-  if (!sessionAllowed) {
-    console.log('[AuthenticatedLayout] No active session, redirecting to signin')
-    // Store the intended destination
+  // Check if session is allowed
+  const hasActiveSession = sessionStorage.getItem('sessionActive') === 'true'
+  
+  // If not authenticated, redirect to signin
+  if (!isAuthenticated) {
+    console.log('[AuthenticatedLayout] Not authenticated, redirecting to signin')
     sessionStorage.setItem('redirectAfterLogin', location.pathname)
     return <Navigate to="/signin" replace />
   }
-
-  // Redirect to sign-in if not authenticated
-  if (!isAuthenticated) {
-    console.log('[AuthenticatedLayout] Not authenticated, redirecting to signin')
+  
+  // If authenticated but no session flag, require fresh sign-in
+  // This enforces the "must sign in when clicking links" requirement
+  if (!hasActiveSession) {
+    console.log('[AuthenticatedLayout] No active session flag, redirecting to signin')
     sessionStorage.setItem('redirectAfterLogin', location.pathname)
     return <Navigate to="/signin" replace />
   }
 
   return (
     <>
-      {/* Sidebar rendered via portal to escape any transform context */}
       {createPortal(
         <Sidebar onCollapse={setSidebarCollapsed} />,
         document.body
       )}
-      
-      {/* Main content with margin to account for sidebar */}
       <div className={`${styles.layoutContent} ${sidebarCollapsed ? styles.collapsed : ''}`}>
         {children}
       </div>
