@@ -203,6 +203,8 @@ function AnimatedRoutes() {
             </motion.div>
           } 
         />
+        {/* Catch-all route - redirect to signin or dashboard based on auth */}
+        <Route path="*" element={<Navigate to="/signin" replace />} />
         </Routes>
       </Suspense>
     </AnimatePresence>

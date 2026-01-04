@@ -11,7 +11,7 @@ import styles from './SignInPage.module.css'
 function SignInPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { login, isAuthenticated, checkAuth } = useAuth()
+  const { login, isAuthenticated } = useAuth()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -35,20 +35,15 @@ function SignInPage() {
       }
       setOauthError(errorMessages[error] || 'Authentication failed. Please try again.')
     }
-    
-    // Check if user is already authenticated (e.g., after OAuth redirect)
-    const checkOAuthLogin = async () => {
-      try {
-        await checkAuth()
-        if (isAuthenticated) {
-          navigate('/dashboard')
-        }
-      } catch (e) {
-        // Not authenticated, stay on sign in page
-      }
+  }, [searchParams])
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      console.log('[SignInPage] User is authenticated, redirecting to dashboard')
+      navigate('/dashboard')
     }
-    checkOAuthLogin()
-  }, [searchParams, checkAuth, isAuthenticated, navigate])
+  }, [isAuthenticated, navigate])
 
   const validateEmail = (value) => {
     if (!value) return 'Email is required'
