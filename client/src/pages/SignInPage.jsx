@@ -37,14 +37,14 @@ function SignInPage() {
     }
   }, [searchParams])
 
-  // Redirect to dashboard if already authenticated AND has active session
-  // Don't redirect if user intentionally came to sign-in (no sessionActive flag)
+  // Redirect to dashboard if already authenticated
   useEffect(() => {
-    if (isAuthenticated && sessionStorage.getItem('sessionActive')) {
-      // Check if there's a stored redirect destination
+    if (isAuthenticated) {
+      // Set session flag and redirect
+      sessionStorage.setItem('sessionActive', 'true')
       const redirectTo = sessionStorage.getItem('redirectAfterLogin') || '/dashboard'
       sessionStorage.removeItem('redirectAfterLogin')
-      console.log('[SignInPage] User is authenticated with active session, redirecting to', redirectTo)
+      console.log('[SignInPage] User is authenticated, redirecting to', redirectTo)
       navigate(redirectTo)
     }
   }, [isAuthenticated, navigate])
