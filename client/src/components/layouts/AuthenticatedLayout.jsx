@@ -9,6 +9,7 @@ import styles from './AuthenticatedLayout.module.css'
 function AuthenticatedLayout({ children }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [isProcessing, setIsProcessing] = useState(true)
+  const [sessionValid, setSessionValid] = useState(false)
   const { isAuthenticated, loading, checkAuth } = useAuth()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -28,6 +29,11 @@ function AuthenticatedLayout({ children }) {
         
         // Re-check auth to ensure cookie is read
         await checkAuth()
+        setSessionValid(true)
+      } else {
+        // Check if session flag exists (set during sign-in/register/oauth)
+        const hasSessionFlag = sessionStorage.getItem('sessionActive') === 'true'
+        setSessionValid(hasSessionFlag)
       }
       
       setIsProcessing(false)
@@ -41,17 +47,12 @@ function AuthenticatedLayout({ children }) {
     return <LoadingScreen />
   }
 
-  // If not authenticated, redirect to signin
-  if (!isAuthenticated) {
-    console.log('[AuthenticatedLayout] Not authenticated, redirecting to signin')
+  // If not authenticated OR no session flag, redirect to signin
+  // This ensures users must sign in fresh in each new tab/window
+  if (!isAuthenticated || !sessionValid) {
+    console.log('[AuthenticatedLayout] Access denied - authenticated:', isAuthenticated, 'sessionValid:', sessionValid)
     sessionStorage.setItem('redirectAfterLogin', location.pathname)
     return <Navigate to="/signin" replace />
-  }
-
-  // User is authenticated - allow access
-  // Also set sessionActive flag so they stay logged in
-  if (!sessionStorage.getItem('sessionActive')) {
-    sessionStorage.setItem('sessionActive', 'true')
   }
 
   return (

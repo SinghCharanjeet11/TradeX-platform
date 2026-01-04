@@ -76,6 +76,10 @@ function RegisterPage() {
       const { authAPI } = await import('../services/api')
       await authAPI.register(formData)
       
+      // Set session flag BEFORE checking auth - this is critical
+      sessionStorage.setItem('sessionActive', 'true')
+      sessionStorage.setItem('justSignedIn', 'true')
+      
       // Registration automatically logs the user in, so update auth context
       await checkAuth()
       
@@ -89,9 +93,7 @@ function RegisterPage() {
   }
 
   const handleLoadingComplete = () => {
-    // Mark session as active and that user just signed in
-    sessionStorage.setItem('sessionActive', 'true')
-    sessionStorage.setItem('justSignedIn', 'true')
+    // Session flags already set in handleSubmit
     navigate('/dashboard')
   }
 

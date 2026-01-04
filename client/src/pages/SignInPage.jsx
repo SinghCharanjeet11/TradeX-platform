@@ -11,7 +11,7 @@ import styles from './SignInPage.module.css'
 function SignInPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { login, isAuthenticated } = useAuth()
+  const { login } = useAuth()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -24,7 +24,7 @@ function SignInPage() {
   const [twoFactorLoading, setTwoFactorLoading] = useState(false)
   const [oauthError, setOauthError] = useState(null)
 
-  // Check for OAuth errors in URL and handle OAuth redirect
+  // Check for OAuth errors in URL
   useEffect(() => {
     const error = searchParams.get('error')
     if (error) {
@@ -37,17 +37,8 @@ function SignInPage() {
     }
   }, [searchParams])
 
-  // Redirect to dashboard if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      // Set session flag and redirect
-      sessionStorage.setItem('sessionActive', 'true')
-      const redirectTo = sessionStorage.getItem('redirectAfterLogin') || '/dashboard'
-      sessionStorage.removeItem('redirectAfterLogin')
-      console.log('[SignInPage] User is authenticated, redirecting to', redirectTo)
-      navigate(redirectTo)
-    }
-  }, [isAuthenticated, navigate])
+  // DO NOT auto-redirect authenticated users - they need to sign in fresh per tab
+  // The session flag check happens in AuthenticatedLayout
 
   const validateEmail = (value) => {
     if (!value) return 'Email is required'
@@ -102,6 +93,10 @@ function SignInPage() {
         return
       }
       
+      // Set session flag BEFORE showing loading transition - this is critical
+      sessionStorage.setItem('sessionActive', 'true')
+      sessionStorage.setItem('justSignedIn', 'true')
+      
       // Success - show loading transition then redirect
       setShowLoadingTransition(true)
     } catch (error) {
@@ -123,6 +118,10 @@ function SignInPage() {
         rememberMe: formData.rememberMe
       })
       
+      // Set session flag BEFORE showing loading transition
+      sessionStorage.setItem('sessionActive', 'true')
+      sessionStorage.setItem('justSignedIn', 'true')
+      
       // Success - show loading transition then redirect
       setShow2FAModal(false)
       setShowLoadingTransition(true)
@@ -138,10 +137,7 @@ function SignInPage() {
   }
 
   const handleLoadingComplete = () => {
-    // Mark session as active and that user just signed in
-    sessionStorage.setItem('sessionActive', 'true')
-    sessionStorage.setItem('justSignedIn', 'true')
-    
+    // Session flags already set in handleSubmit/handle2FAVerify
     // Get redirect destination or default to dashboard
     const redirectTo = sessionStorage.getItem('redirectAfterLogin') || '/dashboard'
     sessionStorage.removeItem('redirectAfterLogin')
