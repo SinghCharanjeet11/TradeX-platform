@@ -5,6 +5,7 @@ import Header from '../components/Header'
 import FormInput from '../components/FormInput'
 import Button from '../components/Button'
 import AuthLoadingTransition from '../components/AuthLoadingTransition'
+import GitHubLink from '../components/GitHubLink'
 import styles from './RegisterPage.module.css'
 
 function RegisterPage() {
@@ -227,6 +228,8 @@ function RegisterPage() {
           </div>
         </div>
       </div>
+
+      <GitHubLink />
     </div>
   )
 }

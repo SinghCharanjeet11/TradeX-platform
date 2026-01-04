@@ -6,6 +6,7 @@ import FormInput from '../components/FormInput'
 import Button from '../components/Button'
 import AuthLoadingTransition from '../components/AuthLoadingTransition'
 import TwoFactorModal from '../components/auth/TwoFactorModal'
+import GitHubLink from '../components/GitHubLink'
 import styles from './SignInPage.module.css'
 
 function SignInPage() {
@@ -282,6 +283,8 @@ function SignInPage() {
         onVerify={handle2FAVerify}
         loading={twoFactorLoading}
       />
+
+      <GitHubLink />
     </div>
   )
 }
