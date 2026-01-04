@@ -40,8 +40,11 @@ function SignInPage() {
   // Redirect to dashboard if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      console.log('[SignInPage] User is authenticated, redirecting to dashboard')
-      navigate('/dashboard')
+      // Check if there's a stored redirect destination
+      const redirectTo = sessionStorage.getItem('redirectAfterLogin') || '/dashboard'
+      sessionStorage.removeItem('redirectAfterLogin')
+      console.log('[SignInPage] User is authenticated, redirecting to', redirectTo)
+      navigate(redirectTo)
     }
   }, [isAuthenticated, navigate])
 
@@ -134,7 +137,14 @@ function SignInPage() {
   }
 
   const handleLoadingComplete = () => {
-    navigate('/dashboard')
+    // Mark session as active and that user just signed in
+    sessionStorage.setItem('sessionActive', 'true')
+    sessionStorage.setItem('justSignedIn', 'true')
+    
+    // Get redirect destination or default to dashboard
+    const redirectTo = sessionStorage.getItem('redirectAfterLogin') || '/dashboard'
+    sessionStorage.removeItem('redirectAfterLogin')
+    navigate(redirectTo)
   }
 
   const getApiUrl = () => {

@@ -53,6 +53,9 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setUser(null)
       setIsAuthenticated(false)
+      // Clear session flags so user must sign in again
+      sessionStorage.removeItem('sessionActive')
+      sessionStorage.removeItem('justSignedIn')
     }
   }
 
