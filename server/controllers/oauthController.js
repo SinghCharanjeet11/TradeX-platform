@@ -80,9 +80,15 @@ export const handleGoogleCallback = async (req, res) => {
   try {
     const { code, state } = req.query
     
+    console.log('[OAuth] Google callback received')
+    console.log('[OAuth] State:', state ? 'present' : 'missing')
+    console.log('[OAuth] Code:', code ? 'present' : 'missing')
+    console.log('[OAuth] FRONTEND_URL:', process.env.FRONTEND_URL)
+    
     // Verify state token
     const storedState = stateStore.get(state)
     if (!storedState || storedState.expiresAt < Date.now()) {
+      console.log('[OAuth] Invalid or expired state token')
       return res.redirect(`${process.env.FRONTEND_URL}/signin?error=invalid_state`)
     }
     
@@ -90,10 +96,14 @@ export const handleGoogleCallback = async (req, res) => {
     stateStore.delete(state)
     
     // Exchange code for tokens
+    console.log('[OAuth] Exchanging code for tokens...')
     const tokens = await getGoogleTokens(code)
+    console.log('[OAuth] Tokens received successfully')
     
     // Get user info
+    console.log('[OAuth] Getting user info...')
     const userInfo = await getGoogleUserInfo(tokens.access_token)
+    console.log('[OAuth] User info received:', userInfo.email)
     
     // Check if OAuth account exists
     let oauthAccount = await findOAuthAccount('google', userInfo.providerId)
@@ -103,6 +113,7 @@ export const handleGoogleCallback = async (req, res) => {
       // Update tokens
       await updateOAuthTokens('google', userInfo.providerId, tokens.access_token, tokens.refresh_token)
       user = oauthAccount
+      console.log('[OAuth] Existing OAuth account found, tokens updated')
     } else {
       // Check if user exists with this email
       user = await findUserByEmail(userInfo.email)
@@ -116,6 +127,7 @@ export const handleGoogleCallback = async (req, res) => {
           fullName: userInfo.name,
           emailVerified: userInfo.emailVerified
         })
+        console.log('[OAuth] New user created:', user.id)
       }
       
       // Create OAuth account
@@ -127,6 +139,7 @@ export const handleGoogleCallback = async (req, res) => {
         tokens.refresh_token,
         userInfo
       )
+      console.log('[OAuth] OAuth account linked')
     }
     
     // Create session
@@ -147,6 +160,7 @@ export const handleGoogleCallback = async (req, res) => {
       ipAddress,
       userAgent
     })
+    console.log('[OAuth] Session created')
     
     // Update last login
     await updateLastLogin(user.id)
@@ -159,11 +173,13 @@ export const handleGoogleCallback = async (req, res) => {
       sameSite: isProduction ? 'none' : 'strict', // 'none' allows cross-domain cookies
       maxAge: 24 * 60 * 60 * 1000
     })
+    console.log('[OAuth] Cookie set, redirecting to:', `${process.env.FRONTEND_URL}/dashboard`)
     
     // Redirect to dashboard
     res.redirect(`${process.env.FRONTEND_URL}/dashboard`)
   } catch (error) {
     console.error('[OAuth] Error handling Google callback:', error)
+    console.error('[OAuth] Error stack:', error.stack)
     res.redirect(`${process.env.FRONTEND_URL}/signin?error=auth_failed`)
   }
 }

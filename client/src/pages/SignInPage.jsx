@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import Header from '../components/Header'
 import FormInput from '../components/FormInput'
@@ -10,7 +10,8 @@ import styles from './SignInPage.module.css'
 
 function SignInPage() {
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const [searchParams] = useSearchParams()
+  const { login, isAuthenticated, checkAuth } = useAuth()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -21,6 +22,33 @@ function SignInPage() {
   const [showLoadingTransition, setShowLoadingTransition] = useState(false)
   const [show2FAModal, setShow2FAModal] = useState(false)
   const [twoFactorLoading, setTwoFactorLoading] = useState(false)
+  const [oauthError, setOauthError] = useState(null)
+
+  // Check for OAuth errors in URL and handle OAuth redirect
+  useEffect(() => {
+    const error = searchParams.get('error')
+    if (error) {
+      const errorMessages = {
+        'invalid_state': 'Authentication session expired. Please try again.',
+        'auth_failed': 'Authentication failed. Please try again.',
+        'access_denied': 'Access was denied. Please try again.'
+      }
+      setOauthError(errorMessages[error] || 'Authentication failed. Please try again.')
+    }
+    
+    // Check if user is already authenticated (e.g., after OAuth redirect)
+    const checkOAuthLogin = async () => {
+      try {
+        await checkAuth()
+        if (isAuthenticated) {
+          navigate('/dashboard')
+        }
+      } catch (e) {
+        // Not authenticated, stay on sign in page
+      }
+    }
+    checkOAuthLogin()
+  }, [searchParams, checkAuth, isAuthenticated, navigate])
 
   const validateEmail = (value) => {
     if (!value) return 'Email is required'
@@ -161,6 +189,12 @@ function SignInPage() {
         <div className={styles.leftSection}>
           <div className={styles.formContainer}>
             <h2 className={styles.formTitle}>Sign In</h2>
+            
+            {oauthError && (
+              <div className={styles.errorBanner}>
+                {oauthError}
+              </div>
+            )}
             
             <form onSubmit={handleSubmit}>
               <FormInput
