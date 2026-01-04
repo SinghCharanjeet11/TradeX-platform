@@ -15,11 +15,11 @@ export const getPerformanceData = async (req, res) => {
     const { timeRange = '30D' } = req.query;
 
     // Validate time range - support both old and new formats
-    const validRanges = ['1D', '5D', '7D', '1M', '30D', '6M', '90D', 'YTD', '1Y', 'MAX', 'ALL'];
+    const validRanges = ['1D', '5D', '7D', '1M', '30D', '6M', '90D', 'YTD', '1Y', '5Y', 'MAX', 'ALL'];
     if (!validRanges.includes(timeRange)) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid time range. Must be one of: 1D, 5D, 7D, 1M, 30D, 6M, 90D, YTD, 1Y, MAX, ALL'
+        error: 'Invalid time range. Must be one of: 1D, 5D, 7D, 1M, 30D, 6M, 90D, YTD, 1Y, 5Y, MAX, ALL'
       });
     }
     
@@ -34,6 +34,7 @@ export const getPerformanceData = async (req, res) => {
       '90D': '90D',
       'YTD': '1Y',   // Map YTD to 1Y
       '1Y': '1Y',
+      '5Y': 'ALL',   // Map 5Y to ALL (max available data)
       'MAX': 'ALL',  // Map MAX to ALL
       'ALL': 'ALL'
     };
