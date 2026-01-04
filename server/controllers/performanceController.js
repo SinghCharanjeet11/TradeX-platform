@@ -14,21 +14,37 @@ export const getPerformanceData = async (req, res) => {
     const userId = req.user.id;
     const { timeRange = '30D' } = req.query;
 
-    // Validate time range
-    const validRanges = ['7D', '30D', '90D', '1Y', 'ALL'];
+    // Validate time range - support both old and new formats
+    const validRanges = ['1D', '5D', '7D', '1M', '30D', '6M', '90D', 'YTD', '1Y', 'MAX', 'ALL'];
     if (!validRanges.includes(timeRange)) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid time range. Must be one of: 7D, 30D, 90D, 1Y, ALL'
+        error: 'Invalid time range. Must be one of: 1D, 5D, 7D, 1M, 30D, 6M, 90D, YTD, 1Y, MAX, ALL'
       });
     }
+    
+    // Map frontend time ranges to backend equivalents
+    const rangeMapping = {
+      '1D': '1D',
+      '5D': '7D',    // Map 5D to 7D
+      '7D': '7D',
+      '1M': '30D',   // Map 1M to 30D
+      '30D': '30D',
+      '6M': '90D',   // Map 6M to 90D (closest)
+      '90D': '90D',
+      'YTD': '1Y',   // Map YTD to 1Y
+      '1Y': '1Y',
+      'MAX': 'ALL',  // Map MAX to ALL
+      'ALL': 'ALL'
+    };
+    const mappedRange = rangeMapping[timeRange] || timeRange;
 
-    const performanceData = await performanceService.getPerformanceData(userId, timeRange);
+    const performanceData = await performanceService.getPerformanceData(userId, mappedRange);
 
     res.json({
       success: true,
       data: {
-        timeRange,
+        timeRange,  // Return original requested range
         dataPoints: performanceData,
         count: performanceData.length
       }

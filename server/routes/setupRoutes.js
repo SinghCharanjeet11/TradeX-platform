@@ -139,4 +139,24 @@ router.get('/database-status', async (req, res) => {
   }
 });
 
+// API configuration diagnostic endpoint
+router.get('/api-config-status', (req, res) => {
+  const coingeckoKey = process.env.COINGECKO_API_KEY;
+  const isProKey = coingeckoKey && coingeckoKey.startsWith('CG-');
+  
+  res.json({
+    success: true,
+    config: {
+      coingecko: {
+        hasApiKey: !!coingeckoKey,
+        keyType: coingeckoKey ? (isProKey ? 'Pro' : 'Demo') : 'None',
+        keyPrefix: coingeckoKey ? coingeckoKey.substring(0, 5) + '...' : 'N/A',
+        baseUrl: isProKey ? 'https://pro-api.coingecko.com/api/v3' : 'https://api.coingecko.com/api/v3'
+      },
+      environment: process.env.NODE_ENV,
+      frontendUrl: process.env.FRONTEND_URL
+    }
+  });
+});
+
 export default router;

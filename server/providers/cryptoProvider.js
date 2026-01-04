@@ -21,8 +21,13 @@ class CryptoProvider {
     this.lastRequestTime = 0;
     this.minRequestInterval = this.apiKey ? 500 : 1500; // Faster with API key
     
-    console.log(`[CryptoProvider] Initialized with ${this.apiKey ? (this.isProKey ? 'Pro' : 'Demo') + ' API key' : 'no API key'}`);
-    console.log(`[CryptoProvider] Using base URL: ${this.baseUrl}`);
+    // Enhanced logging for debugging
+    console.log(`[CryptoProvider] ========================================`);
+    console.log(`[CryptoProvider] API Key present: ${!!this.apiKey}`);
+    console.log(`[CryptoProvider] API Key type: ${this.apiKey ? (this.isProKey ? 'Pro (CG-)' : 'Demo') : 'None'}`);
+    console.log(`[CryptoProvider] API Key prefix: ${this.apiKey ? this.apiKey.substring(0, 5) + '...' : 'N/A'}`);
+    console.log(`[CryptoProvider] Base URL: ${this.baseUrl}`);
+    console.log(`[CryptoProvider] ========================================`);
   }
 
   /**
