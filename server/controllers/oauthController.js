@@ -177,10 +177,10 @@ export const handleGoogleCallback = async (req, res) => {
       sameSite: isProduction ? 'none' : 'strict', // 'none' allows cross-domain cookies
       maxAge: 24 * 60 * 60 * 1000
     })
-    console.log('[OAuth] Cookie set, redirecting to:', `${process.env.FRONTEND_URL}/dashboard`)
+    console.log('[OAuth] Cookie set, redirecting to:', `${process.env.FRONTEND_URL}/dashboard?oauth=true`)
     
-    // Redirect to dashboard
-    res.redirect(`${process.env.FRONTEND_URL}/dashboard`)
+    // Redirect to dashboard with oauth flag so frontend can set session flags
+    res.redirect(`${process.env.FRONTEND_URL}/dashboard?oauth=true`)
   } catch (error) {
     console.error('[OAuth] Error handling Google callback:', error)
     console.error('[OAuth] Error stack:', error.stack)
@@ -330,8 +330,8 @@ export const handleTwitterCallback = async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000
     })
     
-    // Redirect to dashboard
-    res.redirect(`${process.env.FRONTEND_URL}/dashboard`)
+    // Redirect to dashboard with oauth flag so frontend can set session flags
+    res.redirect(`${process.env.FRONTEND_URL}/dashboard?oauth=true`)
   } catch (error) {
     console.error('[OAuth] Error handling Twitter callback:', error)
     res.redirect(`${process.env.FRONTEND_URL}/signin?error=auth_failed`)

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { Navigate, useLocation } from 'react-router-dom'
+import { Navigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import Sidebar from '../dashboard/Sidebar'
 import LoadingScreen from '../LoadingScreen'
@@ -11,6 +11,7 @@ function AuthenticatedLayout({ children }) {
   const [sessionVerified, setSessionVerified] = useState(false)
   const { isAuthenticated, loading } = useAuth()
   const location = useLocation()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   useEffect(() => {
     // Check if user came from sign-in page (session was just verified)
@@ -19,7 +20,18 @@ function AuthenticatedLayout({ children }) {
       setSessionVerified(true)
       sessionStorage.removeItem('justSignedIn')
     }
-  }, [])
+    
+    // Check if user came from OAuth callback (has oauth=true query param)
+    const oauthParam = searchParams.get('oauth')
+    if (oauthParam === 'true') {
+      // Set session flags for OAuth login
+      sessionStorage.setItem('sessionActive', 'true')
+      setSessionVerified(true)
+      // Remove the oauth param from URL
+      searchParams.delete('oauth')
+      setSearchParams(searchParams, { replace: true })
+    }
+  }, [searchParams, setSearchParams])
 
   // Show loading screen while checking authentication
   if (loading) {

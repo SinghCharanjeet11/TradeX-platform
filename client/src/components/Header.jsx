@@ -12,6 +12,7 @@ function Header() {
   
   const isSignIn = location.pathname === '/signin'
   const isRegister = location.pathname === '/register'
+  const isAuthPage = isSignIn || isRegister || location.pathname === '/forgot-password' || location.pathname.startsWith('/reset-password')
   const userName = user?.username || 'User'
 
   // Close dropdown when clicking outside
@@ -59,7 +60,7 @@ function Header() {
         <span className={styles.logoText}>TradeX</span>
       </div>
       
-      {isAuthenticated ? (
+      {isAuthenticated && !isAuthPage ? (
         <div className={styles.rightSection}>
           {/* Notification Button */}
           <button className={styles.iconBtn} title="Notifications">

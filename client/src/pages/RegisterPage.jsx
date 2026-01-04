@@ -89,6 +89,9 @@ function RegisterPage() {
   }
 
   const handleLoadingComplete = () => {
+    // Mark session as active and that user just signed in
+    sessionStorage.setItem('sessionActive', 'true')
+    sessionStorage.setItem('justSignedIn', 'true')
     navigate('/dashboard')
   }
 
