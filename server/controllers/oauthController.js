@@ -151,11 +151,12 @@ export const handleGoogleCallback = async (req, res) => {
     // Update last login
     await updateLastLogin(user.id)
     
-    // Set cookie
+    // Set cookie - use 'none' for cross-domain OAuth redirects in production
+    const isProduction = process.env.NODE_ENV === 'production'
     res.cookie('session_token', sessionToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: isProduction, // Must be true when sameSite is 'none'
+      sameSite: isProduction ? 'none' : 'strict', // 'none' allows cross-domain cookies
       maxAge: 24 * 60 * 60 * 1000
     })
     
@@ -300,11 +301,12 @@ export const handleTwitterCallback = async (req, res) => {
     // Update last login
     await updateLastLogin(user.id)
     
-    // Set cookie
+    // Set cookie - use 'none' for cross-domain OAuth redirects in production
+    const isProductionTwitter = process.env.NODE_ENV === 'production'
     res.cookie('session_token', sessionToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: isProductionTwitter, // Must be true when sameSite is 'none'
+      sameSite: isProductionTwitter ? 'none' : 'strict', // 'none' allows cross-domain cookies
       maxAge: 24 * 60 * 60 * 1000
     })
     
