@@ -70,7 +70,9 @@ export const getMarketData = async (req, res) => {
  */
 export const getAssetDetails = async (req, res) => {
   try {
-    const { type, symbol } = req.params;
+    const { type } = req.params;
+    // Decode the symbol in case it contains URL-encoded characters (e.g., EUR%2FUSD for EUR/USD)
+    const symbol = decodeURIComponent(req.params.symbol);
 
     // Validate market type
     const validTypes = ['crypto', 'stocks', 'forex', 'commodities'];
@@ -123,7 +125,9 @@ export const getAssetDetails = async (req, res) => {
  */
 export const getMarketChart = async (req, res) => {
   try {
-    const { type, symbol } = req.params;
+    const { type } = req.params;
+    // Decode the symbol in case it contains URL-encoded characters (e.g., EUR%2FUSD for EUR/USD)
+    const symbol = decodeURIComponent(req.params.symbol);
     let days = req.query.days || '7';
     
     // Handle 'max' or convert to number

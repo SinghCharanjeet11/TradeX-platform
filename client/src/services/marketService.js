@@ -70,7 +70,9 @@ const marketService = {
    */
   getAssetDetails: async (type, symbol) => {
     try {
-      const response = await api.get(`/markets/${type}/${symbol}/details`);
+      // URL-encode the symbol to handle special characters like '/' in forex pairs (EUR/USD)
+      const encodedSymbol = encodeURIComponent(symbol);
+      const response = await api.get(`/markets/${type}/${encodedSymbol}/details`);
       return response.data;
     } catch (error) {
       console.error(`[MarketService] Error fetching asset details for ${symbol}:`, error);
@@ -87,7 +89,9 @@ const marketService = {
    */
   getChartData: async (type, symbol, days = 7) => {
     try {
-      const response = await api.get(`/markets/${type}/${symbol}/chart`, {
+      // URL-encode the symbol to handle special characters like '/' in forex pairs (EUR/USD)
+      const encodedSymbol = encodeURIComponent(symbol);
+      const response = await api.get(`/markets/${type}/${encodedSymbol}/chart`, {
         params: { days }
       });
       return response.data;
