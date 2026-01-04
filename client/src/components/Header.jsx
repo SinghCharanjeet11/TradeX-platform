@@ -1,17 +1,18 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useState, useRef, useEffect } from 'react'
+import { useAuth } from '../contexts/AuthContext'
 import styles from './Header.module.css'
 
 function Header() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { user, isAuthenticated, logout } = useAuth()
   const [showDropdown, setShowDropdown] = useState(false)
   const dropdownRef = useRef(null)
   
   const isSignIn = location.pathname === '/signin'
   const isRegister = location.pathname === '/register'
-  const isAuthenticated = localStorage.getItem('token')
-  const userName = localStorage.getItem('userName') || 'User'
+  const userName = user?.username || 'User'
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -25,10 +26,14 @@ function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const handleLogout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('userName')
-    navigate('/signin')
+  const handleLogout = async () => {
+    try {
+      await logout()
+      navigate('/signin', { replace: true })
+    } catch (error) {
+      console.error('Logout error:', error)
+      navigate('/signin', { replace: true })
+    }
     setShowDropdown(false)
   }
 

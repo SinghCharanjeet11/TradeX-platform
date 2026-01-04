@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MdPerson, MdSettings, MdEdit, MdLogout, MdSearch } from 'react-icons/md'
+import { useAuth } from '../../contexts/AuthContext'
 import AlertsDropdown from './AlertsDropdown'
 import AlertConfigurationModal from './AlertConfigurationModal'
 import AssetDetailModal from './AssetDetailModal'
@@ -12,6 +13,7 @@ import styles from './TopBar.module.css'
 
 function TopBar({ user, activeMarket, onMarketChange, additionalActions }) {
   const navigate = useNavigate()
+  const { logout } = useAuth()
   const [showDropdown, setShowDropdown] = useState(false)
   const [alerts, setAlerts] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
@@ -130,11 +132,12 @@ function TopBar({ user, activeMarket, onMarketChange, additionalActions }) {
 
   const handleLogout = async () => {
     try {
-      const { authAPI } = await import('../../services/api')
-      await authAPI.logout()
-      navigate('/signin')
+      await logout()
+      navigate('/signin', { replace: true })
     } catch (error) {
       console.error('Logout error:', error)
+      // Still navigate to signin even if logout API fails
+      navigate('/signin', { replace: true })
     }
     setShowDropdown(false)
   }

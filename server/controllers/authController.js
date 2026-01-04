@@ -233,7 +233,13 @@ export const logout = async (req, res) => {
       await deleteSession(tokenHash)
     }
 
-    res.clearCookie('session_token')
+    // Clear cookie with same options used when setting it
+    res.clearCookie('session_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+      path: '/'
+    })
 
     res.json({
       success: true,
