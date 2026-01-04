@@ -142,7 +142,8 @@ router.get('/database-status', async (req, res) => {
 // API configuration diagnostic endpoint
 router.get('/api-config-status', (req, res) => {
   const coingeckoKey = process.env.COINGECKO_API_KEY;
-  const isProKey = coingeckoKey && coingeckoKey.startsWith('CG-');
+  // Pro API is only used if explicitly enabled via COINGECKO_USE_PRO_API=true
+  const isProKey = process.env.COINGECKO_USE_PRO_API === 'true';
   
   res.json({
     success: true,
@@ -163,7 +164,8 @@ router.get('/api-config-status', (req, res) => {
 router.get('/test-coingecko', async (req, res) => {
   const axios = (await import('axios')).default;
   const coingeckoKey = process.env.COINGECKO_API_KEY;
-  const isProKey = coingeckoKey && coingeckoKey.startsWith('CG-');
+  // Pro API is only used if explicitly enabled via COINGECKO_USE_PRO_API=true
+  const isProKey = process.env.COINGECKO_USE_PRO_API === 'true';
   const baseUrl = isProKey ? 'https://pro-api.coingecko.com/api/v3' : 'https://api.coingecko.com/api/v3';
   
   try {
@@ -182,6 +184,7 @@ router.get('/test-coingecko', async (req, res) => {
     
     console.log('[TestCoinGecko] Testing API with headers:', Object.keys(headers));
     console.log('[TestCoinGecko] Base URL:', baseUrl);
+    console.log('[TestCoinGecko] Key type:', isProKey ? 'Pro' : 'Demo');
     
     const response = await axios.get(`${baseUrl}/coins/markets`, {
       params: {
@@ -198,6 +201,8 @@ router.get('/test-coingecko', async (req, res) => {
     res.json({
       success: true,
       message: 'CoinGecko API working!',
+      keyType: isProKey ? 'Pro' : 'Demo',
+      baseUrl: baseUrl,
       dataCount: response.data.length,
       sampleData: response.data.slice(0, 2).map(c => ({
         id: c.id,
@@ -212,7 +217,9 @@ router.get('/test-coingecko', async (req, res) => {
       success: false,
       error: error.message,
       status: error.response?.status,
-      data: error.response?.data
+      data: error.response?.data,
+      keyType: isProKey ? 'Pro' : 'Demo',
+      baseUrl: baseUrl
     });
   }
 });

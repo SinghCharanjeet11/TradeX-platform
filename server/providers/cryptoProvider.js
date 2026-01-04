@@ -9,13 +9,14 @@ import { apiConfig } from '../config/apiConfig.js';
 class CryptoProvider {
   constructor() {
     this.apiKey = process.env.COINGECKO_API_KEY;
-    // Check if it's a Pro API key (starts with 'CG-') or Demo key
-    this.isProKey = this.apiKey && this.apiKey.startsWith('CG-');
+    // Check if Pro API is explicitly enabled via environment variable
+    // Default to Demo API since most keys are Demo keys
+    this.isProKey = process.env.COINGECKO_USE_PRO_API === 'true';
     
-    // Use Pro API only for Pro keys, Demo keys use the regular API
+    // Use Pro API only if explicitly configured, otherwise use Demo/Free API
     this.baseUrl = this.isProKey 
       ? 'https://pro-api.coingecko.com/api/v3'
-      : (apiConfig.coingecko.baseUrl || 'https://api.coingecko.com/api/v3');
+      : 'https://api.coingecko.com/api/v3';
     this.timeout = apiConfig.coingecko.timeout;
     this.retryConfig = apiConfig.retry;
     this.lastRequestTime = 0;
@@ -24,7 +25,7 @@ class CryptoProvider {
     // Enhanced logging for debugging
     console.log(`[CryptoProvider] ========================================`);
     console.log(`[CryptoProvider] API Key present: ${!!this.apiKey}`);
-    console.log(`[CryptoProvider] API Key type: ${this.apiKey ? (this.isProKey ? 'Pro (CG-)' : 'Demo') : 'None'}`);
+    console.log(`[CryptoProvider] API Key type: ${this.isProKey ? 'Pro' : 'Demo/Free'}`);
     console.log(`[CryptoProvider] API Key prefix: ${this.apiKey ? this.apiKey.substring(0, 5) + '...' : 'N/A'}`);
     console.log(`[CryptoProvider] Base URL: ${this.baseUrl}`);
     console.log(`[CryptoProvider] ========================================`);
