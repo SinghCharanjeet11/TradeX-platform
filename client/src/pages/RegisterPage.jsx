@@ -92,16 +92,27 @@ function RegisterPage() {
     navigate('/dashboard')
   }
 
+  const getApiUrl = () => {
+    if (import.meta.env.VITE_API_URL) {
+      return import.meta.env.VITE_API_URL
+    }
+    if (window.location.hostname === 'tradex-platform.onrender.com') {
+      return 'https://tradex-api-zsyj.onrender.com'
+    }
+    return 'http://localhost:5000'
+  }
+
   const handleGoogleLogin = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/oauth/google`)
+      const apiUrl = getApiUrl()
+      const response = await fetch(`${apiUrl}/api/auth/oauth/google`)
       const data = await response.json()
       
       if (data.success && data.authUrl) {
         // Redirect to Google OAuth
         window.location.href = data.authUrl
       } else {
-        alert('Failed to initiate Google login')
+        alert(data.error || 'Failed to initiate Google login')
       }
     } catch (error) {
       console.error('Google login error:', error)
