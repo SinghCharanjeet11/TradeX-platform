@@ -159,4 +159,62 @@ router.get('/api-config-status', (req, res) => {
   });
 });
 
+// Test CoinGecko API directly
+router.get('/test-coingecko', async (req, res) => {
+  const axios = (await import('axios')).default;
+  const coingeckoKey = process.env.COINGECKO_API_KEY;
+  const isProKey = coingeckoKey && coingeckoKey.startsWith('CG-');
+  const baseUrl = isProKey ? 'https://pro-api.coingecko.com/api/v3' : 'https://api.coingecko.com/api/v3';
+  
+  try {
+    const headers = {
+      'Accept': 'application/json',
+      'User-Agent': 'TradeX-Platform/1.0'
+    };
+    
+    if (coingeckoKey) {
+      if (isProKey) {
+        headers['x-cg-pro-api-key'] = coingeckoKey;
+      } else {
+        headers['x-cg-demo-api-key'] = coingeckoKey;
+      }
+    }
+    
+    console.log('[TestCoinGecko] Testing API with headers:', Object.keys(headers));
+    console.log('[TestCoinGecko] Base URL:', baseUrl);
+    
+    const response = await axios.get(`${baseUrl}/coins/markets`, {
+      params: {
+        vs_currency: 'usd',
+        order: 'market_cap_desc',
+        per_page: 5,
+        page: 1,
+        sparkline: false
+      },
+      headers,
+      timeout: 10000
+    });
+    
+    res.json({
+      success: true,
+      message: 'CoinGecko API working!',
+      dataCount: response.data.length,
+      sampleData: response.data.slice(0, 2).map(c => ({
+        id: c.id,
+        symbol: c.symbol,
+        name: c.name,
+        price: c.current_price
+      }))
+    });
+  } catch (error) {
+    console.error('[TestCoinGecko] Error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      status: error.response?.status,
+      data: error.response?.data
+    });
+  }
+});
+
 export default router;
