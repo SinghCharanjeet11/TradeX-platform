@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { MdDevices, MdLocationOn, MdAccessTime, MdDelete, MdComputer, MdPhoneAndroid, MdTablet, MdCheckCircle } from 'react-icons/md'
+import api from '../../services/api'
 import styles from './SessionList.module.css'
 
 function SessionList() {
@@ -14,19 +15,8 @@ function SessionList() {
 
   const fetchSessions = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch('/api/sessions', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch sessions')
-      }
-      
-      const data = await response.json()
-      setSessions(data.sessions || [])
+      const response = await api.get('/sessions')
+      setSessions(response.data.sessions || [])
     } catch (error) {
       console.error('Error fetching sessions:', error)
       setError('Failed to load sessions')
@@ -44,17 +34,7 @@ function SessionList() {
     setError('')
     
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch(`/api/sessions/${sessionId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to terminate session')
-      }
+      await api.delete(`/sessions/${sessionId}`)
       
       // Remove session from list
       setSessions(prev => prev.filter(s => s.id !== sessionId))
@@ -75,24 +55,12 @@ function SessionList() {
     setError('')
     
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch('/api/sessions/others/all', {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to terminate sessions')
-      }
-      
-      const data = await response.json()
+      const response = await api.delete('/sessions/others/all')
       
       // Refresh sessions list
       await fetchSessions()
       
-      setError(`Successfully terminated ${data.terminatedCount} session(s)`)
+      setError(`Successfully terminated ${response.data.terminatedCount} session(s)`)
       setTimeout(() => setError(''), 3000)
     } catch (error) {
       console.error('Error terminating sessions:', error)

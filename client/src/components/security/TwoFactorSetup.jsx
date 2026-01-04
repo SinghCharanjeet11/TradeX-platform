@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import api from '../../services/api'
 import styles from './TwoFactorSetup.module.css'
 
 function TwoFactorSetup() {
@@ -18,19 +19,10 @@ function TwoFactorSetup() {
 
   const checkTwoFactorStatus = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch('/api/auth/2fa/status', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      
-      if (response.ok) {
-        const result = await response.json()
-        // Handle nested data structure from API
-        const data = result.data || result
-        setIsEnabled(data.enabled || false)
-      }
+      const response = await api.get('/auth/2fa/status')
+      // Handle nested data structure from API
+      const data = response.data.data || response.data
+      setIsEnabled(data.enabled || false)
     } catch (error) {
       console.error('Error checking 2FA status:', error)
     }
@@ -41,26 +33,13 @@ function TwoFactorSetup() {
     setError('')
     
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch('/api/auth/2fa/setup', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to generate QR code')
-      }
-      
-      const result = await response.json()
+      const response = await api.post('/auth/2fa/setup')
       // Handle nested data structure from API
-      const data = result.data || result
+      const data = response.data.data || response.data
       setSecret(data.manualEntryKey || data.secret)
       setQrCodeUrl(data.qrCode)
     } catch (error) {
-      setError(error.message)
+      setError(error.message || 'Failed to generate QR code')
     } finally {
       setLoading(false)
     }
@@ -76,32 +55,15 @@ function TwoFactorSetup() {
     setError('')
     
     try {
-      const token = localStorage.getItem('token')
       console.log('[2FA] Enabling 2FA with code:', verificationCode)
       
-      const response = await fetch('/api/auth/2fa/enable', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          token: verificationCode
-        })
+      const response = await api.post('/auth/2fa/enable', {
+        token: verificationCode
       })
       
-      console.log('[2FA] Response status:', response.status)
+      console.log('[2FA] Success! Backup codes received:', response.data.backupCodes?.length)
       
-      if (!response.ok) {
-        const errorData = await response.json()
-        console.error('[2FA] Error response:', errorData)
-        throw new Error(errorData.error || 'Failed to enable 2FA. Please try again.')
-      }
-      
-      const data = await response.json()
-      console.log('[2FA] Success! Backup codes received:', data.backupCodes?.length)
-      
-      setBackupCodes(data.backupCodes)
+      setBackupCodes(response.data.backupCodes)
       setIsEnabled(true)
       setShowBackupCodes(true)
       setSuccess('Two-factor authentication enabled successfully!')
@@ -110,7 +72,7 @@ function TwoFactorSetup() {
       setVerificationCode('')
     } catch (error) {
       console.error('[2FA] Enable error:', error)
-      setError(error.message)
+      setError(error.message || 'Failed to enable 2FA. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -125,24 +87,14 @@ function TwoFactorSetup() {
     setError('')
     
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch('/api/auth/2fa/disable', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to disable two-factor authentication')
-      }
+      await api.post('/auth/2fa/disable')
       
       setIsEnabled(false)
       setBackupCodes([])
       setShowBackupCodes(false)
       setSuccess('Two-factor authentication disabled successfully!')
     } catch (error) {
-      setError(error.message)
+      setError(error.message || 'Failed to disable two-factor authentication')
     } finally {
       setLoading(false)
     }
@@ -157,24 +109,13 @@ function TwoFactorSetup() {
     setError('')
     
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch('/api/auth/2fa/backup-codes/regenerate', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const response = await api.post('/auth/2fa/backup-codes/regenerate')
       
-      if (!response.ok) {
-        throw new Error('Failed to regenerate backup codes')
-      }
-      
-      const data = await response.json()
-      setBackupCodes(data.backupCodes)
+      setBackupCodes(response.data.backupCodes)
       setShowBackupCodes(true)
       setSuccess('Backup codes regenerated successfully!')
     } catch (error) {
-      setError(error.message)
+      setError(error.message || 'Failed to regenerate backup codes')
     } finally {
       setLoading(false)
     }
