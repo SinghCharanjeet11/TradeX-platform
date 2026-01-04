@@ -8,7 +8,8 @@ import styles from './AuthenticatedLayout.module.css'
 
 function AuthenticatedLayout({ children }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const { isAuthenticated, loading } = useAuth()
+  const [oauthProcessing, setOauthProcessing] = useState(false)
+  const { isAuthenticated, loading, checkAuth } = useAuth()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -32,15 +33,23 @@ function AuthenticatedLayout({ children }) {
     
     // Handle OAuth redirect - set session flags and clean URL
     if (isOAuthRedirect) {
+      console.log('[AuthenticatedLayout] OAuth redirect detected, setting session flags')
       sessionStorage.setItem('sessionActive', 'true')
+      setOauthProcessing(true)
+      
       // Remove the oauth param from URL
       searchParams.delete('oauth')
       setSearchParams(searchParams, { replace: true })
+      
+      // Re-check auth after OAuth redirect (cookie should be set now)
+      checkAuth().finally(() => {
+        setOauthProcessing(false)
+      })
     }
-  }, [isOAuthRedirect, searchParams, setSearchParams])
+  }, [isOAuthRedirect, searchParams, setSearchParams, checkAuth])
 
-  // Show loading screen while checking authentication
-  if (loading) {
+  // Show loading screen while checking authentication or processing OAuth
+  if (loading || oauthProcessing) {
     return <LoadingScreen />
   }
 
@@ -53,6 +62,7 @@ function AuthenticatedLayout({ children }) {
   // Always require fresh sign-in when accessing protected routes directly
   // Unless user just signed in during this browser session or came from OAuth
   if (!sessionAllowed) {
+    console.log('[AuthenticatedLayout] No active session, redirecting to signin')
     // Store the intended destination
     sessionStorage.setItem('redirectAfterLogin', location.pathname)
     return <Navigate to="/signin" replace />
@@ -60,6 +70,7 @@ function AuthenticatedLayout({ children }) {
 
   // Redirect to sign-in if not authenticated
   if (!isAuthenticated) {
+    console.log('[AuthenticatedLayout] Not authenticated, redirecting to signin')
     sessionStorage.setItem('redirectAfterLogin', location.pathname)
     return <Navigate to="/signin" replace />
   }
