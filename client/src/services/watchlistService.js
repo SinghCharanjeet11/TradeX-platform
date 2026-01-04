@@ -42,7 +42,9 @@ class WatchlistService {
 
   async isInWatchlist(symbol, assetType) {
     try {
-      const response = await api.get(`/watchlist/check/${symbol}/${assetType}`)
+      // URL-encode the symbol to handle special characters like '/' in forex pairs (EUR/USD)
+      const encodedSymbol = encodeURIComponent(symbol)
+      const response = await api.get(`/watchlist/check/${encodedSymbol}/${assetType}`)
       return response.data
     } catch (error) {
       console.error('[WatchlistService] Error checking watchlist:', error)

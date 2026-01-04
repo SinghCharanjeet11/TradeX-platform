@@ -110,7 +110,9 @@ export const removeFromWatchlist = async (req, res) => {
 export const checkWatchlist = async (req, res) => {
   try {
     const userId = req.user.id
-    const { symbol, assetType } = req.params
+    // Decode the symbol in case it contains URL-encoded characters (e.g., EUR%2FUSD for EUR/USD)
+    const symbol = decodeURIComponent(req.params.symbol)
+    const { assetType } = req.params
 
     const isInWatchlist = await watchlistService.isInWatchlist(userId, symbol, assetType)
 
