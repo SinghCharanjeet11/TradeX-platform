@@ -413,8 +413,18 @@
     left: 260px;
   }
   
+  .searchWrapper {
+    width: 180px;
+    margin-left: -100px;
+  }
+  
   .marketTabs {
-    display: none;
+    margin-left: 20px;
+  }
+  
+  .marketTab {
+    padding: 8px 14px;
+    font-size: 13px;
   }
 }
 
@@ -427,7 +437,35 @@
   }
   
   .centerSection {
+    flex: 1;
+    flex-direction: column;
+    gap: 8px;
+    margin-left: 0;
+  }
+  
+  .searchWrapper {
     display: none;
+  }
+  
+  .marketTabs {
+    display: flex;
+    gap: 4px;
+    margin-left: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .marketTabs::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .marketTab {
+    padding: 6px 12px;
+    font-size: 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   
   .userBtn span {
@@ -437,6 +475,7 @@
   .actions {
     gap: 8px;
     margin-left: auto;
+    flex-shrink: 0;
   }
   
   .iconBtn {
@@ -454,6 +493,16 @@
   .topBar {
     padding: 10px 12px;
     left: 64px;
+  }
+  
+  .marketTabs {
+    gap: 2px;
+  }
+  
+  .marketTab {
+    padding: 5px 10px;
+    font-size: 11px;
+    border-radius: 16px;
   }
   
   .iconBtn {
