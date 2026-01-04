@@ -12,8 +12,10 @@ const insightsService = {
   async getPredictions(symbol, assetType, timeHorizons = ['24h', '7d', '30d']) {
     try {
       const horizonsParam = timeHorizons.join(',');
+      // URL encode symbol to handle forex pairs like EUR/USD
+      const encodedSymbol = encodeURIComponent(symbol);
       const response = await api.get(
-        `/insights/predictions/${symbol}?assetType=${assetType}&timeHorizons=${horizonsParam}`
+        `/insights/predictions/${encodedSymbol}?assetType=${assetType}&timeHorizons=${horizonsParam}`
       );
       // Fix: API returns response.data.data
       const data = response.data?.data || response.data;
@@ -42,8 +44,10 @@ const insightsService = {
    */
   async getSentiment(symbol, hoursBack = 48) {
     try {
+      // URL encode symbol to handle forex pairs like EUR/USD
+      const encodedSymbol = encodeURIComponent(symbol);
       const response = await api.get(
-        `/insights/sentiment/${symbol}?hoursBack=${hoursBack}`
+        `/insights/sentiment/${encodedSymbol}?hoursBack=${hoursBack}`
       );
       // Fix: API returns response.data.data
       return response.data?.data || response.data;
@@ -67,8 +71,10 @@ const insightsService = {
    */
   async getSignals(symbol, assetType) {
     try {
+      // URL encode symbol to handle forex pairs like EUR/USD
+      const encodedSymbol = encodeURIComponent(symbol);
       const response = await api.get(
-        `/insights/signals/${symbol}?assetType=${assetType}`
+        `/insights/signals/${encodedSymbol}?assetType=${assetType}`
       );
       // Fix: API returns response.data.data
       const data = response.data?.data || response.data;
@@ -100,8 +106,10 @@ const insightsService = {
    */
   async getTechnicalIndicators(symbol, assetType) {
     try {
+      // URL encode symbol to handle forex pairs like EUR/USD
+      const encodedSymbol = encodeURIComponent(symbol);
       const response = await api.get(
-        `/insights/technical/${symbol}?assetType=${assetType}`
+        `/insights/technical/${encodedSymbol}?assetType=${assetType}`
       );
       // Fix: API returns response.data.data
       const data = response.data?.data || response.data;
