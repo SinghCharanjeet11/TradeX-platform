@@ -37,6 +37,10 @@ const codeVerifierStore = new Map()
 export const initiateGoogleAuth = async (req, res) => {
   try {
     console.log('[OAuth] Initiating Google OAuth flow...')
+    console.log('[OAuth] GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'set' : 'NOT SET')
+    console.log('[OAuth] GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? 'set' : 'NOT SET')
+    console.log('[OAuth] GOOGLE_REDIRECT_URI:', process.env.GOOGLE_REDIRECT_URI)
+    console.log('[OAuth] FRONTEND_URL:', process.env.FRONTEND_URL)
     
     // Check if credentials are configured
     if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
@@ -57,7 +61,7 @@ export const initiateGoogleAuth = async (req, res) => {
     
     const authUrl = getGoogleAuthUrl(state)
     
-    console.log('[OAuth] Google OAuth URL generated successfully')
+    console.log('[OAuth] Google OAuth URL generated:', authUrl.substring(0, 100) + '...')
     
     res.json({
       success: true,
