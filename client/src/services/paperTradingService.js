@@ -128,6 +128,20 @@ const paperTradingService = {
       console.error('[PaperTradingService] Error getting performance history:', error);
       throw error;
     }
+  },
+
+  /**
+   * Get paper trading order history
+   * @param {string} account - Account type filter (default: 'paper')
+   */
+  async getOrders(account = 'paper') {
+    try {
+      const response = await api.get(`/paper-trading/orders?account=${account}`);
+      return response.data;
+    } catch (error) {
+      console.error('[PaperTradingService] Error getting orders:', error);
+      throw error;
+    }
   }
 };
 

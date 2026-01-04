@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import paperTradingService from '../../services/paperTradingService';
 import styles from './PaperTransactionHistory.module.css';
 
 function PaperTransactionHistory() {
@@ -17,14 +18,8 @@ function PaperTransactionHistory() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/paper-trading/orders', {
-        credentials: 'include'
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setOrders(data.orders || []);
-      }
+      const data = await paperTradingService.getOrders();
+      setOrders(data.orders || []);
     } catch (error) {
       console.error('Error fetching paper trading orders:', error);
     } finally {
