@@ -81,9 +81,22 @@ app.use((err, req, res, next) => {
 })
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`)
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`)
+  
+  // Run migrations automatically if DATABASE_URL is set
+  if (process.env.DATABASE_URL) {
+    try {
+      console.log('🔄 Running database migrations...')
+      const { runMigrations } = await import('./database/init.js')
+      await runMigrations()
+      console.log('✅ Database migrations completed')
+    } catch (error) {
+      console.error('❌ Migration error:', error)
+      // Don't crash the server, just log the error
+    }
+  }
   
   // Start scheduled jobs
   sessionCleanupJob.start()
