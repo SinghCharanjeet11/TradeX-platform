@@ -5,16 +5,34 @@ dotenv.config()
 
 const { Pool } = pg
 
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT) || 5432,
-  database: process.env.DB_NAME || 'tradex_auth',
-  user: process.env.DB_USER || 'postgres',
-  password: String(process.env.DB_PASSWORD || ''),
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-})
+// Support both DATABASE_URL (Render, Heroku, etc.) and individual DB_* variables (local dev)
+const poolConfig = process.env.DATABASE_URL
+  ? {
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 2000,
+    }
+  : {
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT) || 5432,
+      database: process.env.DB_NAME || 'tradex_auth',
+      user: process.env.DB_USER || 'postgres',
+      password: String(process.env.DB_PASSWORD || ''),
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 2000,
+    }
+
+const pool = new Pool(poolConfig)
+
+// Log connection type on startup
+if (process.env.DATABASE_URL) {
+  console.log('📊 Using DATABASE_URL for database connection (production mode)')
+} else {
+  console.log(`📊 Using individual DB config: ${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || 5432}/${process.env.DB_NAME || 'tradex_auth'}`)
+}
 
 pool.on('error', (err) => {
   console.error('Unexpected error on idle client', err)
