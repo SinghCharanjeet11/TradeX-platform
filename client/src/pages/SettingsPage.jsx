@@ -353,6 +353,42 @@ function SettingsPage() {
     }
   }
 
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      'Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently deleted.'
+    )
+    
+    if (!confirmed) return
+    
+    const doubleConfirm = window.confirm(
+      'This is your final warning. Type "DELETE" in the next prompt to confirm account deletion.'
+    )
+    
+    if (!doubleConfirm) return
+    
+    const userInput = window.prompt('Type DELETE to confirm account deletion:')
+    
+    if (userInput !== 'DELETE') {
+      setSaveMessage('Account deletion cancelled - confirmation text did not match')
+      setTimeout(() => setSaveMessage(''), 3000)
+      return
+    }
+    
+    try {
+      const { authAPI } = await import('../services/api')
+      await authAPI.deleteAccount()
+      
+      // Clear session and redirect to sign in
+      sessionStorage.clear()
+      localStorage.clear()
+      navigate('/signin', { replace: true })
+    } catch (error) {
+      console.error('Error deleting account:', error)
+      setSaveMessage(error.message || 'Error deleting account')
+      setTimeout(() => setSaveMessage(''), 3000)
+    }
+  }
+
   const handleDisconnectAccount = async (platform) => {
     try {
       const { authAPI } = await import('../services/api')
@@ -1089,6 +1125,7 @@ function SettingsPage() {
                     <h3>Danger Zone</h3>
                     <button 
                       className={styles.dangerBtn}
+                      onClick={handleDeleteAccount}
                       aria-label="Delete account"
                     >
                       Delete Account

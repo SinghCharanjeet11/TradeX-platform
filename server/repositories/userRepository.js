@@ -112,3 +112,33 @@ export const updateUserProfile = async (userId, { username, email, fullName, pho
   const result = await query(sql, [username, email, fullName, phone, bio, userId])
   return result.rowCount > 0
 }
+
+/**
+ * Delete user account and all related data
+ * @param {string} userId - User ID
+ * @returns {Promise<boolean>} Success status
+ */
+export const deleteUser = async (userId) => {
+  // Delete user - related data should cascade delete if foreign keys are set up
+  // If not, we delete related tables first
+  try {
+    // Delete related data first (in case cascade is not set up)
+    await query('DELETE FROM sessions WHERE user_id = $1', [userId])
+    await query('DELETE FROM reset_tokens WHERE user_id = $1', [userId])
+    await query('DELETE FROM connected_accounts WHERE user_id = $1', [userId])
+    await query('DELETE FROM watchlist WHERE user_id = $1', [userId])
+    await query('DELETE FROM holdings WHERE user_id = $1', [userId])
+    await query('DELETE FROM price_alerts WHERE user_id = $1', [userId])
+    await query('DELETE FROM bookmarks WHERE user_id = $1', [userId])
+    await query('DELETE FROM user_2fa WHERE user_id = $1', [userId])
+    await query('DELETE FROM backup_codes WHERE user_id = $1', [userId])
+    await query('DELETE FROM oauth_accounts WHERE user_id = $1', [userId])
+    
+    // Finally delete the user
+    const result = await query('DELETE FROM users WHERE id = $1', [userId])
+    return result.rowCount > 0
+  } catch (error) {
+    console.error('[UserRepository] Error deleting user:', error)
+    throw error
+  }
+}

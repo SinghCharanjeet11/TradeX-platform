@@ -290,4 +290,32 @@ router.post('/connected-accounts/:accountId/refresh', requireAuth, async (req, r
   }
 })
 
+// Delete account route
+router.delete('/account', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.id
+    
+    console.log(`[Auth] User ${userId} requested account deletion`)
+    
+    // Import user repository
+    const { default: userRepository } = await import('../repositories/userRepository.js')
+    
+    // Delete the user account (this should cascade delete related data)
+    await userRepository.deleteUser(userId)
+    
+    console.log(`[Auth] User ${userId} account deleted successfully`)
+    
+    res.json({
+      success: true,
+      message: 'Account deleted successfully'
+    })
+  } catch (error) {
+    console.error('[Auth] Error deleting account:', error)
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to delete account' 
+    })
+  }
+})
+
 export default router
