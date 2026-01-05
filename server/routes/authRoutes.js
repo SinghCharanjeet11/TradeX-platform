@@ -297,11 +297,11 @@ router.delete('/account', requireAuth, async (req, res) => {
     
     console.log(`[Auth] User ${userId} requested account deletion`)
     
-    // Import user repository
-    const { default: userRepository } = await import('../repositories/userRepository.js')
+    // Import deleteUser function from user repository
+    const { deleteUser } = await import('../repositories/userRepository.js')
     
     // Delete the user account (this should cascade delete related data)
-    await userRepository.deleteUser(userId)
+    await deleteUser(userId)
     
     console.log(`[Auth] User ${userId} account deleted successfully`)
     
@@ -311,9 +311,11 @@ router.delete('/account', requireAuth, async (req, res) => {
     })
   } catch (error) {
     console.error('[Auth] Error deleting account:', error)
+    console.error('[Auth] Error stack:', error.stack)
     res.status(500).json({ 
       success: false,
-      error: 'Failed to delete account' 
+      error: 'Failed to delete account',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     })
   }
 })
