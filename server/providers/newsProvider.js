@@ -1,48 +1,92 @@
 import axios from 'axios';
 import { apiConfig } from '../config/apiConfig.js';
 
-const CRYPTOCOMPARE_API_KEY = process.env.CRYPTOCOMPARE_API_KEY;
-const BASE_URL = 'https://min-api.cryptocompare.com/data/v2';
+const COINGECKO_URL = process.env.COINGECKO_API_URL || 'https://api.coingecko.com/api/v3';
+const NEWSAPI_KEY = process.env.NEWSAPI_KEY;
+const NEWSAPI_URL = 'https://newsapi.org/v2';
 
 /**
- * Fetch latest cryptocurrency news from CryptoCompare API
+ * Generate sample crypto news from trending coins
  */
-export async function fetchCryptoNews({ categories = [], excludeCategories = [], limit = 50 } = {}) {
+async function generateTrendingNews(limit = 50) {
   try {
-    const params = {
-      lang: 'EN',
-      sortOrder: 'latest'
-    };
-
-    if (limit) params.limit = limit;
-    if (categories.length > 0) params.categories = categories.join(',');
-    if (excludeCategories.length > 0) params.excludeCategories = excludeCategories.join(',');
-
-    const response = await axios.get(`${BASE_URL}/news/`, {
-      params,
-      headers: CRYPTOCOMPARE_API_KEY ? {
-        'authorization': `Apikey ${CRYPTOCOMPARE_API_KEY}`
-      } : {},
+    const response = await axios.get(`${COINGECKO_URL}/search/trending`, {
       timeout: 10000
     });
 
-    if (response.data && response.data.Data) {
-      return response.data.Data.map(article => ({
-        id: article.id,
-        title: article.title,
-        body: article.body,
-        url: article.url,
-        imageUrl: article.imageurl,
-        publishedAt: new Date(article.published_on * 1000).toISOString(),
-        source: article.source_info?.name || article.source,
-        categories: article.categories ? article.categories.split('|') : [],
-        tags: article.tags ? article.tags.split('|') : []
+    if (response.data && response.data.coins) {
+      return response.data.coins.slice(0, limit).map((coin, index) => ({
+        id: `trending-${coin.item.id}-${index}`,
+        title: `${coin.item.name} (${coin.item.symbol.toUpperCase()}) is trending in the market`,
+        body: `${coin.item.name} has gained significant interest. Current data: Market cap rank #${coin.item.market_cap_rank}`,
+        url: `https://www.coingecko.com/en/coins/${coin.item.id}`,
+        imageUrl: coin.item.large || null,
+        publishedAt: new Date().toISOString(),
+        source: 'CoinGecko Trending',
+        categories: ['cryptocurrency', 'trending'],
+        tags: [coin.item.symbol.toUpperCase(), 'trending']
       }));
     }
-
     return [];
   } catch (error) {
-    console.error('Error fetching crypto news:', error.message);
+    console.warn('[NewsProvider] Failed to generate trending news:', error.message);
+    return [];
+  }
+}
+
+/**
+ * Fetch latest cryptocurrency news from NewsAPI (primary) or CoinGecko trending fallback
+ */
+export async function fetchCryptoNews({ categories = [], excludeCategories = [], limit = 50 } = {}) {
+  try {
+    // Try NewsAPI first if key is available
+    if (NEWSAPI_KEY && NEWSAPI_KEY !== 'your_newsapi_key_here') {
+      try {
+        console.log('[NewsProvider] Trying NewsAPI...');
+        const response = await axios.get(`${NEWSAPI_URL}/everything`, {
+          params: {
+            q: 'cryptocurrency OR bitcoin OR ethereum OR crypto',
+            sortBy: 'publishedAt',
+            language: 'en',
+            apiKey: NEWSAPI_KEY,
+            pageSize: limit || 50
+          },
+          timeout: 10000
+        });
+
+        if (response.data && response.data.articles) {
+          console.log('[NewsProvider] NewsAPI success, returning articles');
+          return response.data.articles.map(article => ({
+            id: article.url,
+            title: article.title,
+            body: article.description || article.content || '',
+            url: article.url,
+            imageUrl: article.urlToImage,
+            publishedAt: article.publishedAt,
+            source: article.source?.name || 'NewsAPI',
+            categories: categories.length > 0 ? categories : ['cryptocurrency'],
+            tags: []
+          }));
+        }
+      } catch (newsApiError) {
+        console.warn('[NewsProvider] NewsAPI failed:', newsApiError.message);
+      }
+    }
+
+    // Fallback to CoinGecko trending data
+    console.log('[NewsProvider] Falling back to CoinGecko trending...');
+    const trendingNews = await generateTrendingNews(limit);
+
+    if (trendingNews.length > 0) {
+      console.log('[NewsProvider] Returning trending news:', trendingNews.length, 'articles');
+      return trendingNews;
+    }
+
+    // Last resort - return empty array with no error (shows "no news" instead of error)
+    console.warn('[NewsProvider] No news sources available');
+    return [];
+  } catch (error) {
+    console.error('[NewsProvider] Error fetching crypto news:', error.message);
     throw new Error('Failed to fetch cryptocurrency news');
   }
 }
