@@ -90,11 +90,11 @@ router.post('/2fa/disable', requireAuth, disable2FAEndpoint)
 router.get('/2fa/status', requireAuth, get2FAStatus)
 router.post('/2fa/backup-codes/regenerate', requireAuth, regenerateBackupCodesEndpoint)
 
-// OAuth routes
-router.get('/oauth/google', initiateGoogleAuth)
-router.get('/oauth/google/callback', handleGoogleCallback)
-router.get('/oauth/twitter', initiateTwitterAuth)
-router.get('/oauth/twitter/callback', handleTwitterCallback)
+// OAuth routes - DISABLED (using manual auth only)
+// router.get('/oauth/google', initiateGoogleAuth)
+// router.get('/oauth/google/callback', handleGoogleCallback)
+// router.get('/oauth/twitter', initiateTwitterAuth)
+// router.get('/oauth/twitter/callback', handleTwitterCallback)
 
 // External account connection routes
 router.post('/connect-account', requireAuth, async (req, res) => {
