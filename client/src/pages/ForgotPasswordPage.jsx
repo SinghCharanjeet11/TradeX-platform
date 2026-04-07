@@ -20,7 +20,7 @@ function ForgotPasswordPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
     const emailError = validateEmail(email)
     if (emailError) {
       setError(emailError)
@@ -28,7 +28,7 @@ function ForgotPasswordPage() {
     }
 
     setIsSubmitting(true)
-    
+
     try {
       const { authAPI } = await import('../services/api')
       await authAPI.forgotPassword(email)
@@ -45,10 +45,23 @@ function ForgotPasswordPage() {
       <div className={styles.container}>
         <Header />
         <div className={styles.content}>
-          <div className={styles.successMessage}>
-            <h2>Check Your Email</h2>
-            <p>We've sent a password reset link to {email}</p>
-            <Button text="Back to Sign In" onClick={() => navigate('/signin')} />
+          <div className={styles.leftSection}>
+            <div className={styles.successContainer}>
+              <div className={styles.successIcon}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.68A2 2 0 012 .18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92v2z" />
+                </svg>
+              </div>
+              <h2>Check Your Email</h2>
+              <p>We've sent a password reset link to <strong>{email}</strong>. Check your inbox and follow the instructions.</p>
+              <Button text="Back to Sign In" onClick={() => navigate('/signin')} />
+            </div>
+          </div>
+          <div className={styles.rightSection}>
+            <h1 className={styles.title}>CHECK YOUR INBOX</h1>
+            <p className={styles.subtitle}>
+              A reset link is on its way. Follow the instructions in the email to set a new password.
+            </p>
           </div>
         </div>
       </div>
@@ -59,42 +72,51 @@ function ForgotPasswordPage() {
     <div className={styles.container}>
       <Header />
       <div className={styles.content}>
-        <div className={styles.formContainer}>
-          <h2 className={styles.formTitle}>Forgot Password?</h2>
-          <p className={styles.description}>
-            Enter your email address and we'll send you a link to reset your password.
-          </p>
-          
-          <form onSubmit={handleSubmit}>
-            <FormInput
-              type="email"
-              name="email"
-              value={email}
-              placeholder="Email"
-              error={error}
-              onChange={(value) => {
-                setEmail(value)
-                setError(validateEmail(value))
-              }}
-              icon={
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              }
-            />
+        <div className={styles.leftSection}>
+          <div className={styles.formContainer}>
+            <h2 className={styles.formTitle}>Forgot Password?</h2>
+            <p className={styles.description}>
+              Enter your email address and we'll send you a link to reset your password.
+            </p>
 
-            <Button
-              type="submit"
-              text="Send Reset Link"
-              isLoading={isSubmitting}
-              disabled={!email || !!error}
-            />
-          </form>
+            <form onSubmit={handleSubmit}>
+              <FormInput
+                type="email"
+                name="email"
+                value={email}
+                placeholder="Email"
+                error={error}
+                onChange={(value) => {
+                  setEmail(value)
+                  setError(validateEmail(value))
+                }}
+                icon={
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                }
+              />
 
-          <p className={styles.backLink}>
-            <span onClick={() => navigate('/signin')} className={styles.link}>
-              ← Back to Sign In
-            </span>
+              <Button
+                type="submit"
+                text="Send Reset Link"
+                isLoading={isSubmitting}
+                disabled={!email || !!error}
+              />
+            </form>
+
+            <p className={styles.backLink}>
+              <span onClick={() => navigate('/signin')} className={styles.link}>
+                ← Back to Sign In
+              </span>
+            </p>
+          </div>
+        </div>
+
+        <div className={styles.rightSection}>
+          <h1 className={styles.title}>RESET YOUR PASSWORD</h1>
+          <p className={styles.subtitle}>
+            No worries — it happens. Enter your email and we'll get you back into your TradeX account in seconds.
           </p>
         </div>
       </div>
