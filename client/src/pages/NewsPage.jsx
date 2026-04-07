@@ -45,7 +45,6 @@ function NewsPage() {
       setErrorType(null)
 
       const requestFilters = {
-        search: searchQuery || undefined,
         limit: 50
       }
 
@@ -122,7 +121,7 @@ function NewsPage() {
     } finally {
       setLoading(false)
     }
-  }, [searchQuery, isOnline, retryCount, user])
+  }, [isOnline, retryCount, user])
 
   useEffect(() => {
     fetchNews()
@@ -161,6 +160,17 @@ function NewsPage() {
 
   const handleSearch = (query) => {
     setSearchQuery(query)
+    // Filter client-side — backend doesn't support full-text search on trending articles
+    if (!query.trim()) {
+      setNews(allNews)
+    } else {
+      const q = query.toLowerCase()
+      setNews(allNews.filter(a =>
+        a.title?.toLowerCase().includes(q) ||
+        a.source?.toLowerCase().includes(q) ||
+        a.categories?.some(c => c.toLowerCase().includes(q))
+      ))
+    }
   }
 
   const handleFiltersChange = (newFilters) => {
