@@ -1,251 +1,159 @@
-# 🚀 TradeX — Production-Grade Trading Platform
+# TradeX — AI-Powered Trading Platform
 
-**TradeX** is a full-stack, production-ready trading platform that aggregates real-time market data across **cryptocurrencies, stocks, forex, and commodities**. It features AI-powered insights, paper trading simulation, portfolio management, and enterprise-grade security.
+**TradeX** is a full-stack trading platform built for the **Frostbyte Hackathon Grand Finale 2026**. It aggregates real-time market data across cryptocurrencies, stocks, forex, and commodities — and layers on AI-powered trading signals powered by **Google Gemini Flash**.
 
-> **Live Demo:** [https://tradex-platform.onrender.com](https://tradex-platform.onrender.com)
-
-This project demonstrates industry-level system design, secure authentication patterns, and scalable API architecture under real-world constraints.
-
----
-
-## 🧠 System Design Highlights
-
-### Key Engineering Principles
-- **Layered Architecture**: Routes → Controllers → Services → Repositories → Database
-- **Stateless Authentication**: JWT with refresh tokens and session management
-- **API-Aware Caching**: Intelligent TTL strategy to handle third-party rate limits
-- **Graceful Degradation**: Fallback logic when external services fail
-- **Security-First Design**: 2FA, rate limiting, CSRF protection, audit logging
+> **Live Demo:** [https://tradex-platform.onrender.com](https://tradex-platform.onrender.com)  
+> **Demo Video:** [Watch on YouTube](#)
 
 ---
 
-## ✨ Core Features
+## What It Does
 
-### 🔐 Authentication & Security
-- Secure registration/login with bcrypt password hashing
-- JWT access tokens + HTTP-only refresh cookies
-- **Two-Factor Authentication (2FA)** with TOTP & backup codes
-- Session management with device fingerprinting
-- Password reset via tokenized email flow
-- Rate limiting & IP blocking
-- CSRF protection
-- Audit logging for security events
+TradeX gives retail traders a professional-grade dashboard without the complexity of traditional platforms:
 
-### 📊 Multi-Market Data Aggregation
-| Market | Provider | Cache TTL |
-|--------|----------|-----------|
-| Crypto | CoinGecko | 30 sec |
-| Stocks | Alpha Vantage | 60 sec |
-| Forex | Alpha Vantage | 60 sec |
-| Commodities | Alpha Vantage | 120 sec |
-| News | NewsAPI | 5 min |
-
-### 🤖 AI-Powered Insights
-- **Technical Indicators**: RSI, MACD, Bollinger Bands, Moving Averages
-- **Trading Signals**: Buy/Sell/Hold recommendations with confidence scores
-- **Sentiment Analysis**: Market sentiment from news and social data
-- **Price Predictions**: ML-based price forecasting
-- **Portfolio Optimization**: Risk-adjusted allocation suggestions
-
-### 📈 Paper Trading Engine
-- Virtual $100,000 starting balance
-- Real-time market order execution
-- Position tracking with P&L calculations
-- Transaction history
-- Account reset functionality
-- Performance analytics
-
-### 💼 Portfolio Management
-- Holdings tracking with real-time valuations
-- Asset allocation visualization
-- Performance charts (1D, 1W, 1M, 3M, 1Y)
-- Watchlist with price alerts
-- Portfolio snapshots for historical tracking
-
-### 📰 Financial News
-- Real-time news aggregation
-- Category filtering (Crypto, Stocks, Economy)
-- Article bookmarking
-- Breaking news section
-- Search functionality
-
-### 🖥️ Interactive Dashboard
-- Multi-market overview
-- Fear & Greed Index
-- Top gainers/losers
-- Portfolio summary cards
-- Price alert notifications
-- Responsive design (desktop & mobile)
+- **Real-time market data** across crypto, stocks, forex, and commodities
+- **AI trading signals** with BUY/SELL/HOLD recommendations, confidence scores, price targets, and explainability — powered by Gemini Flash
+- **Paper trading** — practice with $100,000 virtual balance before risking real money
+- **Portfolio management** — track holdings, performance, and P&L
+- **Financial news** aggregated from live sources
+- **Watchlist** with custom asset tracking
+- **Two-factor authentication** and enterprise-grade security
 
 ---
 
-## 🏗️ Architecture Overview
+## AI Trading Signals
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Client (React + Vite)                     │
-├─────────────────────────────────────────────────────────────┤
-│  Pages: Dashboard | Markets | Portfolio | Paper Trading     │
-│         News | Settings | Auth                              │
-│  State: Context API | Custom Hooks | Cache Layer            │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                 Backend (Node.js + Express)                  │
-├─────────────────────────────────────────────────────────────┤
-│  Middleware: Auth | CORS | Rate Limit | CSRF | Validation   │
-├─────────────────────────────────────────────────────────────┤
-│  Routes → Controllers → Services → Repositories             │
-├─────────────────────────────────────────────────────────────┤
-│  Services: Market | Portfolio | Paper Trading | AI Insights │
-│            News | Auth | 2FA | Sessions | Alerts            │
-└─────────────────────────────────────────────────────────────┘
-                              │
-              ┌───────────────┼───────────────┐
-              ▼               ▼               ▼
-┌──────────────────┐ ┌──────────────┐ ┌──────────────────┐
-│   PostgreSQL     │ │  External    │ │   Cache Layer    │
-│   (Supabase)     │ │  APIs        │ │   (In-Memory)    │
-│                  │ │              │ │                  │
-│  • Users         │ │  • CoinGecko │ │  • Market Data   │
-│  • Sessions      │ │  • Alpha     │ │  • API Responses │
-│  • Holdings      │ │    Vantage   │ │  • News Articles │
-│  • Paper Trades  │ │  • NewsAPI   │ │                  │
-│  • Watchlists    │ │              │ │                  │
-│  • AI Insights   │ │              │ │                  │
-└──────────────────┘ └──────────────┘ └──────────────────┘
-```
+The signal engine combines rule-based technical analysis with **Google Gemini Flash 1.5** for contextual reasoning:
+
+- Calculates RSI, MACD, Bollinger Bands, EMA, SMA, and volatility
+- Sends indicators to Gemini with a structured prompt
+- Returns: signal type, confidence (60–85%), market condition, risk level, reasoning
+- Shows **why** the signal was generated, **why not BUY**, **why not SELL** — full explainability
+- Falls back to rule-based analysis if Gemini is unavailable
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend
 | Technology | Purpose |
 |------------|---------|
-| React 18 | UI Framework |
-| Vite | Build Tool |
-| React Router 6 | Navigation |
-| Recharts | Data Visualization |
-| Framer Motion | Animations |
-| Formik + Yup | Form Handling |
-| CSS Modules | Styling |
-| Axios | HTTP Client |
+| React 18 + Vite | UI framework & build |
+| React Router 6 | Client-side routing |
+| Recharts | Charts & data visualization |
+| Framer Motion | Page transitions & animations |
+| CSS Modules | Scoped styling |
+| Axios | HTTP client with retry logic |
 
 ### Backend
 | Technology | Purpose |
 |------------|---------|
-| Node.js | Runtime |
-| Express | Web Framework |
-| PostgreSQL | Database |
-| JWT | Authentication |
-| bcrypt | Password Hashing |
-| Speakeasy | 2FA/TOTP |
-| Nodemailer | Email Service |
-| Helmet | Security Headers |
-| express-rate-limit | Rate Limiting |
-| Sentiment | NLP Analysis |
+| Node.js + Express | API server |
+| PostgreSQL | Primary database |
+| JWT | Session tokens (7-day expiry) |
+| bcrypt | Password hashing |
+| Speakeasy | TOTP two-factor authentication |
+| Resend | Transactional email (password reset) |
+| Helmet + CORS | Security headers |
+| express-rate-limit | Rate limiting & brute-force protection |
 
-### External APIs
-| API | Data |
-|-----|------|
-| CoinGecko | Cryptocurrency prices |
-| Alpha Vantage | Stocks, Forex, Commodities |
-| NewsAPI | Financial news |
-| Binance | Real-time crypto data |
+### AI & External APIs
+| Service | Used For |
+|---------|---------|
+| Google Gemini Flash 1.5 | AI trading signal generation |
+| CoinGecko | Cryptocurrency market data |
+| Alpha Vantage | Stocks, forex, commodities |
+| CoinGecko Trending | Financial news fallback |
+| Resend | Password reset emails |
 
 ### Infrastructure
 | Service | Purpose |
 |---------|---------|
-| Render | Backend hosting |
-| Render Static | Frontend hosting |
-| Supabase | PostgreSQL database |
-| GitHub Actions | CI/CD (optional) |
+| Render Static Site | Frontend hosting |
+| Render Web Service | Backend hosting |
+| Supabase | Managed PostgreSQL |
 
 ---
 
-## 🔌 API Endpoints
+## Architecture
 
-### Authentication
 ```
-POST   /api/auth/register          # User registration
-POST   /api/auth/login             # User login
-POST   /api/auth/logout            # User logout
-POST   /api/auth/forgot-password   # Request password reset
-POST   /api/auth/reset-password    # Reset password
-GET    /api/auth/me                # Get current user
-POST   /api/auth/2fa/setup         # Setup 2FA
-POST   /api/auth/2fa/verify        # Verify 2FA code
+┌─────────────────────────────────────────────────────────┐
+│                  React Frontend (Vite)                   │
+│  Dashboard · Markets · Portfolio · Paper Trading · News  │
+│  Auth Context + localStorage token (7-day sessions)      │
+└──────────────────────────┬──────────────────────────────┘
+                           │  HTTPS + Bearer Token
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│              Node.js / Express Backend                   │
+│  Auth · CSRF · Rate Limiting · Session Management        │
+├──────────────────────────────────────────────────────────┤
+│  Routes → Controllers → Services → Repositories          │
+├──────────────────────────────────────────────────────────┤
+│  Gemini Flash ← Signal Generator ← Technical Indicators  │
+└──────┬───────────────────┬──────────────────────────────┘
+       ▼                   ▼
+  PostgreSQL          External APIs
+  (Supabase)          CoinGecko · Alpha Vantage
 ```
+
+**Key design decisions:**
+- Bearer token in `Authorization` header instead of cookies — solves cross-domain session loss on Render
+- In-memory cache with TTL per data type — prevents API rate limit exhaustion
+- Gemini Flash as primary signal source, rule-based engine as fallback — never shows empty signals
+- Keep-alive ping every 10 minutes — prevents Render free tier cold starts
+
+---
+
+## Features
+
+### Authentication & Security
+- Register / sign in with email + password
+- **Two-factor authentication (2FA)** — TOTP via authenticator app + backup codes
+- **Password reset via email** — tokenized link, expires in 1 hour
+- 7-day persistent sessions (survives page refresh)
+- Rate limiting, CSRF protection, bcrypt hashing, session invalidation on password change
 
 ### Markets
-```
-GET    /api/markets/crypto         # Cryptocurrency prices
-GET    /api/markets/stocks         # Stock prices
-GET    /api/markets/forex          # Forex rates
-GET    /api/markets/commodities    # Commodity prices
-GET    /api/markets/:type/:symbol/chart  # Price history
-GET    /api/markets/health         # API health check
-```
-
-### Portfolio & Holdings
-```
-GET    /api/portfolio/summary      # Portfolio overview
-GET    /api/portfolio/performance  # Performance metrics
-GET    /api/holdings               # User holdings
-POST   /api/holdings               # Add holding
-PUT    /api/holdings/:id           # Update holding
-DELETE /api/holdings/:id           # Remove holding
-```
-
-### Paper Trading
-```
-GET    /api/paper-trading/account  # Get paper account
-POST   /api/paper-trading/trade    # Execute paper trade
-GET    /api/paper-trading/positions # Get positions
-GET    /api/paper-trading/history  # Transaction history
-POST   /api/paper-trading/reset    # Reset account
-```
+- Live prices for crypto, stocks, forex, and commodities
+- Interactive price charts (1D, 1W, 1M, 3M, 1Y)
+- Fear & Greed Index, top gainers/losers
 
 ### AI Insights
-```
-GET    /api/insights/technical/:symbol    # Technical indicators
-GET    /api/insights/signals/:symbol      # Trading signals
-GET    /api/insights/sentiment/:symbol    # Sentiment analysis
-GET    /api/insights/prediction/:symbol   # Price prediction
-GET    /api/insights/recommendations      # Portfolio recommendations
-```
+- Per-asset trading signals with full explainability
+- Confidence bar, risk level, price targets (entry / target / stop-loss)
+- Beginner-friendly plain-English explanation alongside technical analysis
+- "AI Powered" badge when Gemini enhanced the signal
 
-### Watchlist & Alerts
-```
-GET    /api/watchlist              # Get watchlist
-POST   /api/watchlist              # Add to watchlist
-DELETE /api/watchlist/:symbol      # Remove from watchlist
-POST   /api/watchlist/alerts       # Create price alert
-```
+### Paper Trading
+- $100,000 virtual balance
+- Market order execution at live prices
+- Real-time P&L, position tracking, transaction history
+- Account reset anytime
+
+### Portfolio & Watchlist
+- Holdings with real-time valuations
+- Asset allocation and performance charts
+- Watchlist for quick price tracking
 
 ### News
-```
-GET    /api/news                   # Get news articles
-GET    /api/news/breaking          # Breaking news
-POST   /api/news/bookmark/:id      # Bookmark article
-GET    /api/news/bookmarks         # Get bookmarks
-```
+- Aggregated financial news
+- Category filtering (Crypto, Stocks, Economy)
+- Live trending from CoinGecko when news APIs are unavailable
 
 ---
 
-## 🚀 Getting Started
+## Running Locally
 
 ### Prerequisites
 - Node.js 18+
 - PostgreSQL 14+ (or Supabase account)
-- npm or yarn
 
-### Installation
+### Setup
 
 ```bash
-# Clone repository
+# Clone
 git clone https://github.com/SinghCharanjeet11/TradeX-platform.git
 cd TradeX-platform
 
@@ -255,127 +163,107 @@ npm run install:all
 
 ### Environment Variables
 
-```bash
-# Server (.env)
-cp server/.env.example server/.env
-```
+Create `server/.env`:
 
-Required variables:
 ```env
+# Server
+PORT=5000
+NODE_ENV=development
+
 # Database
 DATABASE_URL=postgresql://user:password@host:port/database
 
-# Authentication
-JWT_SECRET=your-jwt-secret
-JWT_REFRESH_SECRET=your-refresh-secret
-ENCRYPTION_KEY=your-32-char-encryption-key
+# Auth
+JWT_SECRET=your-secret-here
+ENCRYPTION_KEY=your-32-char-key
 
-# External APIs
-ALPHA_VANTAGE_API_KEY=your-api-key
-NEWS_API_KEY=your-news-api-key
+# Frontend URL (for password reset emails)
+FRONTEND_URL=http://localhost:3000
 
-# Email (optional)
-SMTP_HOST=smtp.gmail.com
-SMTP_USER=your-email
-SMTP_PASS=your-app-password
+# APIs
+ALPHA_VANTAGE_API_KEY=your-key
+GEMINI_API_KEY=your-gemini-key
+RESEND_API_KEY=your-resend-key
 ```
 
-### Database Setup
+### Run
 
 ```bash
-cd server
-npm run db:init
-```
-
-### Run Locally
-
-```bash
-# From root directory
 npm run dev
 ```
 
-- Frontend: http://localhost:5173
+- Frontend: http://localhost:3000
 - Backend: http://localhost:5000
 
----
-
-## 📈 Performance & Reliability
-
-- **Smart Caching**: Prevents API exhaustion with intelligent TTL
-- **Stateless Backend**: Horizontally scalable architecture
-- **Connection Pooling**: Efficient database connections via Supabase
-- **Graceful Degradation**: Fallback data when APIs fail
-- **Health Endpoints**: `/health` for monitoring
-- **Scheduled Jobs**: Automatic session cleanup
-
----
-
-## 🧪 Testing
+### Database Init
 
 ```bash
-cd server
-npm test
+cd server && npm run db:init
 ```
-
-Includes:
-- Unit tests for services
-- Property-based tests with fast-check
-- Integration tests for API endpoints
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 TradeX-platform/
-├── client/                 # React frontend
+├── client/                  # React + Vite frontend
 │   ├── src/
-│   │   ├── components/     # Reusable UI components
-│   │   ├── pages/          # Route pages
-│   │   ├── contexts/       # React contexts
-│   │   ├── hooks/          # Custom hooks
-│   │   └── services/       # API services
+│   │   ├── components/      # UI components (charts, modals, layout)
+│   │   ├── pages/           # Route-level pages
+│   │   ├── contexts/        # AuthContext, ThemeContext
+│   │   ├── hooks/           # Custom hooks (market data, insights)
+│   │   └── services/        # Axios API client
 │   └── public/
-├── server/                 # Node.js backend
-│   ├── config/             # Configuration
-│   ├── controllers/        # Request handlers
-│   ├── database/           # Migrations & init
-│   ├── middleware/         # Express middleware
-│   ├── providers/          # External API clients
-│   ├── repositories/       # Data access layer
-│   ├── routes/             # API routes
-│   ├── services/           # Business logic
-│   └── utils/              # Utilities
-└── scripts/                # Deployment scripts
+│       └── _redirects       # SPA routing fix for Render
+└── server/                  # Node.js + Express backend
+    ├── controllers/          # Request handlers
+    ├── services/             # Business logic (Gemini, signals, email)
+    ├── repositories/         # Database queries
+    ├── middleware/           # Auth, CSRF, rate limiting
+    ├── routes/               # API route definitions
+    └── database/            # Migrations & schema
 ```
 
 ---
 
-## 🧑‍💻 Why This Project Matters
+## API Endpoints
 
-TradeX demonstrates:
+```
+POST  /api/auth/register           Register
+POST  /api/auth/login              Login (returns JWT)
+POST  /api/auth/forgot-password    Send reset email
+POST  /api/auth/reset-password     Reset with token
+GET   /api/auth/me                 Current user (Bearer token)
 
-✅ **Real-world backend constraints** — Rate limiting, caching, API quotas  
-✅ **Enterprise security patterns** — 2FA, session management, audit logs  
-✅ **Clean layered architecture** — Separation of concerns at every level  
-✅ **AI/ML integration** — Technical analysis, sentiment, predictions  
-✅ **Full-stack proficiency** — React + Node.js + PostgreSQL  
-✅ **Production deployment** — Render + Supabase infrastructure  
+GET   /api/markets/crypto          Live crypto prices
+GET   /api/markets/stocks          Live stock prices
+GET   /api/markets/:type/:symbol/chart   Price history
 
-This project is suitable as:
-- 🎯 A portfolio centerpiece for engineering roles
-- 💬 A system design discussion artifact
-- 🏗️ A foundation for a real trading application
+GET   /api/insights/signals/:symbol     AI trading signals
+GET   /api/insights/technical/:symbol   Technical indicators
+
+GET   /api/portfolio/summary       Portfolio overview
+GET   /api/holdings                User holdings
+
+POST  /api/paper-trading/trade     Execute paper trade
+GET   /api/paper-trading/account   Virtual account balance
+
+GET   /api/news                    Financial news feed
+GET   /api/watchlist               User watchlist
+
+GET   /health                      Server health check
+```
 
 ---
 
-## 📄 License
+## Built For
 
-MIT
+**Frostbyte Hackathon Grand Finale 2026**
 
 ---
 
-## 👤 Author
+## Author
 
 **Charanjeet Singh**  
 GitHub: [@SinghCharanjeet11](https://github.com/SinghCharanjeet11)
