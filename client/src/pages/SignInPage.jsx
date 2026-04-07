@@ -24,6 +24,17 @@ function SignInPage() {
   const [show2FAModal, setShow2FAModal] = useState(false)
   const [twoFactorLoading, setTwoFactorLoading] = useState(false)
   const [oauthError, setOauthError] = useState(null)
+  const [serverWaking, setServerWaking] = useState(false)
+
+  // Ping server on mount — if slow, show waking banner
+  useEffect(() => {
+    const controller = new AbortController()
+    const timer = setTimeout(() => setServerWaking(true), 2000)
+    fetch(`https://tradex-api-zsyj.onrender.com/health`, { signal: controller.signal })
+      .then(() => { clearTimeout(timer); setServerWaking(false) })
+      .catch(() => { clearTimeout(timer); setServerWaking(false) })
+    return () => { controller.abort(); clearTimeout(timer) }
+  }, [])
 
   // Check for OAuth errors in URL
   useEffect(() => {
@@ -166,6 +177,13 @@ function SignInPage() {
           <div className={styles.formContainer}>
             <h2 className={styles.formTitle}>Sign In</h2>
             
+            {serverWaking && (
+              <div className={styles.wakingBanner}>
+                <span className={styles.wakingSpinner}></span>
+                Server is waking up — this takes ~30 seconds on first visit. Please wait...
+              </div>
+            )}
+
             {oauthError && (
               <div className={styles.errorBanner}>
                 {oauthError}

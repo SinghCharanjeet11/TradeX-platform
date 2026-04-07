@@ -205,3 +205,32 @@
     gap: 12px;
   }
 }
+
+/* Server waking up banner */
+.wakingBanner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fffbeb;
+  border: 1px solid #f59e0b;
+  color: #92400e;
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+.wakingSpinner {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #f59e0b;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: wakeSpin 0.8s linear infinite;
+}
+
+@keyframes wakeSpin {
+  to { transform: rotate(360deg); }
+}

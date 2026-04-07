@@ -32,6 +32,7 @@ if (import.meta.env.MODE !== 'development') {
 const api = axios.create({
   baseURL: `${API_URL}/api`,
   withCredentials: true, // Important for cookies
+  timeout: 30000, // 30s timeout — handles Render cold start
   headers: {
     'Content-Type': 'application/json',
   },
@@ -57,24 +58,30 @@ api.interceptors.request.use(
   }
 )
 
-// Response interceptor for error handling
+// Response interceptor — with auto retry on cold start
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    const config = error.config
+
     if (error.response) {
       // Suppress 401 errors for /auth/me endpoint (expected when not logged in)
-      if (error.response.status === 401 && error.config.url === '/auth/me') {
+      if (error.response.status === 401 && config.url === '/auth/me') {
         return Promise.reject(new Error('Not authenticated'))
       }
-      // Server responded with error
       const message = error.response.data?.error || 'An error occurred'
       return Promise.reject(new Error(message))
-    } else if (error.request) {
-      // Request made but no response
-      return Promise.reject(new Error('Unable to connect to server'))
-    } else {
-      return Promise.reject(error)
     }
+
+    // Retry once on timeout or network error (handles Render cold start)
+    if (!config._retry && (error.code === 'ECONNABORTED' || !error.response)) {
+      config._retry = true
+      console.log('[API] Server cold start detected — retrying in 3s...')
+      await new Promise(resolve => setTimeout(resolve, 3000))
+      return api(config)
+    }
+
+    return Promise.reject(new Error('Unable to connect to server. Please try again.'))
   }
 )
 

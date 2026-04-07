@@ -93,13 +93,35 @@ app.listen(PORT, async () => {
       await runMigrations()
       console.log('✅ Database migrations completed')
     } catch (error) {
-      console.error('❌ Migration error:', error)
+      console.error('❌ Migration error:', error.message)
+      console.error('Stack trace:', error.stack)
       // Don't crash the server, just log the error
     }
+  } else {
+    console.log('ℹ️  DATABASE_URL not set - skipping automatic migrations')
+    console.log('ℹ️  Run "npm run db:init" manually to initialize the database')
   }
   
   // Start scheduled jobs
   sessionCleanupJob.start()
+
+  // Keep-alive ping (prevents Render free tier from sleeping)
+  if (process.env.NODE_ENV === 'production' && process.env.RENDER_EXTERNAL_URL) {
+    const keepAliveUrl = `${process.env.RENDER_EXTERNAL_URL}/health`
+    setInterval(async () => {
+      try {
+        const { default: https } = await import('https')
+        https.get(keepAliveUrl, (res) => {
+          console.log(`[KeepAlive] Pinged ${keepAliveUrl} - Status: ${res.statusCode}`)
+        }).on('error', (err) => {
+          console.warn('[KeepAlive] Ping failed:', err.message)
+        })
+      } catch (err) {
+        console.warn('[KeepAlive] Error:', err.message)
+      }
+    }, 10 * 60 * 1000) // Every 10 minutes
+    console.log('✅ Keep-alive ping started (every 10 min)')
+  }
 })
 
 // Graceful shutdown
