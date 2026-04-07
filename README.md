@@ -257,11 +257,6 @@ GET   /health                      Server health check
 
 ---
 
-## Built For
-
-**Frostbyte Hackathon Grand Finale 2026**
-
----
 
 ## Author
 
