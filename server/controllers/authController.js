@@ -1,4 +1,5 @@
 import { hashPassword, verifyPassword } from '../services/passwordService.js'
+import { sendPasswordResetEmail } from '../services/emailService.js'
 import { 
   generateSessionToken, 
   hashToken, 
@@ -284,10 +285,8 @@ export const forgotPassword = async (req, res) => {
       expiresAt
     })
 
-    // TODO: Send email with reset link
-    // For now, log the token (in production, send via email)
-    console.log(`Password reset token for ${email}: ${resetToken}`)
-    console.log(`Reset link: ${process.env.FRONTEND_URL}/reset-password/${resetToken}`)
+    // Send password reset email
+    await sendPasswordResetEmail(email, resetToken)
 
     res.json({
       success: true,
