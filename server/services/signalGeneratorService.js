@@ -5,6 +5,7 @@
 
 import AIInsightsService from './aiInsightsService.js';
 import marketService from './marketService.js';
+import { getGeminiSignal } from './geminiService.js';
 
 class SignalGeneratorService extends AIInsightsService {
   constructor() {
@@ -43,18 +44,24 @@ class SignalGeneratorService extends AIInsightsService {
       // Calculate technical indicators
       const indicators = this._calculateTechnicalIndicators(marketData.prices);
 
-      // Determine signal type based on indicators
-      const signalType = this._determineSignalType(indicators);
+      // --- Try Gemini Flash AI first ---
+      const geminiResult = await getGeminiSignal(indicators, symbol);
 
-      // Calculate confidence
-      const confidence = this._calculateSignalConfidence(indicators, signalType);
+      // Use Gemini output if available, otherwise fall back to rule-based
+      const signalType = geminiResult?.recommendation || this._determineSignalType(indicators);
+      const confidence = geminiResult?.confidence || this._calculateSignalConfidence(indicators, signalType);
+      const marketCondition = geminiResult?.market_condition || this._determineMarketCondition(indicators);
+      const riskLevel = geminiResult?.risk || this._determineRiskLevel(indicators);
 
       // Calculate price targets
       const currentPrice = marketData.prices[marketData.prices.length - 1].price;
       const priceTargets = this._calculatePriceTargets(signalType, currentPrice, indicators);
 
-      // Generate reasoning
-      const reasoning = this._generateReasoning(signalType, indicators);
+      // Use Gemini explanation or generate rule-based
+      const reasoning = geminiResult?.explanation || this._generateReasoning(signalType, indicators);
+      const explainability = this._generateExplainability(signalType, indicators, marketCondition);
+      const riskExplanation = this._generateRiskExplanation(riskLevel, indicators, marketCondition);
+      const beginnerExplanation = this._generateBeginnerExplanation(signalType, reasoning);
 
       // Calculate risk score
       const riskScore = this._calculateRiskScore(indicators);
@@ -66,11 +73,17 @@ class SignalGeneratorService extends AIInsightsService {
         signalType,
         confidence,
         reasoning,
+        marketCondition,
+        riskLevel,
+        explainability,
+        riskExplanation,
+        beginnerExplanation,
         priceTargets,
         riskScore,
         indicators: this._formatIndicators(indicators),
+        aiPowered: !!geminiResult, // Flag to show "AI Powered" badge on frontend
         generatedAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         dismissed: false
       };
 
@@ -425,6 +438,140 @@ class SignalGeneratorService extends AIInsightsService {
   }
 
   /**
+   * Determine market condition (BULLISH / BEARISH / NEUTRAL)
+   * @private
+   */
+  _determineMarketCondition(indicators) {
+    let bullishCount = 0;
+    let bearishCount = 0;
+
+    if (indicators.rsi > 55) bullishCount++;
+    else if (indicators.rsi < 45) bearishCount++;
+
+    if (indicators.macd.histogram > 0) bullishCount++;
+    else if (indicators.macd.histogram < 0) bearishCount++;
+
+    if (indicators.ema12 > indicators.ema26) bullishCount++;
+    else bearishCount++;
+
+    if (indicators.currentPrice > indicators.sma20) bullishCount++;
+    else bearishCount++;
+
+    if (indicators.trendStrength > 3) bullishCount++;
+    else if (indicators.trendStrength < -3) bearishCount++;
+
+    if (bullishCount >= 4) return 'BULLISH';
+    if (bearishCount >= 4) return 'BEARISH';
+    return 'NEUTRAL';
+  }
+
+  /**
+   * Determine risk level (LOW / MEDIUM / HIGH)
+   * @private
+   */
+  _determineRiskLevel(indicators) {
+    const riskScore = this._calculateRiskScore(indicators);
+    if (riskScore <= 40) return 'LOW';
+    if (riskScore <= 65) return 'MEDIUM';
+    return 'HIGH';
+  }
+
+  /**
+   * Generate explainability output matching Prompt 2 structure
+   * { why, why_not_buy, why_not_sell }
+   * @private
+   */
+  _generateExplainability(signalType, indicators, marketCondition) {
+    const why = [];
+    const why_not_buy = [];
+    const why_not_sell = [];
+
+    if (signalType === 'BUY') {
+      if (indicators.rsi < 35) why.push('RSI is in oversold territory, indicating a potential price reversal upward');
+      else why.push('Technical indicators show more bullish signals than bearish ones');
+      if (indicators.macd.histogram > 0) why.push('MACD histogram is positive, confirming bullish momentum');
+      else why.push('Price is positioned below key moving averages, suggesting a recovery opportunity');
+
+      why_not_buy.push('Signals are not overwhelmingly strong — mixed indicators reduce certainty');
+      if (indicators.volatility > 0.04) why_not_buy.push('High volatility increases the risk of a false breakout');
+      else why_not_buy.push('Short-term price action may still dip before recovering');
+
+      why_not_sell.push('No strong bearish divergence detected in MACD or RSI');
+      why_not_sell.push('Price has not breached upper Bollinger Band, so overbought conditions are absent');
+
+    } else if (signalType === 'SELL') {
+      if (indicators.rsi > 65) why.push('RSI is in overbought territory, suggesting the asset may be overvalued');
+      else why.push('Technical indicators show more bearish signals than bullish ones');
+      if (indicators.macd.histogram < 0) why.push('MACD histogram is negative, confirming bearish momentum');
+      else why.push('Price is positioned above key moving averages, suggesting a pullback is likely');
+
+      why_not_buy.push('Momentum is currently bearish — buying into a downtrend carries high risk');
+      why_not_buy.push('RSI and MACD do not show oversold or reversal conditions yet');
+
+      why_not_sell.push('Signals are not overwhelmingly strong — mixed indicators reduce certainty');
+      if (indicators.volatility > 0.04) why_not_sell.push('High volatility could cause a sudden price spike against the position');
+      else why_not_sell.push('A short-term bounce is possible before the trend continues downward');
+
+    } else {
+      // HOLD
+      why.push('Technical indicators are mixed — no clear directional bias exists');
+      why.push('Waiting for confirmation reduces the risk of entering a false signal');
+
+      why_not_buy.push('No strong oversold condition or bullish crossover to justify a buy entry');
+      why_not_buy.push('RSI and MACD are in neutral zones, offering no clear upside catalyst');
+
+      why_not_sell.push('No strong overbought condition or bearish divergence to justify a sell');
+      why_not_sell.push('Price is within normal Bollinger Band range, suggesting no extreme overvaluation');
+    }
+
+    return { why, why_not_buy, why_not_sell };
+  }
+
+  /**
+   * Generate risk explanation matching Prompt 4 structure
+   * { risk_explanation }
+   * @private
+   */
+  _generateRiskExplanation(riskLevel, indicators, marketCondition) {
+    const volPct = (indicators.volatility * 100).toFixed(1);
+
+    if (riskLevel === 'HIGH') {
+      return {
+        risk_explanation: `Risk is HIGH because volatility is elevated at ${volPct}% and the market condition is ${marketCondition}. Extreme RSI or Bollinger Band positioning increases the chance of sharp reversals.`
+      };
+    } else if (riskLevel === 'MEDIUM') {
+      return {
+        risk_explanation: `Risk is MEDIUM because volatility stands at ${volPct}% with a ${marketCondition} market. Some indicators are aligned but not all, leaving room for unexpected price moves.`
+      };
+    } else {
+      return {
+        risk_explanation: `Risk is LOW because volatility is contained at ${volPct}% and the ${marketCondition} market shows consistent signals. Indicators are relatively aligned, reducing the chance of a sudden reversal.`
+      };
+    }
+  }
+
+  /**
+   * Generate beginner-friendly explanation matching Prompt 5 structure
+   * { beginner_explanation }
+   * @private
+   */
+  _generateBeginnerExplanation(signalType, reasoning) {
+    if (signalType === 'BUY') {
+      return {
+        beginner_explanation: `The charts suggest this might be a good time to buy. The price looks lower than usual and momentum is picking up, which often means the price could go up soon. But nothing is guaranteed — only invest what you can afford to lose.`
+      };
+    } else if (signalType === 'SELL') {
+      return {
+        beginner_explanation: `The charts suggest this might be a good time to sell or avoid buying. The price looks higher than usual and momentum is slowing down, which often means the price could drop soon. It's safer to wait for a better entry point.`
+      };
+    } else {
+      return {
+        beginner_explanation: `The charts are giving mixed signals right now — some say up, some say down. The safest move is to wait and watch. When things become clearer, a better opportunity to buy or sell will appear.`
+      };
+    }
+  }
+
+  /**
    * Generate reasoning for the signal
    * @private
    */
@@ -641,11 +788,20 @@ class SignalGeneratorService extends AIInsightsService {
       signalType: 'HOLD',
       confidence: 0,
       reasoning: 'Insufficient market data to generate reliable trading signal',
-      priceTargets: {
-        entry: 0,
-        target: 0,
-        stopLoss: 0
+      marketCondition: 'NEUTRAL',
+      riskLevel: 'HIGH',
+      explainability: {
+        why: ['Not enough historical data to determine a reliable direction'],
+        why_not_buy: ['No data to confirm a safe entry point'],
+        why_not_sell: ['No data to confirm a safe exit point']
       },
+      riskExplanation: {
+        risk_explanation: 'Risk is HIGH because there is insufficient market data to make any reliable assessment.'
+      },
+      beginnerExplanation: {
+        beginner_explanation: 'We do not have enough price history for this asset yet. Check back later when more data is available.'
+      },
+      priceTargets: { entry: 0, target: 0, stopLoss: 0 },
       riskScore: 100,
       indicators: [],
       generatedAt: new Date().toISOString(),
