@@ -16,6 +16,7 @@ import {
 import {
   createUser,
   findUserByEmail,
+  findUserByUsername,
   updateLastLogin
 } from '../repositories/userRepository.js'
 import {
@@ -30,6 +31,43 @@ import {
 // Store state tokens temporarily (in production, use Redis)
 const stateStore = new Map()
 const codeVerifierStore = new Map()
+
+/**
+ * Sanitize and make username unique
+ */
+const sanitizeUsername = (name) => {
+  return name
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+    .replace(/[^a-z0-9_]/g, '')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '')
+}
+
+const ensureUniqueUsername = async (baseName) => {
+  let username = sanitizeUsername(baseName)
+
+  if (!username) {
+    username = 'user'
+  }
+
+  let existing = await findUserByUsername(username)
+  if (!existing) {
+    return username
+  }
+
+  // Append numbers until unique
+  for (let i = 2; i <= 100; i++) {
+    const candidate = `${username}_${i}`
+    existing = await findUserByUsername(candidate)
+    if (!existing) {
+      return candidate
+    }
+  }
+
+  // Fallback: use timestamp
+  return `${username}_${Date.now()}`
+}
 
 /**
  * Initiate Google OAuth flow
@@ -83,11 +121,11 @@ export const initiateGoogleAuth = async (req, res) => {
 export const handleGoogleCallback = async (req, res) => {
   try {
     const { code, state } = req.query
-    
+
     console.log('[OAuth] Google callback received')
-    console.log('[OAuth] State:', state ? 'present' : 'missing')
-    console.log('[OAuth] Code:', code ? 'present' : 'missing')
+    console.log('[OAuth] Query params - code:', code ? 'present' : 'missing', 'state:', state ? 'present' : 'missing')
     console.log('[OAuth] FRONTEND_URL:', process.env.FRONTEND_URL)
+    console.log('[OAuth] Full redirect URL would be:', `${process.env.FRONTEND_URL}/dashboard?oauth=true`)
     
     // Verify state token
     const storedState = stateStore.get(state)
@@ -101,8 +139,18 @@ export const handleGoogleCallback = async (req, res) => {
     
     // Exchange code for tokens
     console.log('[OAuth] Exchanging code for tokens...')
-    const tokens = await getGoogleTokens(code)
-    console.log('[OAuth] Tokens received successfully')
+    let tokens
+    try {
+      tokens = await getGoogleTokens(code)
+      console.log('[OAuth] Tokens received successfully')
+    } catch (tokenError) {
+      console.error('[OAuth] Token exchange failed - likely invalid credentials or redirect URI mismatch')
+      console.error('[OAuth] Check these in Google Cloud Console:')
+      console.error('[OAuth]   1. GOOGLE_CLIENT_ID matches OAuth 2.0 Client ID')
+      console.error('[OAuth]   2. GOOGLE_CLIENT_SECRET is correct')
+      console.error('[OAuth]   3. Redirect URI in Console:', process.env.GOOGLE_REDIRECT_URI)
+      throw tokenError
+    }
     
     // Get user info
     console.log('[OAuth] Getting user info...')
@@ -123,15 +171,16 @@ export const handleGoogleCallback = async (req, res) => {
       user = await findUserByEmail(userInfo.email)
       
       if (!user) {
-        // Create new user
+        // Create new user with Google name as username
+        const username = await ensureUniqueUsername(userInfo.name)
         user = await createUser({
-          username: userInfo.email.split('@')[0] + '_' + Math.random().toString(36).substr(2, 5),
+          username,
           email: userInfo.email,
           passwordHash: null, // OAuth users don't have passwords
           fullName: userInfo.name,
           emailVerified: userInfo.emailVerified
         })
-        console.log('[OAuth] New user created:', user.id)
+        console.log('[OAuth] New user created:', user.id, 'with username:', username)
       }
       
       // Create OAuth account
@@ -175,10 +224,10 @@ export const handleGoogleCallback = async (req, res) => {
       httpOnly: true,
       secure: isProduction, // Must be true when sameSite is 'none'
       sameSite: isProduction ? 'none' : 'strict', // 'none' allows cross-domain cookies
-      maxAge: 24 * 60 * 60 * 1000
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     })
-    console.log('[OAuth] Cookie set, redirecting to:', `${process.env.FRONTEND_URL}/dashboard?oauth=true`)
-    
+    console.log('[OAuth] Cookie set (7-day expiry), redirecting to:', `${process.env.FRONTEND_URL}/dashboard?oauth=true`)
+
     // Redirect to dashboard with oauth flag so frontend can set session flags
     res.redirect(`${process.env.FRONTEND_URL}/dashboard?oauth=true`)
   } catch (error) {
@@ -327,9 +376,9 @@ export const handleTwitterCallback = async (req, res) => {
       httpOnly: true,
       secure: isProductionTwitter, // Must be true when sameSite is 'none'
       sameSite: isProductionTwitter ? 'none' : 'strict', // 'none' allows cross-domain cookies
-      maxAge: 24 * 60 * 60 * 1000
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     })
-    
+
     // Redirect to dashboard with oauth flag so frontend can set session flags
     res.redirect(`${process.env.FRONTEND_URL}/dashboard?oauth=true`)
   } catch (error) {

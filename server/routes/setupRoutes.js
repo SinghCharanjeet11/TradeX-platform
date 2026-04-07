@@ -125,16 +125,28 @@ router.post('/initialize-database', async (req, res) => {
 // Health check for database
 router.get('/database-status', async (req, res) => {
   try {
-    const result = await db.query('SELECT NOW()');
+    // Test basic database connection
+    const result = await db.query('SELECT NOW() as current_time');
+    
+    // Check if migrations table exists
+    const migrationsCheck = await db.query(`
+      SELECT COUNT(*) as migration_count 
+      FROM schema_migrations
+    `);
+    
     res.json({
       success: true,
       message: 'Database connection successful',
-      timestamp: result.rows[0].now
+      timestamp: result.rows[0].current_time,
+      migrationsRun: parseInt(migrationsCheck.rows[0].migration_count),
+      databaseUrl: process.env.DATABASE_URL ? 'Set (Supabase)' : 'Not set',
+      nodeEnv: process.env.NODE_ENV || 'development'
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });

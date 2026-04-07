@@ -5,6 +5,20 @@ dotenv.config()
 
 const { Pool } = pg
 
+// Validate DATABASE_URL format if provided
+if (process.env.DATABASE_URL) {
+  try {
+    const url = new URL(process.env.DATABASE_URL)
+    if (!url.protocol.startsWith('postgres')) {
+      throw new Error('DATABASE_URL must use postgresql:// or postgres:// protocol')
+    }
+  } catch (error) {
+    console.error('❌ Invalid DATABASE_URL format:', error.message)
+    console.error('Expected format: postgresql://user:password@host:port/database')
+    process.exit(1)
+  }
+}
+
 // Support both DATABASE_URL (Render, Heroku, etc.) and individual DB_* variables (local dev)
 const poolConfig = process.env.DATABASE_URL
   ? {

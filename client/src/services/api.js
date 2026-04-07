@@ -38,19 +38,25 @@ const api = axios.create({
   },
 })
 
-// Request interceptor to add CSRF token
+// Request interceptor to add auth token + CSRF token
 api.interceptors.request.use(
   (config) => {
+    // Attach stored JWT as Bearer token (handles cross-domain — cookies are blocked)
+    const token = localStorage.getItem('tradex_token')
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`
+    }
+
     // Get CSRF token from cookie
     const csrfToken = document.cookie
       .split('; ')
       .find(row => row.startsWith('csrf_token='))
       ?.split('=')[1]
-    
+
     if (csrfToken && config.method !== 'get') {
       config.headers['X-CSRF-Token'] = csrfToken
     }
-    
+
     return config
   },
   (error) => {

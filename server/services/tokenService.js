@@ -5,7 +5,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key_12345'
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h'
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d'
 const JWT_REMEMBER_EXPIRES_IN = process.env.JWT_REMEMBER_EXPIRES_IN || '30d'
 
 /**
@@ -69,7 +69,7 @@ export const hashToken = (token) => {
  * @returns {Date} Expiration date
  */
 export const getTokenExpiration = (rememberMe = false) => {
-  const hours = rememberMe ? 30 * 24 : 24 // 30 days or 24 hours
+  const hours = rememberMe ? 30 * 24 : 7 * 24 // 30 days or 7 days
   return new Date(Date.now() + hours * 60 * 60 * 1000)
 }
 

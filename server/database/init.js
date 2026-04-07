@@ -7,10 +7,14 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 export const runMigrations = async () => {
-  const client = await pool.connect()
+  let client
   
   try {
     console.log('Starting database migrations...')
+    console.log('Attempting to connect to database...')
+    
+    client = await pool.connect()
+    console.log('✅ Database connection established')
     
     // Create migrations tracking table if it doesn't exist
     await client.query(`
@@ -20,9 +24,12 @@ export const runMigrations = async () => {
         executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `)
+    console.log('✅ Migrations tracking table ready')
     
     const migrationsDir = path.join(__dirname, 'migrations')
     const files = fs.readdirSync(migrationsDir).sort()
+    
+    console.log(`Found ${files.filter(f => f.endsWith('.sql')).length} migration files`)
     
     for (const file of files) {
       if (file.endsWith('.sql')) {
@@ -53,6 +60,7 @@ export const runMigrations = async () => {
           console.log(`✓ Completed: ${file}`)
         } catch (err) {
           await client.query('ROLLBACK')
+          console.error(`❌ Failed to run migration ${file}:`, err.message)
           throw err
         }
       }
@@ -60,10 +68,15 @@ export const runMigrations = async () => {
     
     console.log('All migrations completed successfully!')
   } catch (error) {
-    console.error('Migration error:', error)
+    console.error('Migration error:', error.message)
+    if (error.code) {
+      console.error('Error code:', error.code)
+    }
     throw error
   } finally {
-    client.release()
+    if (client) {
+      client.release()
+    }
   }
 }
 
